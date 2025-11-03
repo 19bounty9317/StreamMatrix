@@ -71,7 +71,7 @@
             "icon": "build/icon.ico",
             "sign": null,
             "verifyUpdateCodeSignature": false,
-            "artifactName": "${productName} Setup ${version}.${ext}",
+            "artifactName": "${productName}-Setup-${version}.${ext}",
             "publisherName": "StreamMatrix"
         },
         "nsis": {
