@@ -25,11 +25,42 @@ export class AppUpdater {
 
     // Update verfügbar
     autoUpdater.on('update-available', (info) => {
+      console.log('✅ Update verfügbar:', info.version);
       this.mainWindow.webContents.send('update-available', info);
+      this.mainWindow.webContents.send('update-status', {
+        status: 'available',
+        message: `Update ${info.version} verfügbar! Download startet...`
+      });
+    });
+
+    // Kein Update verfügbar
+    autoUpdater.on('update-not-available', (info) => {
+      console.log('✅ Keine Updates verfügbar');
+      this.mainWindow.webContents.send('update-status', {
+        status: 'not-available',
+        message: 'Du bist auf dem neuesten Stand!'
+      });
+    });
+
+    // Update wird heruntergeladen
+    autoUpdater.on('download-progress', (progress) => {
+      const percent = Math.round(progress.percent);
+      console.log(`📥 Download: ${percent}%`);
+      this.mainWindow.webContents.send('update-status', {
+        status: 'downloading',
+        message: `Update wird heruntergeladen: ${percent}%`,
+        progress: percent
+      });
     });
 
     // Update heruntergeladen
     autoUpdater.on('update-downloaded', (info) => {
+      console.log('✅ Update heruntergeladen:', info.version);
+      this.mainWindow.webContents.send('update-status', {
+        status: 'downloaded',
+        message: `Update ${info.version} bereit zur Installation!`
+      });
+      
       dialog.showMessageBox(this.mainWindow, {
         type: 'info',
         title: 'Update bereit',
@@ -45,7 +76,11 @@ export class AppUpdater {
 
     // Fehler beim Update
     autoUpdater.on('error', (error) => {
-      console.error('Update-Fehler:', error);
+      console.error('❌ Update-Fehler:', error);
+      this.mainWindow.webContents.send('update-status', {
+        status: 'error',
+        message: 'Fehler beim Suchen nach Updates'
+      });
     });
   }
 

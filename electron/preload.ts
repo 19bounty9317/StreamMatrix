@@ -10,5 +10,8 @@ contextBridge.exposeInMainWorld('electron', {
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   onUpdateAvailable: (callback: (info: any) => void) => {
     ipcRenderer.on('update-available', (event, info) => callback(info));
+  },
+  onUpdateStatus: (callback: (status: any) => void) => {
+    ipcRenderer.on('update-status', (event, status) => callback(status));
   }
 });

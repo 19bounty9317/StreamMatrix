@@ -37,11 +37,38 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
   const [obsPassword, setObsPassword] = useState('');
   const [obsConnected, setObsConnected] = useState(false);
   const [obsConnecting, setObsConnecting] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState<string>('');
 
   useEffect(() => {
     const theme = getTheme(settings.themeId);
     applyTheme(theme);
   }, [settings.themeId]);
+
+  // Höre auf Update-Status-Events
+  useEffect(() => {
+    if (window.electron?.onUpdateStatus) {
+      window.electron.onUpdateStatus((status) => {
+        console.log('Update-Status:', status);
+        
+        if (status.status === 'not-available') {
+          setUpdateStatus('✅ ' + status.message);
+        } else if (status.status === 'available') {
+          setUpdateStatus('🎉 ' + status.message);
+        } else if (status.status === 'downloading') {
+          setUpdateStatus('📥 ' + status.message);
+        } else if (status.status === 'downloaded') {
+          setUpdateStatus('✅ ' + status.message);
+        } else if (status.status === 'error') {
+          setUpdateStatus('❌ ' + status.message);
+        }
+        
+        // Reset nach 8 Sekunden (außer bei Download)
+        if (status.status !== 'downloading') {
+          setTimeout(() => setUpdateStatus(''), 8000);
+        }
+      });
+    }
+  }, []);
 
   useEffect(() => {
     // Lade OBS-Einstellungen
@@ -355,17 +382,33 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
               <button
                 onClick={() => {
                   if (window.electron?.checkForUpdates) {
+                    setUpdateStatus('🔍 Suche nach Updates...');
                     window.electron.checkForUpdates();
-                    alert('Suche nach Updates...');
+                  } else {
+                    setUpdateStatus('❌ Update-Funktion nicht verfügbar');
+                    setTimeout(() => setUpdateStatus(''), 3000);
                   }
                 }}
                 className="w-full px-4 py-2 rounded font-semibold transition-all"
                 style={{ backgroundColor: 'var(--color-accent)', color: '#FFFFFF' }}
                 onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
                 onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                disabled={updateStatus !== '' && !updateStatus.includes('✅')}
               >
                 🔍 Nach Updates suchen
               </button>
+              
+              {updateStatus && (
+                <div className="p-2 rounded text-sm font-semibold text-center"
+                     style={{ 
+                       backgroundColor: updateStatus.includes('❌') ? 'var(--color-error)' : 
+                                       updateStatus.includes('✅') ? '#10b981' : 
+                                       'var(--color-accent)',
+                       color: '#FFFFFF'
+                     }}>
+                  {updateStatus}
+                </div>
+              )}
               
               <div className="text-xs theme-text-secondary">
                 💡 Updates werden automatisch heruntergeladen und beim nächsten Start installiert.

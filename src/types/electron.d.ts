@@ -5,6 +5,7 @@ export interface IElectronAPI {
   getSystemStats?: () => Promise<{ cpu: number; ram: number; gpu: number; bitrate: number }>;
   checkForUpdates?: () => Promise<{ success: boolean }>;
   onUpdateAvailable?: (callback: (info: any) => void) => void;
+  onUpdateStatus?: (callback: (status: { status: string; message: string; progress?: number }) => void) => void;
 }
 
 declare global {
