@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { emoteService } from '../../services/EmoteService';
 
 interface ChatMessage {
   id: string;
@@ -11,6 +12,20 @@ interface ChatMessage {
   isVip?: boolean;
   isFirstMessage?: boolean;
   badges?: string;
+  tags?: any;
+}
+
+// Komponente zum Rendern von Nachrichten mit Emotes
+function MessageWithEmotes({ message }: { message: ChatMessage }) {
+  const emoteTags = message.tags?.emotes;
+  const html = emoteService.parseMessageWithEmotes(message.message, emoteTags);
+  
+  return (
+    <span 
+      className="theme-text flex-1" 
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  );
 }
 
 export default function TileChat() {
@@ -109,17 +124,21 @@ export default function TileChat() {
     scrollToBottom();
   }, [messages]);
 
-  // Verbinde zum Chat
+  // Verbinde zum Chat und lade Emotes
   useEffect(() => {
     const connectChat = async () => {
       try {
         const { TwitchService } = await import('../../services/TwitchService');
         const { twitchChat } = await import('../../services/TwitchChatService');
+        const { emoteService } = await import('../../services/EmoteService');
         
         const user = TwitchService.getUserFromStorage();
         const token = TwitchService.getStoredToken();
         
         if (user && token) {
+          // Lade Emotes
+          await emoteService.loadEmotes(user.id, user.login);
+          
           // Verbinde zum Chat
           twitchChat.connect(user.login, user.login, token);
           
@@ -564,7 +583,7 @@ export default function TileChat() {
                 <span style={{ color: msg.color }} className="font-semibold">{msg.username}</span>
               </div>
               <span className="theme-text-secondary">:</span>
-              <span className="theme-text flex-1">{msg.message}</span>
+              <MessageWithEmotes message={msg} />
               
               {msg.username !== 'Du' && msg.username !== 'System' && (
                 <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
