@@ -191,45 +191,63 @@ export class EmoteService {
   }
 
   parseMessageWithEmotes(message: string, emoteTags?: string): string {
-    let html = message;
+    // Erstelle Array mit Wörtern und deren Positionen
+    const parts: Array<{ text: string; isEmote: boolean; html?: string }> = [];
+    const words = message.split(' ');
+    let currentPos = 0;
 
     // Parse Twitch IRC Emote Tags (aus Chat-Nachricht)
+    const twitchEmotePositions: Array<{ start: number; end: number; id: string }> = [];
     if (emoteTags) {
-      const emotePositions: Array<{ start: number; end: number; id: string }> = [];
-      
       emoteTags.split('/').forEach(emoteData => {
         const [id, positions] = emoteData.split(':');
         positions.split(',').forEach(pos => {
           const [start, end] = pos.split('-').map(Number);
-          emotePositions.push({ start, end, id });
+          twitchEmotePositions.push({ start, end, id });
         });
       });
-
-      // Sortiere nach Position (rückwärts, damit Indizes stimmen)
-      emotePositions.sort((a, b) => b.start - a.start);
-
-      // Ersetze Emotes
-      emotePositions.forEach(({ start, end, id }) => {
-        const emoteCode = message.substring(start, end + 1);
-        const emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${id}/default/dark/2.0`;
-        html = html.substring(0, start) + 
-               `<img src="${emoteUrl}" alt="${emoteCode}" class="inline-block h-7 mx-0.5 align-middle" title="${emoteCode}" />` + 
-               html.substring(end + 1);
-      });
+      twitchEmotePositions.sort((a, b) => a.start - b.start);
     }
 
-    // Parse Third-Party Emotes (BTTV, FFZ, 7TV)
-    const words = html.split(' ');
-    const parsedWords = words.map(word => {
-      // Prüfe ob Wort ein Emote ist
-      const emote = this.emotes.get(word);
-      if (emote) {
-        return `<img src="${emote.url}" alt="${emote.code}" class="inline-block h-7 mx-0.5 align-middle" title="${emote.code}" />`;
+    // Verarbeite jedes Wort
+    words.forEach((word) => {
+      const wordStart = currentPos;
+      const wordEnd = currentPos + word.length - 1;
+      
+      // Prüfe ob dieses Wort ein Twitch-Emote ist (aus IRC Tags)
+      const twitchEmote = twitchEmotePositions.find(
+        e => e.start === wordStart && e.end === wordEnd
+      );
+      
+      if (twitchEmote) {
+        // Twitch-Emote aus IRC Tags
+        const emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${twitchEmote.id}/default/dark/2.0`;
+        parts.push({
+          text: word,
+          isEmote: true,
+          html: `<img src="${emoteUrl}" alt="${word}" class="inline-block h-7 mx-0.5 align-middle" title="${word}" />`
+        });
+      } else {
+        // Prüfe Third-Party Emotes (BTTV, FFZ, 7TV)
+        const thirdPartyEmote = this.emotes.get(word);
+        if (thirdPartyEmote) {
+          parts.push({
+            text: word,
+            isEmote: true,
+            html: `<img src="${thirdPartyEmote.url}" alt="${thirdPartyEmote.code}" class="inline-block h-7 mx-0.5 align-middle" title="${thirdPartyEmote.code}" />`
+          });
+        } else {
+          // Normaler Text
+          parts.push({ text: word, isEmote: false });
+        }
       }
-      return word;
+      
+      // Update Position (+1 für Leerzeichen)
+      currentPos = wordEnd + 2;
     });
 
-    return parsedWords.join(' ');
+    // Baue HTML-String
+    return parts.map(p => p.isEmote ? p.html : p.text).join(' ');
   }
 
   getEmote(code: string): Emote | undefined {
