@@ -3,6 +3,8 @@ export interface IElectronAPI {
   openExternal: (url: string) => Promise<{ success: boolean }>;
   onOAuthToken: (callback: (token: string) => void) => void;
   getSystemStats?: () => Promise<{ cpu: number; ram: number; gpu: number; bitrate: number }>;
+  checkForUpdates?: () => Promise<{ success: boolean }>;
+  onUpdateAvailable?: (callback: (info: any) => void) => void;
 }
 
 declare global {

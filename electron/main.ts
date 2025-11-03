@@ -2,9 +2,11 @@ import { app, BrowserWindow, ipcMain, session, shell } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 import { startOAuthServer } from './oauth-server';
+import { AppUpdater } from './updater';
 
 let mainWindow: BrowserWindow | null = null;
 let oauthServer: any = null;
+let appUpdater: AppUpdater | null = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -152,7 +154,16 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  
+  // Initialisiere Auto-Updater nach 3 Sekunden (damit die App erst lädt)
+  setTimeout(() => {
+    if (mainWindow) {
+      appUpdater = new AppUpdater(mainWindow);
+    }
+  }, 3000);
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -262,6 +273,15 @@ async function getSystemGpuUsage(): Promise<number> {
   }
   return 0;
 }
+
+// Manuell nach Updates suchen
+ipcMain.handle('check-for-updates', async () => {
+  if (appUpdater) {
+    appUpdater.checkForUpdates();
+    return { success: true };
+  }
+  return { success: false };
+});
 
 // System-Stats abrufen (Task Manager-kompatibel) mit Caching
 ipcMain.handle('get-system-stats', async () => {

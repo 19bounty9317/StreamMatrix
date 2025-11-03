@@ -43,6 +43,17 @@ function App() {
 
   const [streamBitrate, setStreamBitrate] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+
+  // Update-Listener
+  useEffect(() => {
+    if (window.electron?.onUpdateAvailable) {
+      window.electron.onUpdateAvailable((info) => {
+        setUpdateAvailable(true);
+        console.log('Update verfügbar:', info.version);
+      });
+    }
+  }, []);
 
   useEffect(() => {
     const token = TwitchService.getStoredToken();
@@ -156,6 +167,21 @@ function App() {
     <div className="flex h-screen" style={{ backgroundColor: 'var(--color-background)' }}>
       <Tutorial />
       <Settings isOpen={showSettings} onClose={() => setShowSettings(false)} />
+      
+      {/* Update-Banner */}
+      {updateAvailable && (
+        <div className="fixed top-0 left-0 right-0 z-50 p-3 text-center text-white font-semibold shadow-lg"
+             style={{ backgroundColor: 'var(--color-accent)' }}>
+          🎉 Neues Update verfügbar! Wird beim nächsten Start installiert.
+          <button 
+            onClick={() => setUpdateAvailable(false)}
+            className="ml-4 px-3 py-1 rounded bg-white bg-opacity-20 hover:bg-opacity-30 transition-all"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+      
       <Sidebar
         tiles={availableTiles}
         onToggleTile={toggleTile}

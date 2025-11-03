@@ -343,6 +343,36 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
             </div>
           </div>
 
+          {/* Updates */}
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold theme-text">🔄 Updates</h3>
+            
+            <div className="p-3 theme-tile-content-bg rounded space-y-3">
+              <div className="text-sm theme-text-secondary">
+                StreamMatrix sucht automatisch nach Updates. Du kannst auch manuell prüfen:
+              </div>
+              
+              <button
+                onClick={() => {
+                  if (window.electron?.checkForUpdates) {
+                    window.electron.checkForUpdates();
+                    alert('Suche nach Updates...');
+                  }
+                }}
+                className="w-full px-4 py-2 rounded font-semibold transition-all"
+                style={{ backgroundColor: 'var(--color-accent)', color: '#FFFFFF' }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+              >
+                🔍 Nach Updates suchen
+              </button>
+              
+              <div className="text-xs theme-text-secondary">
+                💡 Updates werden automatisch heruntergeladen und beim nächsten Start installiert.
+              </div>
+            </div>
+          </div>
+
           {/* App-Info */}
           <div className="space-y-3">
             <h3 className="text-lg font-semibold theme-text">ℹ️ App-Informationen</h3>
