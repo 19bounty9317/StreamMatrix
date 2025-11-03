@@ -202,24 +202,8 @@ Gefunden einen Bug? [Erstelle ein Issue](https://github.com/DEIN-USERNAME/Stream
 
 ## 🔮 Roadmap
 
-### v1.4.0 (geplant)
-- 🎬 OBS Szenen-Kontrolle
-- 📹 Recording Start/Stop
-- 🎛️ Audio-Mixer Integration
-- 📊 Erweiterte Analytics
-
-### v1.5.0 (geplant)
-- 🤖 Chatbot-Integration
-- 🎁 Giveaway-System
-- 📢 Alerts & Notifications
-- 🎵 Spotify Integration
-
-### v2.0.0 (Vision)
-- 🌐 Multi-Plattform (YouTube, Kick)
-- 📱 Mobile App
-- ☁️ Cloud-Sync
-- 👥 Multi-User Support
-
+### v1.3.2 (geplant)
+- Verbesserungen und Bug Fixxes
 ---
 
 ## 📄 Lizenz
