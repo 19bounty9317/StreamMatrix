@@ -1,0 +1,19 @@
+:root {
+  /* Default Twitch Dark Theme */
+  --color-background: #0E0E10;
+  --color-sidebar: #18181B;
+  --color-tile: #18181B;
+  --color-tile-header: #1F1F23;
+  --color-tile-border: #9146FF;
+  --color-text: #FFFFFF;
+  --color-text-secondary: #ADADB8;
+  --color-accent: #9146FF;
+  --color-accent-hover: #772CE8;
+  --color-border: #2C2C34;
+  --color-success: #00F593;
+  --color-warning: #FFA500;
+  --color-error: #FF4444;
+}
+
+/* Theme variables are set dynamically via JavaScript */
+/* No overrides needed - Tailwind classes work as normal */

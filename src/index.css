@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  background-color: #0E0E10;
+  color: #EFEFF1;
+  overflow: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #18181B;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3A3A3D;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4A4A4D;
+}
+
+/* React Grid Layout Resize Handle - besser sichtbar */
+.react-grid-item > .react-resizable-handle {
+  opacity: 1 !important;
+  width: 20px !important;
+  height: 20px !important;
+  bottom: 0 !important;
+  right: 0 !important;
+  background-color: var(--color-accent) !important;
+  background-image: none !important;
+  border-radius: 0 0 8px 0 !important;
+  box-shadow: 0 0 8px rgba(145, 71, 255, 0.6) !important;
+}
+
+.react-grid-item > .react-resizable-handle:hover {
+  background-color: var(--color-accent-hover) !important;
+  box-shadow: 0 0 12px rgba(145, 71, 255, 0.9) !important;
+}
+
+/* Resize Handle im Drag-Modus */
+.react-grid-item.react-draggable-dragging > .react-resizable-handle,
+.react-grid-item.resizing > .react-resizable-handle {
+  background-color: var(--color-accent-hover) !important;
+  box-shadow: 0 0 12px rgba(145, 71, 255, 0.9) !important;
+}
+
+/* Theme-kompatible Utility-Klassen */
+.theme-bg {
+  background-color: var(--color-background);
+}
+
+.theme-tile-bg {
+  background-color: var(--color-tile);
+}
+
+.theme-tile-content-bg {
+  background-color: var(--color-tile-content);
+}
+
+.theme-text {
+  color: var(--color-text);
+}
+
+.theme-text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.theme-border {
+  border-color: var(--color-border);
+}
+
+.theme-input {
+  background-color: var(--color-tile-content);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.theme-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(145, 71, 255, 0.2);
+}
+
+.theme-button {
+  background-color: var(--color-tile);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.theme-button:hover {
+  background-color: var(--color-tile-header);
+}
