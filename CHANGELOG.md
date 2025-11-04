@@ -1,5 +1,103 @@
 # 📝 Changelog
 
+## Version 1.3.4 - Copyright & Schutz (04.11.2025)
+
+### 🛡️ Rechtlicher Schutz
+- **Copyright-Hinweis im UI**
+  - Anzeige unten rechts: © 2025 StreamMatrix
+  - Link zu GitHub Repository
+  - Dezent aber sichtbar
+
+- **Proprietäre Lizenz**
+  - LICENSE Datei hinzugefügt
+  - Vollständiger Copyright-Schutz
+  - Autor: Michael Mader
+  - Kontakt: StreamMatrix@web.de
+
+- **Neue Dokumentation**
+  - COPYRIGHT.md - Copyright-Informationen
+  - SECURITY.md - Sicherheitsdokumentation
+  - SCHUTZ-ANLEITUNG.md - Projekt-Schutz
+  - LICENSE-GPL - Alternative GPL-Lizenz
+
+### 🧹 Projekt aufgeräumt
+- Alte Entwicklungs-Docs entfernt (9 Dateien)
+- Alte Builds gelöscht (~1.5 GB gespart)
+- Saubere Projekt-Struktur
+- Nur aktuelle Builds behalten
+
+### 📦 Technisch
+- package.json: UNLICENSED + private
+- Copyright-Komponente in App integriert
+- Alle Versionsnummern auf 1.3.4
+
+---
+
+## Version 1.3.3 - Auto-Update Test (03.11.2025)
+
+### 🔄 Auto-Update Verbesserungen
+- Verbesserte Update-Status-Anzeige
+- Download-Fortschritt wird angezeigt
+- Besseres Feedback beim Update-Check
+- Detaillierte Status-Meldungen
+
+### 🐛 Bugfixes
+- Auto-Update nur in Production-Builds
+- Prüfung ob App gepackt ist (app.isPackaged)
+- Bessere Logging für Debugging
+- Fehler-Handling verbessert
+
+### 📚 Dokumentation
+- AUTO-UPDATE-TEST.md - Test-Anleitung
+- Konsistente Dateinamen für Updates
+
+---
+
+## Version 1.3.2 - Auto-Update & Emotes (03.11.2025)
+
+### 🔄 Auto-Update-Funktion
+- **Automatische Updates**
+  - Prüft alle 10 Minuten nach Updates
+  - GitHub-Integration für Updates
+  - Hintergrund-Download
+  - Installation beim nächsten Start
+
+- **Update-UI**
+  - Update-Button in Settings
+  - Live-Status-Anzeige
+  - Update-Benachrichtigung im UI
+  - Manueller Update-Check
+
+### 😀 Emote-Unterstützung
+- **Twitch Emotes**
+  - Global Emotes (Kappa, LUL, PogChamp, etc.)
+  - Channel Emotes (Subscriber-Emotes)
+  - Automatisches Laden beim Chat-Start
+
+- **Third-Party Emotes**
+  - BTTV Emotes (Global + Channel)
+  - FFZ Channel Emotes
+  - 7TV Emotes (Global + Channel)
+  - Über 1000+ Emotes verfügbar
+
+- **Emote-Rendering**
+  - Inline-Darstellung als Bilder (28px)
+  - Hover-Tooltip mit Emote-Namen
+  - Position-basiertes Parsing
+  - Gemischte Emotes (Twitch + Third-Party)
+
+### 📚 Dokumentation
+- EMOTE-SUPPORT.md - Emote-Dokumentation
+- RELEASE-NOTES-v1.3.2.md - Release Notes
+
+### 🔧 Technische Details
+- electron-updater@6.6.2 integriert
+- EmoteService für alle Emote-Plattformen
+- GitHub Releases für Auto-Update
+- Update-Events und Status-Tracking
+
+---
+
 ## Version 1.3.1 - Bugfix-Release (31.10.2025)
 
 ### 🐛 Bugfixes
