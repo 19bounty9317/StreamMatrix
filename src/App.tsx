@@ -5,7 +5,6 @@ import Footer from './components/Footer';
 import LoginScreen from './components/LoginScreen';
 import Tutorial from './components/Tutorial';
 import Settings from './components/Settings';
-import CopyrightNotice from './components/CopyrightNotice';
 import { TwitchService } from './services/TwitchService';
 import StreamQualityService from './services/StreamQualityService';
 import EventTracker from './services/EventTracker';
@@ -168,7 +167,6 @@ function App() {
     <div className="flex h-screen" style={{ backgroundColor: 'var(--color-background)' }}>
       <Tutorial />
       <Settings isOpen={showSettings} onClose={() => setShowSettings(false)} />
-      <CopyrightNotice />
       
       {/* Update-Banner */}
       {updateAvailable && (

@@ -433,6 +433,37 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
                 <span className="theme-text-secondary">Plattform:</span>
                 <span className="theme-text">Windows</span>
               </div>
+              <div className="flex justify-between">
+                <span className="theme-text-secondary">Autor:</span>
+                <span className="theme-text">Michael Mader</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="theme-text-secondary">Kontakt:</span>
+                <a 
+                  href="mailto:StreamMatrix@web.de"
+                  className="theme-text hover:underline"
+                  style={{ color: 'var(--color-accent)' }}
+                >
+                  StreamMatrix@web.de
+                </a>
+              </div>
+              <div className="flex justify-between">
+                <span className="theme-text-secondary">GitHub:</span>
+                <a 
+                  href="https://github.com/19bounty9317/StreamMatrix"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="theme-text hover:underline"
+                  style={{ color: 'var(--color-accent)' }}
+                >
+                  Repository
+                </a>
+              </div>
+              <div className="pt-2 border-t" style={{ borderColor: 'var(--color-border)' }}>
+                <div className="text-xs theme-text-secondary text-center">
+                  © 2025 Michael Mader. Alle Rechte vorbehalten.
+                </div>
+              </div>
             </div>
           </div>
         </div>
