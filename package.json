@@ -19,8 +19,9 @@
         "streamer",
         "electron"
     ],
-    "author": "",
-    "license": "MIT",
+    "author": "[Dein Name] <[Deine Email]>",
+    "license": "UNLICENSED",
+    "private": true,
     "devDependencies": {
         "@types/node": "^20.10.0",
         "@types/react": "^18.2.45",
