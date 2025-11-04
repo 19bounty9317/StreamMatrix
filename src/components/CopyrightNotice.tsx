@@ -14,7 +14,7 @@ export default function CopyrightNotice() {
            style={{ backgroundColor: 'var(--color-tile)' }}>
         <span>© 2025 StreamMatrix</span>
         <span>•</span>
-        <span>v1.3.3</span>
+        <span>v1.3.4</span>
         <span>•</span>
         <a 
           href="https://github.com/19bounty9317/StreamMatrix" 

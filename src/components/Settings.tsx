@@ -423,7 +423,7 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
             <div className="p-3 theme-tile-content-bg rounded space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="theme-text-secondary">Version:</span>
-                <span className="theme-text">1.3.3</span>
+                <span className="theme-text">1.3.4</span>
               </div>
               <div className="flex justify-between">
                 <span className="theme-text-secondary">Name:</span>

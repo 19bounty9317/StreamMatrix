@@ -138,7 +138,7 @@ export default function Footer({ status }: FooterProps) {
         </div>
 
         <div style={{ color: 'var(--color-border)' }}>|</div>
-        <div style={{ color: 'var(--color-text-secondary)' }}>v1.3.3</div>
+        <div style={{ color: 'var(--color-text-secondary)' }}>v1.3.4</div>
       </div>
     </div>
   );
