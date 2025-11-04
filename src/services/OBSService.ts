@@ -283,6 +283,61 @@ class OBSService {
   }
 
   /**
+   * Hole Stream-Statistiken von OBS
+   */
+  async getStreamStats(): Promise<any> {
+    if (!this.isConnected) return null;
+
+    return new Promise((resolve) => {
+      const requestId = Date.now().toString();
+      
+      const handler = (event: MessageEvent) => {
+        const message = JSON.parse(event.data);
+        if (message.op === 7 && message.d?.requestId === requestId) {
+          this.ws?.removeEventListener('message', handler);
+          
+          const stats = message.d?.responseData;
+          if (stats) {
+            resolve({
+              'streaming': stats.outputActive || false,
+              'recording': stats.recordActive || false,
+              'output-bytes': stats.outputBytes || 0,
+              'output-frames': stats.outputTotalFrames || 0,
+              'output-skipped-frames': stats.outputSkippedFrames || 0,
+              'output-total-frames': stats.outputTotalFrames || 0,
+              'average-frame-time': stats.averageFrameRenderTime || 0,
+              'fps': stats.activeFps || 0,
+              'render-total-frames': stats.renderTotalFrames || 0,
+              'render-skipped-frames': stats.renderSkippedFrames || 0,
+              'cpu-usage': stats.cpuUsage || 0,
+              'memory-usage': stats.memoryUsage || 0,
+              'free-disk-space': stats.availableDiskSpace || 0
+            });
+          } else {
+            resolve(null);
+          }
+        }
+      };
+
+      this.ws?.addEventListener('message', handler);
+
+      this.sendMessage({
+        op: 6,
+        d: {
+          requestType: 'GetStats',
+          requestId: requestId
+        }
+      });
+
+      // Timeout nach 2 Sekunden
+      setTimeout(() => {
+        this.ws?.removeEventListener('message', handler);
+        resolve(null);
+      }, 2000);
+    });
+  }
+
+  /**
    * Hole Screenshot von OBS (für Preview)
    */
   async getSourceScreenshot(sourceName: string = 'Program'): Promise<string | null> {

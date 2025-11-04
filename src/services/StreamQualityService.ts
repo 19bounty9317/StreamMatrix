@@ -7,6 +7,22 @@ interface StreamQualityData {
   health: 'excellent' | 'good' | 'poor' | 'offline';
 }
 
+interface OBSStreamStats {
+  'streaming': boolean;
+  'recording': boolean;
+  'output-bytes': number;
+  'output-frames': number;
+  'output-skipped-frames': number;
+  'output-total-frames': number;
+  'average-frame-time': number;
+  'fps': number;
+  'render-total-frames': number;
+  'render-skipped-frames': number;
+  'cpu-usage': number;
+  'memory-usage': number;
+  'free-disk-space': number;
+}
+
 class StreamQualityService {
   private static instance: StreamQualityService;
   private accessToken: string = '';
@@ -17,8 +33,13 @@ class StreamQualityService {
   private currentQuality: StreamQualityData | null = null;
   private droppedFrames: number = 0;
   private totalFrames: number = 0;
+  private lastOutputBytes: number = 0;
+  private lastUpdateTime: number = 0;
+  private obsConnected: boolean = false;
 
-  private constructor() {}
+  private constructor() {
+    this.checkOBSConnection();
+  }
 
   static getInstance(): StreamQualityService {
     if (!StreamQualityService.instance) {
@@ -33,9 +54,85 @@ class StreamQualityService {
     this.userId = userId;
   }
 
+  private checkOBSConnection() {
+    try {
+      const obsSettings = localStorage.getItem('obs-settings');
+      if (obsSettings) {
+        const settings = JSON.parse(obsSettings);
+        this.obsConnected = settings.enabled === true;
+      }
+    } catch (error) {
+      this.obsConnected = false;
+    }
+  }
+
+  private async getOBSStreamStats(): Promise<OBSStreamStats | null> {
+    try {
+      if (!this.obsConnected) {
+        this.checkOBSConnection();
+        if (!this.obsConnected) return null;
+      }
+
+      const OBSService = (await import('./OBSService')).default;
+      const obsService = OBSService.getInstance();
+      
+      if (!obsService.isConnectedToOBS()) {
+        this.obsConnected = false;
+        return null;
+      }
+
+      const stats = await obsService.getStreamStats();
+      return stats;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der OBS-Stats:', error);
+      this.obsConnected = false;
+      return null;
+    }
+  }
+
+  private calculateBitrateFromOBS(stats: OBSStreamStats): number {
+    const now = Date.now();
+    const timeDiff = (now - this.lastUpdateTime) / 1000; // in Sekunden
+    
+    if (this.lastUpdateTime === 0 || timeDiff === 0) {
+      this.lastOutputBytes = stats['output-bytes'];
+      this.lastUpdateTime = now;
+      return this.currentBitrate; // Behalte vorherigen Wert
+    }
+
+    const bytesDiff = stats['output-bytes'] - this.lastOutputBytes;
+    const bitrate = (bytesDiff * 8) / timeDiff; // Bits pro Sekunde
+
+    this.lastOutputBytes = stats['output-bytes'];
+    this.lastUpdateTime = now;
+
+    return Math.round(bitrate);
+  }
+
   async getStreamQuality(): Promise<StreamQualityData> {
     try {
-      // Hole Stream-Informationen von Twitch API
+      // Versuche zuerst OBS-Daten zu holen (genauer)
+      const obsStats = await this.getOBSStreamStats();
+      
+      if (obsStats && obsStats.streaming) {
+        // Berechne echte Bitrate von OBS
+        const bitrate = this.calculateBitrateFromOBS(obsStats);
+        
+        // Update Frame-Daten von OBS
+        this.droppedFrames = obsStats['output-skipped-frames'];
+        this.totalFrames = obsStats['output-total-frames'];
+        
+        this.currentBitrate = bitrate;
+
+        return {
+          bitrate: bitrate,
+          fps: Math.round(obsStats.fps),
+          resolution: 'OBS Stream',
+          health: this.calculateHealth(bitrate)
+        };
+      }
+
+      // Fallback: Hole Stream-Informationen von Twitch API
       const response = await axios.get(
         `https://api.twitch.tv/helix/streams?user_id=${this.userId}`,
         {
@@ -50,7 +147,6 @@ class StreamQualityService {
         const stream = response.data.data[0];
         
         // Schätze Bitrate basierend auf Auflösung und FPS
-        // Twitch API gibt keine direkte Bitrate, daher schätzen wir
         const resolution = `${stream.width}x${stream.height}`;
         const estimatedBitrate = this.estimateBitrate(stream.width, stream.height);
         
@@ -118,12 +214,16 @@ class StreamQualityService {
       health: this.currentQuality?.health || 'offline',
       droppedFrames: this.droppedFrames,
       totalFrames: this.totalFrames,
-      droppedFramesPercent: this.totalFrames > 0 ? (this.droppedFrames / this.totalFrames) * 100 : 0
+      droppedFramesPercent: this.totalFrames > 0 ? (this.droppedFrames / this.totalFrames) * 100 : 0,
+      isOBSConnected: this.obsConnected
     };
   }
 
-  // Simuliere Frame-Drops (in echter Anwendung würde dies von OBS/Streaming-Software kommen)
+  // Simuliere Frame-Drops nur wenn OBS nicht verbunden ist
   simulateFrameData() {
+    // Nur simulieren wenn OBS nicht verbunden ist
+    if (this.obsConnected) return;
+
     // Erhöhe Total Frames (30 FPS = 30 Frames pro Sekunde)
     this.totalFrames += 30;
     

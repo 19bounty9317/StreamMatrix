@@ -67,19 +67,28 @@ export class TwitchService {
     this.cache.set(key, { data, timestamp: Date.now() });
   }
 
-  static async getUserInfo() {
-    const cached = this.getCached('userInfo');
+  static async getUserInfo(username?: string) {
+    const cacheKey = username ? `userInfo_${username}` : 'userInfo';
+    const cached = this.getCached(cacheKey);
     if (cached) return cached;
 
-    const response = await axios.get(`${TWITCH_API_BASE}/users`, {
+    const url = username 
+      ? `${TWITCH_API_BASE}/users?login=${username}`
+      : `${TWITCH_API_BASE}/users`;
+
+    const response = await axios.get(url, {
       headers: {
         'Authorization': `Bearer ${this.token}`,
         'Client-Id': this.clientId
       }
     });
     const user = response.data.data[0];
-    this.saveUserToStorage(user);
-    this.setCache('userInfo', user);
+    
+    if (!username) {
+      this.saveUserToStorage(user);
+    }
+    
+    this.setCache(cacheKey, user);
     return user;
   }
 

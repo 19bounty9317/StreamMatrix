@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { emoteService } from '../../services/EmoteService';
+import UserCard from '../UserCard';
 
 interface ChatMessage {
   id: string;
@@ -45,6 +46,7 @@ export default function TileChat() {
     return saved ? JSON.parse(saved) : true;
   });
   const [viewerCount, setViewerCount] = useState(0);
+  const [selectedUser, setSelectedUser] = useState<{ username: string; color: string; badges: string; position: { x: number; y: number } } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const toggleTimestamps = () => {
@@ -495,8 +497,23 @@ export default function TileChat() {
     }
   };
 
+  const handleUsernameClick = (e: React.MouseEvent, msg: ChatMessage) => {
+    if (msg.username === 'Du' || msg.username === 'System') return;
+    
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    setSelectedUser({
+      username: msg.username,
+      color: msg.color,
+      badges: msg.badges || '',
+      position: {
+        x: rect.left,
+        y: rect.bottom + 5
+      }
+    });
+  };
+
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col relative">
       <div className="flex items-center justify-between gap-2 mb-2 pb-2 theme-border" style={{ borderBottom: '1px solid var(--color-border)' }}>
         {showViewerCount && (
           <button
@@ -580,7 +597,13 @@ export default function TileChat() {
                     FIRST
                   </span>
                 )}
-                <span style={{ color: msg.color }} className="font-semibold">{msg.username}</span>
+                <span 
+                  style={{ color: msg.color }} 
+                  className="font-semibold cursor-pointer hover:underline"
+                  onClick={(e) => handleUsernameClick(e, msg)}
+                >
+                  {msg.username}
+                </span>
               </div>
               <span className="theme-text-secondary">:</span>
               <MessageWithEmotes message={msg} />
@@ -637,6 +660,17 @@ export default function TileChat() {
           className="w-full theme-input px-3 py-2 rounded"
         />
       </form>
+
+      {/* User Card Popup */}
+      {selectedUser && (
+        <UserCard
+          username={selectedUser.username}
+          color={selectedUser.color}
+          badges={selectedUser.badges}
+          position={selectedUser.position}
+          onClose={() => setSelectedUser(null)}
+        />
+      )}
     </div>
   );
 }

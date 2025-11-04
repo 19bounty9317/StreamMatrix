@@ -1,5 +1,48 @@
 # 📝 Changelog
 
+## Version 1.3.5 - User-Card & Stream-Qualität (04.11.2025)
+
+### ✨ Neue Features
+- **👤 User-Card im Chat**
+  - Klick auf Username öffnet Info-Card
+  - Zeigt Profilbild, Bio, Account-Alter
+  - Follower-Anzahl des Users
+  - Schnellaktionen: Mod, VIP, Timeout, Ban
+  - Link zum Twitch-Kanal
+  - Wie im Twitch Chat!
+
+- **📊 Stream-Qualität Live-Daten**
+  - Echte Bitrate von OBS (wenn verbunden)
+  - Dropped Frames Anzeige (echt von OBS)
+  - Dropped Frames Prozent
+  - Farbcodierung: Grün (gut), Gelb (mittel), Rot (schlecht)
+  - Fallback auf geschätzte Werte ohne OBS
+
+### 🔧 Verbesserungen
+- **StreamQualityService erweitert**
+  - OBS-Integration für echte Daten
+  - Bitrate-Berechnung aus OBS output-bytes
+  - Frame-Drop-Tracking von OBS
+  - Automatischer Fallback auf Twitch API
+
+- **OBSService erweitert**
+  - `getStreamStats()` Methode hinzugefügt
+  - Liefert alle Stream-Statistiken
+  - Output-Bytes, Frames, Dropped Frames
+  - CPU/Memory Usage
+
+### 🎨 UI/UX
+- User-Card Popup mit Twitch-Style
+- Hover-Effekt auf Usernamen
+- Smooth Animations
+- Responsive Positionierung
+
+### 📚 Dokumentation
+- README.md aktualisiert für v1.3.5
+- Alle Features dokumentiert
+
+---
+
 ## Version 1.3.4 - Copyright & Schutz (04.11.2025)
 
 ### 🛡️ Rechtlicher Schutz
