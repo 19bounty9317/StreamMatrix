@@ -113,7 +113,7 @@ StreamMatrix ist **sicher für den normalen Gebrauch**, hat aber einige Verbesse
 Wenn du ein Sicherheitsproblem findest:
 
 1. **NICHT** öffentlich als Issue melden
-2. **Sende Email** an: [Deine Email]
+2. **Sende Email** an: StreamMatrix@web.de
 3. **Beschreibe** das Problem detailliert
 4. **Warte** auf Antwort (max. 48h)
 

@@ -1,6 +1,6 @@
 /**
  * StreamMatrix - Twitch Dashboard für Streamer
- * Copyright (c) 2025 [Dein Name]. Alle Rechte vorbehalten.
+ * Copyright (c) 2025 Michael Mader. Alle Rechte vorbehalten.
  * 
  * Diese Software ist urheberrechtlich geschützt.
  * Siehe LICENSE Datei für Details.

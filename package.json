@@ -19,7 +19,7 @@
         "streamer",
         "electron"
     ],
-    "author": "[Dein Name] <[Deine Email]>",
+    "author": "Michael Mader <StreamMatrix@web.de>",
     "license": "UNLICENSED",
     "private": true,
     "devDependencies": {

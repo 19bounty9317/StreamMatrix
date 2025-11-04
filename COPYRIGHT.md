@@ -2,13 +2,13 @@
 
 ## Copyright
 
-**Copyright © 2025 [Dein Name/Firma]. Alle Rechte vorbehalten.**
+**Copyright © 2025 Michael Mader. Alle Rechte vorbehalten.**
 
 StreamMatrix ist urheberrechtlich geschützte Software.
 
 ## Markenzeichen
 
-**StreamMatrix™** ist eine Marke von [Dein Name/Firma].
+**StreamMatrix™** ist eine Marke von Michael Mader.
 
 ### Geschützte Elemente:
 - ™ Name "StreamMatrix"
@@ -42,15 +42,15 @@ Der Quellcode von StreamMatrix ist geschützt durch:
 ## Verstöße melden
 
 Wenn du einen Verstoß gegen das Copyright feststellst:
-- Email: [Deine Email]
+- Email: StreamMatrix@web.de
 - GitHub Issues: Nur für technische Probleme
 - Beschreibe den Verstoß detailliert
 
 ## Kommerzielle Nutzung
 
 Für kommerzielle Lizenzen kontaktiere:
-- Email: [Deine Email]
-- Website: [Deine Website]
+- Email: StreamMatrix@web.de
+- GitHub: https://github.com/19bounty9317/StreamMatrix
 
 ## Attribution
 
@@ -58,7 +58,7 @@ Wenn du StreamMatrix in deinen Projekten erwähnst:
 
 **Korrekt:**
 - "Powered by StreamMatrix"
-- "Verwendet StreamMatrix von [Dein Name]"
+- "Verwendet StreamMatrix von Michael Mader"
 - Link zu: https://github.com/19bounty9317/StreamMatrix
 
 **Falsch:**
