@@ -86,8 +86,10 @@ export default function TileActivity() {
   useEffect(() => {
     const handleChatMessage = (data: any) => {
       console.log('🎯 Activity Feed - Message empfangen:', data);
+      console.log('🎯 Tags:', data.tags);
+      console.log('🎯 msg-id:', data.tags?.['msg-id']);
       
-      // Bits/Cheers
+      // Bits/Cheers (aus normalen PRIVMSG)
       if (data.bits && parseInt(data.bits) > 0) {
         console.log('💎 Bits erkannt:', data.bits);
         const activity: Activity = {
@@ -101,18 +103,22 @@ export default function TileActivity() {
         addActivity(activity);
       }
 
-      // Subs (aus Chat-Nachrichten)
+      // USERNOTICE Events (Subs, Raids, etc.)
       if (data.tags && data.tags['msg-id']) {
         const msgId = data.tags['msg-id'];
-        console.log('📋 msg-id erkannt:', msgId);
+        console.log('📋 USERNOTICE msg-id erkannt:', msgId);
         
+        // Subs & Resubs
         if (msgId === 'sub' || msgId === 'resub') {
-          console.log('⭐ Sub erkannt:', msgId);
+          console.log('⭐ Sub erkannt:', msgId, 'von', data.username);
+          const months = data.tags['msg-param-cumulative-months'] || '1';
           const activity: Activity = {
             id: `sub-${data.username}-${Date.now()}`,
             type: 'sub',
             username: data.username,
-            message: msgId === 'resub' ? 'hat resubscribed!' : 'hat subscribed!',
+            message: msgId === 'resub' 
+              ? `hat für ${months} Monat(e) resubscribed!` 
+              : 'hat subscribed!',
             timestamp: new Date()
           };
           addActivity(activity);
@@ -120,6 +126,7 @@ export default function TileActivity() {
         
         // Gift Subs
         if (msgId === 'subgift') {
+          console.log('🎁 Gift Sub erkannt von', data.username);
           const recipient = data.tags['msg-param-recipient-display-name'] || 'Jemand';
           const activity: Activity = {
             id: `subgift-${data.username}-${Date.now()}`,
@@ -130,20 +137,36 @@ export default function TileActivity() {
           };
           addActivity(activity);
         }
-      }
 
-      // Raids
-      if (data.tags && data.tags['msg-id'] === 'raid') {
-        const viewerCount = parseInt(data.tags['msg-param-viewerCount'] || '0');
-        const activity: Activity = {
-          id: `raid-${data.username}-${Date.now()}`,
-          type: 'raid',
-          username: data.username,
-          message: 'hat geraidet!',
-          amount: viewerCount,
-          timestamp: new Date()
-        };
-        addActivity(activity);
+        // Mystery Gift Subs (Masse)
+        if (msgId === 'submysterygift') {
+          console.log('🎁 Mystery Gift Subs erkannt von', data.username);
+          const count = data.tags['msg-param-mass-gift-count'] || '1';
+          const activity: Activity = {
+            id: `mysterygift-${data.username}-${Date.now()}`,
+            type: 'sub',
+            username: data.username,
+            message: `hat ${count} Subs verschenkt!`,
+            amount: parseInt(count),
+            timestamp: new Date()
+          };
+          addActivity(activity);
+        }
+
+        // Raids
+        if (msgId === 'raid') {
+          console.log('🚀 Raid erkannt von', data.username);
+          const viewerCount = parseInt(data.tags['msg-param-viewerCount'] || '0');
+          const activity: Activity = {
+            id: `raid-${data.username}-${Date.now()}`,
+            type: 'raid',
+            username: data.username,
+            message: 'hat geraidet!',
+            amount: viewerCount,
+            timestamp: new Date()
+          };
+          addActivity(activity);
+        }
       }
     };
 
