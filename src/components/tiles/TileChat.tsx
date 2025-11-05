@@ -119,11 +119,22 @@ export default function TileChat() {
   };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Scrolle nur innerhalb des Chat-Containers, nicht das gesamte Dashboard
+    const chatContainer = messagesEndRef.current?.parentElement;
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
+    // Nur auto-scrollen wenn User bereits am Ende ist
+    const chatContainer = messagesEndRef.current?.parentElement;
+    if (chatContainer) {
+      const isNearBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight < 100;
+      if (isNearBottom) {
+        scrollToBottom();
+      }
+    }
   }, [messages]);
 
   // Verbinde zum Chat und lade Emotes
