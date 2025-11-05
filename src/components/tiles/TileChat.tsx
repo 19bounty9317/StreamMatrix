@@ -130,8 +130,16 @@ export default function TileChat() {
   };
 
   useEffect(() => {
-    // Immer nach unten scrollen bei neuen Nachrichten
-    scrollToBottom();
+    // Nur nach unten scrollen wenn User bereits am Ende ist (innerhalb 150px)
+    const chatContainer = messagesEndRef.current?.parentElement;
+    if (chatContainer) {
+      const scrollBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight;
+      const isNearBottom = scrollBottom < 150;
+      
+      if (isNearBottom) {
+        scrollToBottom();
+      }
+    }
   }, [messages]);
 
   // Verbinde zum Chat und lade Emotes
