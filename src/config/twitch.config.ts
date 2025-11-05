@@ -25,7 +25,8 @@ export const TWITCH_CONFIG = {
     'moderator:manage:announcements', // Für Announcements
     'moderator:manage:chat_settings', // Für Chat-Modi (Slow, Follower-Only, etc.)
     'moderator:manage:shield_mode', // Für Shield-Mode
-    'moderator:manage:warnings' // Für Warnungen
+    'moderator:manage:warnings', // Für Warnungen
+    'user:read:follows' // Für Raid-Ziele (gefolgte Kanäle)
   ]
 };
 

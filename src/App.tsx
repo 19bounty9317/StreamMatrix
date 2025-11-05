@@ -31,7 +31,8 @@ function App() {
       { id: 'bits', name: 'Einnahmen-Übersicht', enabled: true },
       { id: 'channel-points', name: 'Rewards Queue', enabled: false },
       { id: 'hype-train', name: 'Hype Train', enabled: false },
-      { id: 'stream-settings', name: 'Stream-Einstellungen', enabled: false }
+      { id: 'stream-settings', name: 'Stream-Einstellungen', enabled: false },
+      { id: 'raid-targets', name: 'Raid-Ziele', enabled: true }
     ];
   });
 

@@ -15,6 +15,7 @@ import TileViewerStats from './tiles/TileViewerStats';
 import TileQuickActions from './tiles/TileQuickActions';
 import TileViewerList from './tiles/TileViewerList';
 import TileStreamPreview from './tiles/TileStreamPreview';
+import TileRaidTargets from './tiles/TileRaidTargets';
 
 interface Tile {
   id: string;
@@ -53,7 +54,8 @@ export default function Dashboard({ tiles, onCloseTile }: DashboardProps) {
     'channel-points': TileChannelPoints,
     'hype-train': TileHypeTrain,
     'stream-settings': TileStreamSettings,
-    'stream-preview': TileStreamPreview
+    'stream-preview': TileStreamPreview,
+    'raid-targets': TileRaidTargets
   };
 
   // Standard-Layout: Festes Layout wie im Screenshot
@@ -73,7 +75,8 @@ export default function Dashboard({ tiles, onCloseTile }: DashboardProps) {
       'channel-points': { x: 6, y: 9, w: 3, h: 3 },
       'hype-train': { x: 9, y: 7, w: 3, h: 3 },
       'viewer-stats': { x: 0, y: 10, w: 3, h: 3 },
-      'subs': { x: 3, y: 10, w: 3, h: 3 }
+      'subs': { x: 3, y: 10, w: 3, h: 3 },
+      'raid-targets': { x: 6, y: 10, w: 3, h: 4 }
     };
 
     return tiles.map((tile) => {
