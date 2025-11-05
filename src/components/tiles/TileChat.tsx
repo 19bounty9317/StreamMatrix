@@ -205,7 +205,24 @@ export default function TileChat() {
       } else {
         // Normale Nachricht senden
         const { twitchChat } = await import('../../services/TwitchChatService');
+        const { TwitchService } = await import('../../services/TwitchService');
+        
         twitchChat.sendMessage(message);
+        
+        // Füge eigene Nachricht sofort zum Chat hinzu
+        const user = TwitchService.getUserFromStorage();
+        if (user) {
+          const ownMessage: ChatMessage = {
+            id: `own-${Date.now()}`,
+            username: user.display_name || user.login,
+            message: message,
+            timestamp: new Date(),
+            color: '#9147FF', // Twitch Purple für eigene Nachrichten
+            badges: '',
+            tags: {}
+          };
+          setMessages(prev => [...prev, ownMessage].slice(-100));
+        }
       }
       
       setInputValue('');
