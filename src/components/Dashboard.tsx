@@ -103,10 +103,41 @@ export default function Dashboard({ tiles, onCloseTile }: DashboardProps) {
   const [layout, setLayout] = useState(() => {
     const saved = localStorage.getItem('dashboard-layout');
     if (saved) {
-      return JSON.parse(saved);
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Fehler beim Laden des Layouts:', e);
+        return getDefaultLayout(tiles);
+      }
     }
     return getDefaultLayout(tiles);
   });
+
+  // Update Layout wenn Tiles sich ändern (hinzufügen/entfernen)
+  useEffect(() => {
+    const layoutTileIds = new Set(layout.map((l: any) => l.i));
+    
+    // Prüfe ob Tiles hinzugefügt oder entfernt wurden
+    const tilesChanged = 
+      tiles.length !== layout.length ||
+      !tiles.every(t => layoutTileIds.has(t.id));
+    
+    if (tilesChanged) {
+      // Behalte Positionen für existierende Tiles, füge neue mit Default-Position hinzu
+      const newLayout = tiles.map(tile => {
+        const existing = layout.find((l: any) => l.i === tile.id);
+        if (existing) {
+          return existing;
+        }
+        // Neue Tile: Verwende Default-Position
+        const defaultLayout = getDefaultLayout([tile]);
+        return defaultLayout[0];
+      });
+      
+      setLayout(newLayout);
+      localStorage.setItem('dashboard-layout', JSON.stringify(newLayout));
+    }
+  }, [tiles]);
 
   // Lade Schriftgrößen
   const [fontSizes, setFontSizes] = useState<Record<string, number>>(() => {
