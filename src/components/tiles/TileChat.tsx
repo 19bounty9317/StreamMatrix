@@ -122,19 +122,16 @@ export default function TileChat() {
     // Scrolle nur innerhalb des Chat-Containers, nicht das gesamte Dashboard
     const chatContainer = messagesEndRef.current?.parentElement;
     if (chatContainer) {
-      chatContainer.scrollTop = chatContainer.scrollHeight;
+      // Verwende requestAnimationFrame für smooth scroll ohne Dashboard-Scroll
+      requestAnimationFrame(() => {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      });
     }
   };
 
   useEffect(() => {
-    // Nur auto-scrollen wenn User bereits am Ende ist
-    const chatContainer = messagesEndRef.current?.parentElement;
-    if (chatContainer) {
-      const isNearBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight < 100;
-      if (isNearBottom) {
-        scrollToBottom();
-      }
-    }
+    // Immer nach unten scrollen bei neuen Nachrichten
+    scrollToBottom();
   }, [messages]);
 
   // Verbinde zum Chat und lade Emotes
