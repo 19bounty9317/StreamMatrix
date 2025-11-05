@@ -20,7 +20,7 @@ interface UserInfo {
   is_following?: boolean;
 }
 
-export default function UserCard({ username, userId, color, badges, onClose, position }: UserCardProps) {
+export default function UserCard({ username, color, badges, onClose, position }: UserCardProps) {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -128,13 +128,15 @@ export default function UserCard({ username, userId, color, badges, onClose, pos
       
       {/* User Card */}
       <div 
-        className="fixed z-50 theme-tile rounded-lg shadow-2xl"
+        className="fixed z-50 rounded-lg shadow-2xl"
         style={{
           left: `${position.x}px`,
           top: `${position.y}px`,
           width: '320px',
           maxHeight: '500px',
-          overflow: 'auto'
+          overflow: 'auto',
+          backgroundColor: 'var(--color-tile)',
+          border: '1px solid var(--color-border)'
         }}
       >
         {loading ? (
@@ -144,7 +146,7 @@ export default function UserCard({ username, userId, color, badges, onClose, pos
         ) : userInfo ? (
           <div>
             {/* Header mit Profilbild */}
-            <div className="p-4 theme-tile-header rounded-t-lg">
+            <div className="p-4 rounded-t-lg" style={{ backgroundColor: 'var(--color-tile-header)' }}>
               <div className="flex items-start gap-3">
                 <img 
                   src={userInfo.profile_image_url} 
