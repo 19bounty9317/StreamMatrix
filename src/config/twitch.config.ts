@@ -19,8 +19,13 @@ export const TWITCH_CONFIG = {
     'moderator:read:chatters', // Für Live Viewer Liste
     'channel:read:hype_train',
     'channel:manage:broadcast',
+    'channel:manage:raids', // Für Raid-Funktion
     'moderator:manage:banned_users', // Für Ban/Timeout
-    'moderator:manage:chat_messages' // Für Message Delete
+    'moderator:manage:chat_messages', // Für Message Delete
+    'moderator:manage:announcements', // Für Announcements
+    'moderator:manage:chat_settings', // Für Chat-Modi (Slow, Follower-Only, etc.)
+    'moderator:manage:shield_mode', // Für Shield-Mode
+    'moderator:manage:warnings' // Für Warnungen
   ]
 };
 
