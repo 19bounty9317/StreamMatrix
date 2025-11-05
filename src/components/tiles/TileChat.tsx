@@ -399,6 +399,125 @@ export default function TileChat() {
         addSystemMessage(`📺 Werbung gestartet (${duration}s)`);
         break;
 
+      case '/uniquechat':
+        twitchChat.sendMessage('/uniquechat');
+        addSystemMessage('🔒 Unique-Chat aktiviert (R9K-Mode)');
+        break;
+
+      case '/uniquechatoff':
+        twitchChat.sendMessage('/uniquechatoff');
+        addSystemMessage('✅ Unique-Chat deaktiviert');
+        break;
+
+      case '/r9kbeta':
+        twitchChat.sendMessage('/r9kbeta');
+        addSystemMessage('🔒 R9K-Mode aktiviert');
+        break;
+
+      case '/r9kbetaoff':
+        twitchChat.sendMessage('/r9kbetaoff');
+        addSystemMessage('✅ R9K-Mode deaktiviert');
+        break;
+
+      case '/color':
+        if (args.length === 0) {
+          addSystemMessage('❌ Verwendung: /color <farbe>');
+          addSystemMessage('💡 Farben: Blue, Coral, DodgerBlue, SpringGreen, YellowGreen, Green, OrangeRed, Red, GoldenRod, HotPink, CadetBlue, SeaGreen, Chocolate, BlueViolet, Firebrick');
+          return;
+        }
+        twitchChat.sendMessage(`/color ${args[0]}`);
+        addSystemMessage(`🎨 Farbe geändert zu ${args[0]}`);
+        break;
+
+      case '/me':
+        if (args.length === 0) {
+          addSystemMessage('❌ Verwendung: /me <aktion>');
+          return;
+        }
+        twitchChat.sendMessage(command);
+        addSystemMessage(`💬 Aktion gesendet`);
+        break;
+
+      case '/announce':
+        if (args.length === 0) {
+          addSystemMessage('❌ Verwendung: /announce <nachricht>');
+          return;
+        }
+        twitchChat.sendMessage(command);
+        addSystemMessage(`📢 Ankündigung gesendet`);
+        break;
+
+      case '/announceblue':
+      case '/announcegreen':
+      case '/announceorange':
+      case '/announcepurple':
+        if (args.length === 0) {
+          addSystemMessage(`❌ Verwendung: ${cmd} <nachricht>`);
+          return;
+        }
+        twitchChat.sendMessage(command);
+        addSystemMessage(`📢 Farbige Ankündigung gesendet`);
+        break;
+
+      case '/delete':
+        if (args.length === 0) {
+          addSystemMessage('❌ Verwendung: /delete <message-id>');
+          return;
+        }
+        twitchChat.sendMessage(command);
+        addSystemMessage(`🗑️ Nachricht gelöscht`);
+        break;
+
+      case '/w':
+      case '/whisper':
+        if (args.length < 2) {
+          addSystemMessage('❌ Verwendung: /w <username> <nachricht>');
+          return;
+        }
+        twitchChat.sendMessage(command);
+        addSystemMessage(`💌 Whisper an ${args[0]} gesendet`);
+        break;
+
+      case '/marker':
+        const markerDesc = args.join(' ') || '';
+        twitchChat.sendMessage(`/marker ${markerDesc}`);
+        addSystemMessage(`📍 Stream-Marker gesetzt${markerDesc ? `: ${markerDesc}` : ''}`);
+        break;
+
+      case '/shield':
+        twitchChat.sendMessage('/shield');
+        addSystemMessage('🛡️ Shield-Mode aktiviert');
+        break;
+
+      case '/shieldoff':
+        twitchChat.sendMessage('/shieldoff');
+        addSystemMessage('✅ Shield-Mode deaktiviert');
+        break;
+
+      case '/warn':
+        if (args.length < 2) {
+          addSystemMessage('❌ Verwendung: /warn <username> <grund>');
+          return;
+        }
+        twitchChat.sendMessage(command);
+        addSystemMessage(`⚠️ ${args[0]} wurde verwarnt`);
+        break;
+
+      case '/requests':
+        twitchChat.sendMessage('/requests');
+        addSystemMessage('📋 Mod-Anfragen angezeigt');
+        break;
+
+      case '/mods':
+        twitchChat.sendMessage('/mods');
+        addSystemMessage('🛡️ Moderatoren-Liste angezeigt');
+        break;
+
+      case '/vips':
+        twitchChat.sendMessage('/vips');
+        addSystemMessage('💎 VIP-Liste angezeigt');
+        break;
+
       case '/help':
         showCommandHelp();
         break;
@@ -424,19 +543,35 @@ export default function TileChat() {
 
   const showCommandHelp = () => {
     const helpMessages = [
-      '📋 Verfügbare Befehle:',
+      '📋 Verfügbare Befehle (1/3):',
       '/raid <user> - Raiden',
       '/host <user> - Hosten',
-      '/mod <user> - Mod geben',
-      '/vip <user> - VIP geben',
-      '/ban <user> - Bannen',
+      '/mod <user> - Mod geben/entfernen',
+      '/vip <user> - VIP geben/entfernen',
+      '/ban <user> [grund] - Bannen',
+      '/unban <user> - Entbannen',
       '/timeout <user> <sec> - Timeout',
+      '/warn <user> <grund> - Verwarnen',
+      '',
+      '📋 Verfügbare Befehle (2/3):',
       '/clear - Chat leeren',
       '/slow <sec> - Slow-Mode',
       '/followers <min> - Follower-Only',
       '/subscribers - Sub-Only',
       '/emoteonly - Emote-Only',
-      '/commercial <sec> - Werbung'
+      '/uniquechat - R9K-Mode',
+      '/shield - Shield-Mode',
+      '',
+      '📋 Verfügbare Befehle (3/3):',
+      '/announce <text> - Ankündigung',
+      '/announceblue/green/orange/purple - Farbige Ankündigung',
+      '/me <aktion> - Aktion',
+      '/w <user> <text> - Whisper',
+      '/color <farbe> - Farbe ändern',
+      '/marker [text] - Stream-Marker',
+      '/commercial <sec> - Werbung',
+      '/mods - Moderatoren anzeigen',
+      '/vips - VIPs anzeigen'
     ];
     
     helpMessages.forEach(msg => addSystemMessage(msg));
