@@ -14,6 +14,8 @@ interface ChatMessage {
   isFirstMessage?: boolean;
   badges?: string;
   tags?: any;
+  isRaidNotice?: boolean; // Für Raid-Banner
+  raidTarget?: string; // Raid-Ziel
 }
 
 // Komponente zum Rendern von Nachrichten mit Emotes
@@ -266,7 +268,20 @@ export default function TileChat() {
           return;
         }
         twitchChat.sendMessage(`/raid ${args[0]}`);
-        addSystemMessage(`🚀 Raiding ${args[0]}...`);
+        
+        // Zeige Raid-Banner wie im Twitch Chat
+        const raidNotice: ChatMessage = {
+          id: `raid-notice-${Date.now()}`,
+          username: 'Raid',
+          message: `Du raidest jetzt ${args[0]}!`,
+          timestamp: new Date(),
+          color: '#9147FF',
+          badges: '',
+          tags: {},
+          isRaidNotice: true,
+          raidTarget: args[0]
+        };
+        setMessages(prev => [...prev, raidNotice].slice(-100));
         break;
 
       case '/unraid':
@@ -740,7 +755,38 @@ export default function TileChat() {
             <div className="text-sm">Warte auf Chat-Nachrichten...</div>
           </div>
         )}
-        {messages.map(msg => (
+        {messages.map(msg => {
+          // Raid-Banner (wie im Twitch Chat)
+          if (msg.isRaidNotice) {
+            return (
+              <div 
+                key={msg.id}
+                className="px-4 py-3 rounded mb-2 border-l-4"
+                style={{
+                  backgroundColor: 'rgba(145, 71, 255, 0.15)',
+                  borderLeftColor: '#9147FF'
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">🚀</span>
+                  <div className="flex-1">
+                    <div className="font-bold text-lg" style={{ color: '#9147FF' }}>
+                      Raid gestartet!
+                    </div>
+                    <div className="theme-text text-sm mt-1">
+                      Du raidest jetzt <span className="font-semibold">{msg.raidTarget}</span>
+                    </div>
+                    <div className="theme-text-secondary text-xs mt-1">
+                      Deine Zuschauer werden zu {msg.raidTarget} weitergeleitet
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          // Normale Nachricht
+          return (
           <div 
             key={msg.id} 
             className="group px-3 py-2 rounded border mb-2 theme-border"
@@ -821,7 +867,8 @@ export default function TileChat() {
               )}
             </div>
           </div>
-        ))}
+          );
+        })}
         <div ref={messagesEndRef} />
       </div>
       <form onSubmit={handleSendMessage} className="mt-2 pt-2" style={{ borderTop: '1px solid var(--color-border)' }}>
