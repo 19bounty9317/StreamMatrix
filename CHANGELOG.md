@@ -1,5 +1,33 @@
 # 📝 Changelog
 
+## Version 1.3.7 - Activity Feed & Chat Verbesserungen (05.11.2025)
+
+### ✨ Neue Features
+- **Activity Feed - Bits Anzeige**
+  - Bits/Cheers werden jetzt angezeigt
+  - Gelbes Icon für Bits
+  - Zeigt Username und Anzahl
+
+- **Activity Feed - Gruppierte Gift Subs**
+  - 5+ Gift Subs werden automatisch gruppiert
+  - Recipients werden als Badges angezeigt
+  - Intelligente 3-Sekunden-Gruppierung
+  - Einzelne Subs (<5) bleiben einzeln
+
+### 🔧 Verbesserungen
+- **Chat Auto-Scroll**
+  - Scrollt nur wenn User am Ende ist (150px)
+  - Bleibt an Position beim Lesen alter Nachrichten
+  - Wie im echten Twitch Chat
+  - Bessere UX
+
+### 🐛 Bugfixes
+- Chat scrollt nicht mehr das gesamte Dashboard
+- Intelligentes Auto-Scroll-Verhalten
+- Recipients werden schön formatiert
+
+---
+
 ## Version 1.3.6 - Bugfix-Release (05.11.2025)
 
 ### 🐛 Bugfixes
