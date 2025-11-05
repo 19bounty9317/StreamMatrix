@@ -1,5 +1,38 @@
 # 📝 Changelog
 
+## Version 1.3.6 - Bugfix-Release (05.11.2025)
+
+### 🐛 Bugfixes
+- **DevTools in Production**
+  - F12 oder Ctrl+Shift+I öffnet DevTools
+  - Auch in Production-Builds verfügbar
+  - Besseres Debugging möglich
+
+- **Chat-Verbesserungen**
+  - Eigene Nachrichten werden sofort angezeigt
+  - Dashboard scrollt nicht mehr automatisch
+  - Chat scrollt nur innerhalb des Containers
+  - Bessere UX beim Schreiben
+
+- **User-Card**
+  - Hintergrund hinzugefügt
+  - Bessere Sichtbarkeit
+  - Theme-kompatibel
+
+- **Activity Feed**
+  - Mehr Debug-Logs für Subs
+  - Mystery Gift Subs hinzugefügt
+  - Monatszahl bei Resubs
+  - Bessere Fehlersuche
+
+### 🔧 Technische Verbesserungen
+- scrollIntoView durch scrollTop ersetzt
+- Eigene Nachrichten mit User-Info
+- Explizite Hintergründe für User-Card
+- Verbesserte Event-Listener
+
+---
+
 ## Version 1.3.5 - User-Card & Stream-Qualität (04.11.2025)
 
 ### ✨ Neue Features

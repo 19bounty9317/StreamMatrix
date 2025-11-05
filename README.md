@@ -6,19 +6,19 @@ StreamMatrix ist eine professionelle Desktop-Anwendung, die Streamern ein umfass
 
 ## Download
 
-**Aktuelle Version: v1.3.5**
+**Aktuelle Version: v1.3.6**
 
 ### Windows
-- [StreamMatrix-Setup-1.3.5.exe](https://github.com/19bounty9317/StreamMatrix/releases/download/v1.3.5/StreamMatrix-Setup-1.3.5.exe)
-- [StreamMatrix-1.3.5-win.zip](https://github.com/19bounty9317/StreamMatrix/releases/download/v1.3.5/StreamMatrix-1.3.5-win.zip)
+- [StreamMatrix-Setup-1.3.6.exe](https://github.com/19bounty9317/StreamMatrix/releases/download/v1.3.6/StreamMatrix-Setup-1.3.6.exe)
+- [StreamMatrix-1.3.6-win.zip](https://github.com/19bounty9317/StreamMatrix/releases/download/v1.3.6/StreamMatrix-1.3.6-win.zip)
 
 ### macOS
-- [StreamMatrix-1.3.5.dmg](https://github.com/19bounty9317/StreamMatrix/releases/download/v1.3.5/StreamMatrix-1.3.5.dmg)
-- [StreamMatrix-1.3.5-mac.zip](https://github.com/19bounty9317/StreamMatrix/releases/download/v1.3.5/StreamMatrix-1.3.5-mac.zip)
+- [StreamMatrix-1.3.6.dmg](https://github.com/19bounty9317/StreamMatrix/releases/download/v1.3.6/StreamMatrix-1.3.6.dmg)
+- [StreamMatrix-1.3.6-mac.zip](https://github.com/19bounty9317/StreamMatrix/releases/download/v1.3.6/StreamMatrix-1.3.6-mac.zip)
 
 ### Linux
-- [StreamMatrix-1.3.5.AppImage](https://github.com/19bounty9317/StreamMatrix/releases/download/v1.3.5/StreamMatrix-1.3.5.AppImage)
-- [StreamMatrix-1.3.5-linux.tar.gz](https://github.com/19bounty9317/StreamMatrix/releases/download/v1.3.5/StreamMatrix-1.3.5-linux.tar.gz)
+- [StreamMatrix-1.3.6.AppImage](https://github.com/19bounty9317/StreamMatrix/releases/download/v1.3.6/StreamMatrix-1.3.6.AppImage)
+- [StreamMatrix-1.3.6-linux.tar.gz](https://github.com/19bounty9317/StreamMatrix/releases/download/v1.3.6/StreamMatrix-1.3.6-linux.tar.gz)
 
 ## Features
 
@@ -59,6 +59,6 @@ Siehe [LICENSE](LICENSE) für Details.
 
 ---
 
-**StreamMatrix v1.3.5**
+**StreamMatrix v1.3.6**
 
 Copyright © 2025 Michael Mader | StreamMatrix@web.de
