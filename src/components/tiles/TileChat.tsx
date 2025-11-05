@@ -162,7 +162,21 @@ export default function TileChat() {
           
           // Höre auf neue Nachrichten
           twitchChat.onMessage((msg: ChatMessage) => {
-            setMessages(prev => [...prev, msg].slice(-100)); // Max 100 Nachrichten
+            setMessages(prev => {
+              // Verhindere Duplikate: Prüfe ob Nachricht bereits existiert
+              // (z.B. eigene Nachricht die wir lokal hinzugefügt haben)
+              const isDuplicate = prev.some(m => 
+                m.username === msg.username && 
+                m.message === msg.message &&
+                Math.abs(m.timestamp.getTime() - msg.timestamp.getTime()) < 2000 // Innerhalb 2 Sekunden
+              );
+              
+              if (isDuplicate) {
+                return prev; // Nicht hinzufügen
+              }
+              
+              return [...prev, msg].slice(-100); // Max 100 Nachrichten
+            });
           });
           
           setIsConnecting(false);
