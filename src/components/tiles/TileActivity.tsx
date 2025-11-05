@@ -8,6 +8,7 @@ interface Activity {
   message?: string;
   amount?: number;
   timestamp: Date;
+  recipients?: string[]; // Für Gift Sub Recipients
 }
 
 export default function TileActivity() {
@@ -20,6 +21,9 @@ export default function TileActivity() {
     }
     return [];
   });
+
+  // State für Gift Sub Tracking (gruppiert mehrere Subs vom gleichen User)
+  const [, setGiftSubTracking] = useState<Map<string, { recipients: string[], timeout: NodeJS.Timeout }>>(new Map());
 
   // Speichere Aktivitäten
   useEffect(() => {
@@ -124,18 +128,85 @@ export default function TileActivity() {
           addActivity(activity);
         }
         
-        // Gift Subs
+        // Gift Subs - Gruppiere mehrere Subs vom gleichen User
         if (msgId === 'subgift') {
           console.log('🎁 Gift Sub erkannt von', data.username);
           const recipient = data.tags['msg-param-recipient-display-name'] || 'Jemand';
-          const activity: Activity = {
-            id: `subgift-${data.username}-${Date.now()}`,
-            type: 'sub',
-            username: data.username,
-            message: `hat ${recipient} ein Sub geschenkt!`,
-            timestamp: new Date()
-          };
-          addActivity(activity);
+          
+          setGiftSubTracking(prev => {
+            const newMap = new Map(prev);
+            const existing = newMap.get(data.username);
+            
+            if (existing) {
+              // Füge Recipient hinzu und reset Timeout
+              clearTimeout(existing.timeout);
+              existing.recipients.push(recipient);
+              
+              // Neuer Timeout: Nach 3 Sekunden ohne neue Subs → Activity erstellen
+              existing.timeout = setTimeout(() => {
+                const recipients = existing.recipients;
+                const count = recipients.length;
+                
+                if (count >= 5) {
+                  // 5+ Subs: Zeige zusammengefasst
+                  const activity: Activity = {
+                    id: `subgift-${data.username}-${Date.now()}`,
+                    type: 'sub',
+                    username: data.username,
+                    message: `hat ${count} Subs verschenkt!`,
+                    amount: count,
+                    recipients: recipients,
+                    timestamp: new Date()
+                  };
+                  addActivity(activity);
+                } else {
+                  // Weniger als 5: Zeige einzeln
+                  recipients.forEach(rec => {
+                    const activity: Activity = {
+                      id: `subgift-${data.username}-${rec}-${Date.now()}`,
+                      type: 'sub',
+                      username: data.username,
+                      message: `hat ${rec} ein Sub geschenkt!`,
+                      timestamp: new Date()
+                    };
+                    addActivity(activity);
+                  });
+                }
+                
+                // Entferne aus Tracking
+                setGiftSubTracking(m => {
+                  const newM = new Map(m);
+                  newM.delete(data.username);
+                  return newM;
+                });
+              }, 3000);
+              
+              newMap.set(data.username, existing);
+            } else {
+              // Erster Gift Sub von diesem User
+              const timeout = setTimeout(() => {
+                // Nach 3 Sekunden: Nur 1 Sub → Zeige einzeln
+                const activity: Activity = {
+                  id: `subgift-${data.username}-${recipient}-${Date.now()}`,
+                  type: 'sub',
+                  username: data.username,
+                  message: `hat ${recipient} ein Sub geschenkt!`,
+                  timestamp: new Date()
+                };
+                addActivity(activity);
+                
+                setGiftSubTracking(m => {
+                  const newM = new Map(m);
+                  newM.delete(data.username);
+                  return newM;
+                });
+              }, 3000);
+              
+              newMap.set(data.username, { recipients: [recipient], timeout });
+            }
+            
+            return newMap;
+          });
         }
 
         // Mystery Gift Subs (Masse)
@@ -249,8 +320,23 @@ export default function TileActivity() {
             <p className="theme-text-secondary text-sm">{activity.message}</p>
             {activity.amount && (
               <p className={`text-sm font-semibold mt-1 ${getColor(activity.type)}`}>
-                {activity.type === 'raid' ? `${activity.amount} Zuschauer` : `${activity.amount} Bits`}
+                {activity.type === 'raid' ? `${activity.amount} Zuschauer` : 
+                 activity.type === 'bits' ? `${activity.amount} Bits` :
+                 activity.type === 'sub' && activity.recipients ? `${activity.amount} Subs` : 
+                 `${activity.amount}`}
               </p>
+            )}
+            {activity.recipients && activity.recipients.length > 0 && (
+              <div className="mt-2 text-xs theme-text-secondary">
+                <div className="font-semibold mb-1">Recipients:</div>
+                <div className="flex flex-wrap gap-1">
+                  {activity.recipients.map((recipient, idx) => (
+                    <span key={idx} className="bg-purple-600/20 px-2 py-0.5 rounded">
+                      {recipient}
+                    </span>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
         </div>
