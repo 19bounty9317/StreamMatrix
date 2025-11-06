@@ -3,6 +3,7 @@ import StreamSessionTracker from '../services/StreamSessionTracker';
 
 export default function StreamSessionStats() {
   const [stats, setStats] = useState(StreamSessionTracker.getInstance().getStats());
+  const [, forceUpdate] = useState({});
 
   useEffect(() => {
     const tracker = StreamSessionTracker.getInstance();
@@ -11,16 +12,36 @@ export default function StreamSessionStats() {
       setStats(newStats);
     });
 
-    // Aktualisiere Stats alle 60 Sekunden
-    const interval = setInterval(() => {
-      const { TwitchService } = require('../services/TwitchService');
-      const user = TwitchService.getUserFromStorage();
-      if (user) {
-        tracker.updateCurrentStats(user.id);
-      }
-    }, 60000);
+    // Listener für Test-Mode Änderungen
+    const handleTestModeChange = () => {
+      setStats(tracker.getStats());
+      forceUpdate({});
+    };
 
-    return () => clearInterval(interval);
+    window.addEventListener('test-mode-change' as any, handleTestModeChange);
+
+    // Aktualisiere Stats alle 5 Sekunden im Test-Modus, sonst alle 60 Sekunden
+    const interval = setInterval(() => {
+      const isTestMode = localStorage.getItem('test-mode-active') === 'true';
+      const currentStats = tracker.getStats();
+      
+      if (currentStats) {
+        setStats({...currentStats});
+      }
+      
+      if (!isTestMode) {
+        const { TwitchService } = require('../services/TwitchService');
+        const user = TwitchService.getUserFromStorage();
+        if (user) {
+          tracker.updateCurrentStats(user.id);
+        }
+      }
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('test-mode-change' as any, handleTestModeChange);
+    };
   }, []);
 
   if (!stats || !stats.isLive) {
