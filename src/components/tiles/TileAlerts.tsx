@@ -3,22 +3,24 @@ import NotificationService, { AlertEvent } from '../../services/NotificationServ
 
 export default function TileAlerts() {
   const [alerts, setAlerts] = useState<AlertEvent[]>([]);
-  const [enabled, setEnabled] = useState(true);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [celebrationMode, setCelebrationMode] = useState<'full' | 'visual' | 'off'>(() => {
+    const saved = localStorage.getItem('celebration-mode');
+    return (saved as 'full' | 'visual' | 'off') || 'full';
+  });
 
   useEffect(() => {
     const notificationService = NotificationService.getInstance();
     
     notificationService.onAlert((event) => {
-      // Nur Raids anzeigen
-      if (event.type === 'raid') {
+      // Raids und Sub-Bomben (5+ Subs) anzeigen
+      if (event.type === 'raid' || (event.type === 'subscriber' && event.amount && event.amount >= 5)) {
         setAlerts(prev => [event, ...prev].slice(0, 20));
       }
     });
 
-    // Lade nur Raid-Alerts aus der Historie
+    // Lade Raid-Alerts und Sub-Bomben aus der Historie
     const history = notificationService.getAlertHistory();
-    setAlerts(history.filter(a => a.type === 'raid'));
+    setAlerts(history.filter(a => a.type === 'raid' || (a.type === 'subscriber' && a.amount && a.amount >= 5)));
   }, []);
 
   // Listener für Test-Events
@@ -27,21 +29,28 @@ export default function TileAlerts() {
       const data = event.detail;
       console.log('🧪 Alerts Test Event empfangen:', data);
       
-      // Nur Raids anzeigen, alles andere ist im Activity Feed
-      if (data.type !== 'raid') {
-        return;
+      // Raids und Sub-Bomben (5+ Gift Subs) anzeigen
+      if (data.type === 'raid') {
+        const testAlert: AlertEvent = {
+          id: `test-${Date.now()}`,
+          type: 'raid',
+          username: data.username,
+          amount: data.amount || 0,
+          message: getTestAlertMessage(data),
+          timestamp: new Date()
+        };
+        setAlerts(prev => [testAlert, ...prev].slice(0, 20));
+      } else if (data.type === 'gift-sub' && data.amount && data.amount >= 5) {
+        const testAlert: AlertEvent = {
+          id: `test-${Date.now()}`,
+          type: 'subscriber',
+          username: data.username,
+          amount: data.amount,
+          message: getTestAlertMessage(data),
+          timestamp: new Date()
+        };
+        setAlerts(prev => [testAlert, ...prev].slice(0, 20));
       }
-      
-      const testAlert: AlertEvent = {
-        id: `test-${Date.now()}`,
-        type: 'raid',
-        username: data.username,
-        amount: data.amount || 0,
-        message: getTestAlertMessage(data),
-        timestamp: new Date()
-      };
-      
-      setAlerts(prev => [testAlert, ...prev].slice(0, 20));
     };
 
     const getTestAlertMessage = (data: any) => {
@@ -78,16 +87,25 @@ export default function TileAlerts() {
     };
   }, []);
 
-  const toggleNotifications = () => {
-    const newState = !enabled;
-    setEnabled(newState);
-    NotificationService.getInstance().setEnabled(newState);
-  };
-
-  const toggleSound = () => {
-    const newState = !soundEnabled;
-    setSoundEnabled(newState);
-    NotificationService.getInstance().setSoundEnabled(newState);
+  const cycleCelebrationMode = () => {
+    let newMode: 'full' | 'visual' | 'off';
+    if (celebrationMode === 'full') {
+      newMode = 'visual';
+    } else if (celebrationMode === 'visual') {
+      newMode = 'off';
+    } else {
+      newMode = 'full';
+    }
+    
+    setCelebrationMode(newMode);
+    localStorage.setItem('celebration-mode', newMode);
+    
+    // Trigger Event für EventCelebration
+    const event = new CustomEvent('celebration-mode-change', { detail: newMode });
+    window.dispatchEvent(event);
+    
+    // Auch NotificationService aktualisieren
+    NotificationService.getInstance().setEnabled(newMode !== 'off');
   };
 
   const clearAlerts = () => {
@@ -131,21 +149,27 @@ export default function TileAlerts() {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <button
-            onClick={toggleNotifications}
-            className={`px-3 py-1 rounded text-xs ${
-              enabled ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-600 hover:bg-gray-700'
+            onClick={cycleCelebrationMode}
+            className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
+              celebrationMode === 'full' ? 'bg-green-600 hover:bg-green-700 text-white' :
+              celebrationMode === 'visual' ? 'bg-blue-600 hover:bg-blue-700 text-white' :
+              'bg-gray-600 hover:bg-gray-700 text-white'
             }`}
+            title={
+              celebrationMode === 'full' ? 'Alles an: Benachrichtigung + Emoji-Regen' :
+              celebrationMode === 'visual' ? 'Nur Visuell: Benachrichtigung ohne Emoji-Regen' :
+              'Alles aus: Keine visuellen Effekte'
+            }
           >
-            {enabled ? '🔔 An' : '🔕 Aus'}
+            {celebrationMode === 'full' ? '🔔 Voll' :
+             celebrationMode === 'visual' ? '🎨 Visuell' :
+             '🔕 Aus'}
           </button>
-          <button
-            onClick={toggleSound}
-            className={`px-3 py-1 rounded text-xs ${
-              soundEnabled ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'
-            }`}
-          >
-            {soundEnabled ? '🔊 Sound' : '🔇 Stumm'}
-          </button>
+          <div className="text-xs theme-text-secondary">
+            {celebrationMode === 'full' ? 'Benachrichtigung + Regen' :
+             celebrationMode === 'visual' ? 'Nur Benachrichtigung' :
+             'Keine Effekte'}
+          </div>
         </div>
         <button
           onClick={clearAlerts}
@@ -159,24 +183,30 @@ export default function TileAlerts() {
         {alerts.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
             <div className="text-4xl mb-2">🚀</div>
-            <div className="text-sm theme-text">Keine Raids bisher</div>
-            <div className="text-xs mt-2 theme-text-secondary">Raids werden hier angezeigt</div>
+            <div className="text-sm theme-text">Keine Alerts bisher</div>
+            <div className="text-xs mt-2 theme-text-secondary">Raids & Sub-Bomben (5+) werden hier angezeigt</div>
           </div>
         ) : (
           alerts.map((alert, index) => (
             <div
               key={index}
-              className="theme-tile-content-bg p-3 rounded border-l-4 border-red-500"
+              className={`theme-tile-content-bg p-3 rounded border-l-4 ${
+                alert.type === 'raid' ? 'border-red-500' : 'border-purple-500'
+              }`}
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-start gap-2">
-                  <span className="text-xl">🚀</span>
+                  <span className="text-xl">{alert.type === 'raid' ? '🚀' : '⭐'}</span>
                   <div>
                     <div className="font-semibold theme-text text-lg">
                       {alert.username}
                     </div>
-                    <div className="text-sm text-red-400 font-semibold">
-                      {alert.amount || 0} Zuschauer
+                    <div className={`text-sm font-semibold ${
+                      alert.type === 'raid' ? 'text-red-400' : 'text-purple-400'
+                    }`}>
+                      {alert.type === 'raid' 
+                        ? `${alert.amount || 0} Zuschauer` 
+                        : `${alert.amount || 0} Subs verschenkt`}
                     </div>
                   </div>
                 </div>
@@ -184,12 +214,14 @@ export default function TileAlerts() {
                   {formatTime(alert.timestamp)}
                 </span>
               </div>
-              <button
-                onClick={() => sendShoutout(alert.username)}
-                className="w-full px-3 py-2 rounded bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-sm font-semibold transition-all shadow-md hover:shadow-lg"
-              >
-                📢 Shoutout senden
-              </button>
+              {alert.type === 'raid' && (
+                <button
+                  onClick={() => sendShoutout(alert.username)}
+                  className="w-full px-3 py-2 rounded bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-sm font-semibold transition-all shadow-md hover:shadow-lg"
+                >
+                  📢 Shoutout senden
+                </button>
+              )}
             </div>
           ))
         )}
