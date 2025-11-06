@@ -9,40 +9,46 @@ Die brandneue Hype Train Kachel zeigt deinen aktiven Hype Train in Echtzeit:
 - ⏱️ **Verbleibende Zeit** wird live aktualisiert (Minuten:Sekunden)
 - 🎬 **Visuelle Effekte** beim Start (Zug fährt von rechts nach links, 5 Sekunden)
 - 🎬 **Visuelle Effekte** beim Ende (Zug fährt gespiegelt von links nach rechts, 5 Sekunden)
-- �  **Details im Activity Feed** nach Hype Train Ende (Level, Subs, Bits beigetragen)
+- 📝 **Details im Activity Feed** nach Hype Train Ende (Level, Subs, Bits beigetragen)
 - 🔄 **Automatische Aktualisierung** alle 10 Sekunden
 - 🎨 **Animiertes Zug-Emoji** mit orangenem Glow-Effekt
 - 📢 **Benachrichtigung** mit Animation bei Start und Ende
 - ⚫ **Inaktiv-Anzeige** wenn kein Hype Train läuft
 
-### � Komplaett überarbeitete Raid-Alerts
-Raids bekommen jetzt die Aufmerksamkeit, die sie verdienen:
-- 🎯 **Dedizierte Kachel** "Alerts & Benachrichtigungen" zeigt NUR noch Raids
+### 🚀 Komplett überarbeitete Raid-Alerts & Sub-Bomben
+Raids und große Sub-Geschenke bekommen jetzt die Aufmerksamkeit, die sie verdienen:
+
+**Raids:**
+- 🎯 **Dedizierte Anzeige** in "Alerts & Benachrichtigungen"
 - 📢 **Shoutout-Button** sendet automatisch `/shoutout` Befehl an Twitch
-- � * *Zuschauerzahl** wird prominent in Rot angezeigt
+- 👥 **Zuschauerzahl** wird prominent in Rot angezeigt
 - 🎨 **Rote Border** für bessere Sichtbarkeit
 - ⚡ **Schnelle Reaktion** - Ein Klick für Shoutout
-- � **Grörßere Darstellung** mit mehr Platz pro Raid
 - ⏰ **Timestamp** wann der Raid kam
-- 🔔 **Sound & Desktop-Benachrichtigung** (wenn aktiviert)
 
-### � Aictivity Feed Komplett-Überarbeitung
+**Sub-Bomben (5+ Gift Subs):**
+- ⭐ **Anzeige bei großen Sub-Geschenken** (5 oder mehr Subs)
+- 💜 **Lila Border** zur Unterscheidung von Raids
+- 📊 **Zeigt nur Anzahl** - keine einzelnen Empfänger-Namen
+- 🎯 **Fokus auf wichtige Events** - kleine Gift Subs bleiben im Activity Feed
+
+### 📊 Activity Feed Komplett-Überarbeitung
 Der Activity Feed wurde von Grund auf neu gestaltet:
-- � **Hypev Train Ende** wird mit Details angezeigt:
+- � **Hylpe Train Ende** wird mit Details angezeigt:
   - Level erreicht
   - ⭐ Anzahl Subs beigetragen
-  - � Aknzahl Bits beigetragen
-- 📅 **Korrekte Sortierung** - neueste Events IMMER oben (war vorher buggy)
-- 🎯 **Alle Events** außer Raids:
+  - � Anzaahl Bits beigetragen
+- � **Korerekte Sortierung** - neueste Events IMMER oben (war vorher buggy)
+- � **Aelle Events** außer Raids:
   - 👤 Follower
   - ⭐ Subs (normal & Gift Subs)
-  - 💎 Bits/Cheers
+  - � Biöts/Cheers
   - 💵 Donations
-  - 🚂 Hype Train Ende
+  - � Hiype Train Ende
 - 🎨 **Bessere Übersichtlichkeit** durch optimierte Darstellung
 - 🏷️ **Gift Sub Recipients** werden angezeigt (bei 5+ Subs zusammengefasst)
 - ⏰ **Relative Zeitanzeige** (vor 2m, vor 1h, etc.)
-- 🗑️ **Löschen-Button** zum Zurücksetzen des Feeds
+- �️ **Lölschen-Button** zum Zurücksetzen des Feeds
 
 ### 👥 Live Viewer Kachel Erweiterung
 Mehr Kontrolle über deine Viewer-Liste:
@@ -78,18 +84,20 @@ Das Tutorial wurde von Grund auf neu geschrieben:
 - 📝 **Detaillierte Erklärungen** für alle neuen Features
 - 🎯 **Fokus auf praktische Nutzung** statt nur Theorie
 
-### � Elegtante Update-Benachrichtigungen
+### 💎 Elegante Update-Benachrichtigungen
 Komplett neu gestaltete Update-Hinweise:
-- � **Kormpakte Anzeige** im Footer (rechts unten) statt störendem Banner
-- � **Cayan/Türkis Design** mit Glow-Effekt für bessere Sichtbarkeit
+- � **KHompakte Anzeige** im Footer (rechts unten) statt störendem Banner
+- 🎨 **Cyan/Türkis Design** mit Glow-Effekt für bessere Sichtbarkeit
 - ⏸️ **"Später" Button** - Update wird nicht mehr angezeigt bis zur nächsten Version
 - 💾 **Speichert abgelehnte Version** in localStorage
 - ❌ **Kein störendes Banner** mehr oben im Dashboard
 - 🎯 **Pulsierender Text** für Aufmerksamkeit
-- 🖱️ **Hover-Effekt** auf Button für besseres Feedback
+- �️ *H*Hover-Effekt** auf Button für besseres Feedback
 
-### 🎉 Event Celebration Erweiterungen
-Neue visuelle Effekte für Events:
+### 🎉 Event Celebration Erweiterungen & Steuerung
+Neue visuelle Effekte für Events mit voller Kontrolle:
+
+**Hype Train Animationen:**
 - 🚂 **Hype Train Start** - 3 Züge fahren von rechts nach links (5 Sekunden)
 - 🚂 **Hype Train Ende** - 3 Züge fahren gespiegelt von links nach rechts (5 Sekunden)
 - 🎨 **Orangener Glow-Effekt** um die Züge
@@ -97,9 +105,17 @@ Neue visuelle Effekte für Events:
 - 🎯 **Keine Emoji-Regen** für Hype Train (nur Zug-Animation)
 - ⚙️ **Test-Buttons** in Settings für Hype Train Start & Ende
 
+**Celebration Mode Steuerung (NEU!):**
+- 🔔 **Voll-Modus** - Benachrichtigung + Emoji-Regen + Animationen
+- 🎨 **Visuell-Modus** - Nur Benachrichtigung, kein Emoji-Regen
+- � **ZAus-Modus** - Keine visuellen Effekte
+- � **Eeinstellung wird gespeichert** und beim nächsten Start wiederhergestellt
+- � **Eins Button zum Durchschalten** in Alerts & Benachrichtigungen
+- � **Insfo-Text** zeigt aktuellen Modus an
+
 ### 🔧 Sonstige Verbesserungen
 - 📦 **Zentrale Versionsverwaltung** in `src/config/version.ts`
-- 📊 **Version** wird in Footer (v1.4.0) und Einstellungen angezeigt
+- � **Versxion** wird in Footer (v1.4.0) und Einstellungen angezeigt
 - 🎨 **Konsistenteres Design** über alle Komponenten
 - 🔄 **Bessere Performance** durch optimierte Updates
 - 📝 **Klarere Beschriftungen** in allen Kacheln
@@ -114,13 +130,14 @@ Neue visuelle Effekte für Events:
 - ✅ **Update-Banner** verschwindet nicht mehr nach Reload
 - ✅ **Live Viewer Filter** wird korrekt gespeichert und wiederhergestellt
 - ✅ **Event Celebration** - Hype Train triggert keine doppelten Events mehr
+- ✅ **Celebration Mode** - Einstellung wird persistent gespeichert
 
 ## 📥 Download
 
 **Windows (x64):**
 - [StreamMatrix-Setup-1.4.0.exe](https://github.com/19bounty9317/StreamMatrix/releases/download/v1.4.0/StreamMatrix-Setup-1.4.0.exe) (~75 MB)
 
-## 🔄 Update
+## � Updante
 
 Wenn du bereits StreamMatrix installiert hast, wirst du automatisch über das Update benachrichtigt. Die neue Version wird beim nächsten Start installiert.
 
@@ -132,29 +149,31 @@ Wenn du bereits StreamMatrix installiert hast, wirst du automatisch über das Up
 - **React:** 18
 - **Vite:** 5.4.20
 - **TypeScript:** Latest
-- **Neue Dateien:** 1 (`src/config/version.ts`)
-- **Geänderte Dateien:** 14
-- **Zeilen hinzugefügt:** 395
-- **Zeilen entfernt:** 74
+- **Neue Dateien:** 2 (`src/config/version.ts`, `GITHUB-RELEASE-v1.4.0.md`)
+- **Geänderte Dateien:** 16
+- **Zeilen hinzugefügt:** 700+
+- **Zeilen entfernt:** 130+
 
-## 📋 Vollständige Änderungen
+## �A Vollständige Änderungen
 
 ### Neue Features
 - 🚂 Hype Train Kachel mit Live-Anzeige (Level, Progress, Countdown)
 - 🎬 Hype Train Animationen (Start: rechts→links, Ende: links→rechts, je 5 Sekunden)
-- 📝 Hype Train Details im Activity Feed (Level, Subs, Bits)
-- 🚀 Raid-only Alerts & Benachrichtigungen Kachel
+- � Hype Tra in Details im Activity Feed (Level, Subs, Bits)
+- � Alertts & Benachrichtigungen zeigt Raids + Sub-Bomben (5+)
 - 📢 Shoutout-Button für Raids (sendet `/shoutout` Befehl)
+- ⭐ Sub-Bomben Anzeige (5+ Gift Subs, ohne Empfänger-Namen)
+- 🎨 Celebration Mode Steuerung (Voll/Visuell/Aus)
 - 🟢 Aktiv/Alle Schalter in Live Viewer (letzte 5 Min Filter)
-- 📦 Zentrale Versionsverwaltung (`src/config/version.ts`)
-- 💎 Update-Benachrichtigungen im Footer (Cyan Design)
+- � Zuentrale Versionsverwaltung (`src/config/version.ts`)
+- � AUpdate-Benachrichtigungen im Footer (Cyan Design)
 - ⏸️ "Später" Button für Updates (speichert Ablehnung)
 - 🎯 Test-Buttons für Hype Train in Settings
 
 ### Verbesserungen
 - 📚 Tutorial komplett überarbeitet (8 detaillierte Schritte)
-- 📊 Activity Feed Sortierung (neueste immer oben)
-- 🔄 Raid-Ziele Aktualisierungsintervall (30s statt 60s)
+- � Aectivity Feed Sortierung (neueste immer oben)
+- � Reaid-Ziele Aktualisierungsintervall (30s statt 60s)
 - 🔄 Live Viewer Aktualisierungsintervall (30s statt 60s)
 - 🎨 UI-Konsistenz über alle Komponenten
 - 📝 Klarere Beschriftungen und Info-Texte
@@ -170,6 +189,7 @@ Wenn du bereits StreamMatrix installiert hast, wirst du automatisch über das Up
 - ✅ Update-Banner Persistenz
 - ✅ Live Viewer Filter Speicherung
 - ✅ Event Celebration Duplikate
+- ✅ Celebration Mode Persistenz
 
 ## 🐛 Bug Reports
 
