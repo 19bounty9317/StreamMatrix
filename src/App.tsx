@@ -46,6 +46,9 @@ function App() {
   const [streamBitrate, setStreamBitrate] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [testModeActive, setTestModeActive] = useState(() => {
+    return localStorage.getItem('test-mode-active') === 'true';
+  });
 
   // Update-Listener
   useEffect(() => {
@@ -55,6 +58,19 @@ function App() {
         console.log('Update verfügbar:', info.version);
       });
     }
+  }, []);
+
+  // Test-Mode Listener
+  useEffect(() => {
+    const handleTestModeChange = (event: CustomEvent<boolean>) => {
+      setTestModeActive(event.detail);
+    };
+
+    window.addEventListener('test-mode-change' as any, handleTestModeChange);
+
+    return () => {
+      window.removeEventListener('test-mode-change' as any, handleTestModeChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -181,6 +197,24 @@ function App() {
             className="ml-4 px-3 py-1 rounded bg-white bg-opacity-20 hover:bg-opacity-30 transition-all"
           >
             ✕
+          </button>
+        </div>
+      )}
+
+      {/* Test-Mode Banner */}
+      {testModeActive && (
+        <div className="fixed top-0 left-0 right-0 z-50 p-3 text-center bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold shadow-lg animate-pulse">
+          ⚠️ TEST-MODUS AKTIV - Events werden simuliert
+          <button 
+            onClick={() => {
+              localStorage.setItem('test-mode-active', 'false');
+              setTestModeActive(false);
+              const event = new CustomEvent('test-mode-change', { detail: false });
+              window.dispatchEvent(event);
+            }}
+            className="ml-4 px-3 py-1 rounded bg-white bg-opacity-20 hover:bg-opacity-30 transition-all"
+          >
+            Test-Modus beenden
           </button>
         </div>
       )}
