@@ -1,7 +1,7 @@
 // Service für Desktop-Benachrichtigungen und Alerts
 
 interface AlertEvent {
-  type: 'follower' | 'subscriber' | 'bits' | 'raid' | 'host';
+  type: 'follower' | 'subscriber' | 'bits' | 'raid' | 'host' | 'donation';
   username: string;
   amount?: number;
   message?: string;

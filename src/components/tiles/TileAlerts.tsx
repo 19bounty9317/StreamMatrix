@@ -26,7 +26,8 @@ export default function TileAlerts() {
         id: `test-${Date.now()}`,
         type: data.type === 'sub' || data.type === 'gift-sub' ? 'subscriber' : 
               data.type === 'follow' ? 'follower' :
-              data.type === 'bits' || data.type === 'donation' ? 'bits' :
+              data.type === 'bits' ? 'bits' :
+              data.type === 'donation' ? 'donation' :
               data.type === 'raid' ? 'raid' : 'other',
         username: data.username,
         message: getTestAlertMessage(data),
@@ -86,6 +87,7 @@ export default function TileAlerts() {
       case 'bits': return '💎';
       case 'raid': return '🚀';
       case 'host': return '📺';
+      case 'donation': return '💵';
       default: return '🔔';
     }
   };
