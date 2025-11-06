@@ -345,9 +345,26 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
                     checked={(() => {
                       return localStorage.getItem('test-mode-active') === 'true';
                     })()}
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const isActive = e.target.checked;
                       localStorage.setItem('test-mode-active', isActive.toString());
+                      
+                      // Wenn Test-Modus aktiviert wird, starte Test-Session
+                      if (isActive) {
+                        const StreamSessionTracker = (await import('../services/StreamSessionTracker')).default;
+                        const tracker = StreamSessionTracker.getInstance();
+                        const existingStats = tracker.getStats();
+                        
+                        if (!existingStats || !existingStats.isLive) {
+                          // Starte Test-Session mit Dummy-Werten
+                          const { TwitchService } = await import('../services/TwitchService');
+                          const user = TwitchService.getUserFromStorage();
+                          if (user) {
+                            await tracker.startSession(user.id);
+                          }
+                        }
+                      }
+                      
                       // Trigger Event für alle Komponenten
                       const event = new CustomEvent('test-mode-change', { detail: isActive });
                       window.dispatchEvent(event);
