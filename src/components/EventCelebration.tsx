@@ -30,6 +30,10 @@ export default function EventCelebration() {
     const saved = localStorage.getItem('celebration-duration');
     return saved ? parseInt(saved) : 5;
   });
+  const [celebrationMode, setCelebrationMode] = useState<'full' | 'visual' | 'off'>(() => {
+    const saved = localStorage.getItem('celebration-mode');
+    return (saved as 'full' | 'visual' | 'off') || 'full';
+  });
 
   useEffect(() => {
     // Globaler Event-Listener für Celebrations
@@ -40,17 +44,25 @@ export default function EventCelebration() {
         timestamp: Date.now()
       };
 
+      // Prüfe Celebration-Mode
+      if (celebrationMode === 'off') {
+        return; // Keine visuellen Effekte
+      }
+
       setEvents(prev => [...prev, newEvent]);
 
-      // Spezial-Animation für Hype Train
-      if (newEvent.type === 'hypetrain') {
-        createTrainAnimation('left', newEvent.amount);
-      } else if (newEvent.type === 'hypetrain-end') {
-        createTrainAnimation('right', newEvent.amount);
-      } else {
-        // Erstelle Emoji-Regen für andere Events
-        createEmojiRain(newEvent.type);
+      // Spezial-Animation für Hype Train (nur bei 'full' Mode)
+      if (celebrationMode === 'full') {
+        if (newEvent.type === 'hypetrain') {
+          createTrainAnimation('left', newEvent.amount);
+        } else if (newEvent.type === 'hypetrain-end') {
+          createTrainAnimation('right', newEvent.amount);
+        } else {
+          // Erstelle Emoji-Regen für andere Events
+          createEmojiRain(newEvent.type);
+        }
       }
+      // Bei 'visual' Mode: Nur Benachrichtigung, kein Emoji-Regen
 
       // Entferne Event nach eingestellter Dauer
       setTimeout(() => {
@@ -76,6 +88,20 @@ export default function EventCelebration() {
 
     return () => {
       window.removeEventListener('celebration-duration-change' as any, handleDurationChange);
+    };
+  }, []);
+
+  // Listener für Celebration-Mode Änderungen
+  useEffect(() => {
+    const handleModeChange = (event: CustomEvent<'full' | 'visual' | 'off'>) => {
+      setCelebrationMode(event.detail);
+      localStorage.setItem('celebration-mode', event.detail);
+    };
+
+    window.addEventListener('celebration-mode-change' as any, handleModeChange);
+
+    return () => {
+      window.removeEventListener('celebration-mode-change' as any, handleModeChange);
     };
   }, []);
 
