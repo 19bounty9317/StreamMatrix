@@ -169,7 +169,7 @@ export class TwitchChatService {
         const tagString = tagMatch[1];
         tagString.split(';').forEach(tag => {
           const [key, value] = tag.split('=');
-          tags[key] = value;
+          tags[key] = value ? value.replace(/\\s/g, ' ') : value; // Decode escaped spaces
         });
       }
 
@@ -181,15 +181,58 @@ export class TwitchChatService {
       const messageMatch = rawMessage.match(/USERNOTICE #[^ ]+ :(.+)/);
       const message = messageMatch ? messageMatch[1] : '';
 
+      // Bestimme den Typ der Nachricht
+      const msgId = tags['msg-id'];
+      let displayMessage = message || tags['system-msg'] || '';
+      let noticeType = 'general';
+
+      // Watch Streak (Zuschauer-Serie)
+      if (msgId === 'viewermilestone') {
+        const streakMonths = tags['msg-param-value'] || '?';
+        const category = tags['msg-param-category'] || 'watch-streak';
+        
+        if (category === 'watch-streak') {
+          noticeType = 'watch-streak';
+          displayMessage = `${tags['display-name'] || username} hat momentan eine ${streakMonths}-Streams-Serie!`;
+        }
+      }
+
+      // Channel Points Redemption
+      if (msgId === 'highlighted-message') {
+        noticeType = 'highlighted-message';
+        displayMessage = `${tags['display-name'] || username} hat eine Nachricht hervorgehoben`;
+      }
+
+      // Custom Reward (Channel Points)
+      if (msgId === 'custom-reward-id' || tags['custom-reward-id']) {
+        noticeType = 'channel-points';
+        const rewardTitle = tags['msg-param-reward-title'] || 'Belohnung';
+        displayMessage = `${tags['display-name'] || username} hat "${rewardTitle}" eingelöst`;
+        if (message) {
+          displayMessage += `: ${message}`;
+        }
+      }
+
+      // Subs, Resubs, Gift Subs
+      if (msgId === 'sub' || msgId === 'resub') {
+        noticeType = 'subscription';
+      } else if (msgId === 'subgift' || msgId === 'submysterygift') {
+        noticeType = 'gift-sub';
+      } else if (msgId === 'raid') {
+        noticeType = 'raid';
+      }
+
       return {
         id: tags['id'] || Date.now().toString(),
         username: tags['display-name'] || username,
-        message: message || tags['system-msg'] || '',
+        message: displayMessage,
         color: tags['color'] || this.getRandomColor(),
         badges: tags['badges'] || '',
         timestamp: new Date(),
         tags: tags,
-        bits: null // USERNOTICE hat keine Bits
+        bits: null,
+        noticeType: noticeType, // Füge Typ hinzu
+        msgId: msgId // Füge msg-id hinzu
       };
     } catch (error) {
       console.error('Fehler beim Parsen der USERNOTICE:', error);

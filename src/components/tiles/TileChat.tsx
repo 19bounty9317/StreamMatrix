@@ -16,6 +16,8 @@ interface ChatMessage {
   tags?: any;
   isRaidNotice?: boolean; // Für Raid-Banner
   raidTarget?: string; // Raid-Ziel
+  noticeType?: string; // Typ der Benachrichtigung
+  msgId?: string; // Message ID für spezielle Events
 }
 
 // Komponente zum Rendern von Nachrichten mit Emotes
@@ -223,6 +225,8 @@ export default function TileChat() {
     const interval = setInterval(loadViewerCount, 30000);
     return () => clearInterval(interval);
   }, []);
+
+
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -724,22 +728,22 @@ export default function TileChat() {
           </button>
         )}
         <div className="flex items-center gap-2">
-        <button
-          onClick={toggleHighlight}
-          className="text-xs theme-text-secondary px-2 py-1 theme-button rounded flex items-center gap-1"
-          title="Nachrichten hervorheben"
-        >
-          <span>💬</span>
-          <span>{highlightMessages ? 'Felder aus' : 'Felder an'}</span>
-        </button>
-        <button
-          onClick={toggleTimestamps}
-          className="text-xs theme-text-secondary px-2 py-1 theme-button rounded flex items-center gap-1"
-          title="Zeitstempel ein/ausblenden"
-        >
-          <span>🕐</span>
-          <span>{showTimestamps ? 'Uhrzeit aus' : 'Uhrzeit an'}</span>
-        </button>
+          <button
+            onClick={toggleHighlight}
+            className="text-xs theme-text-secondary px-2 py-1 theme-button rounded flex items-center gap-1"
+            title="Nachrichten hervorheben"
+          >
+            <span>💬</span>
+            <span>{highlightMessages ? 'Felder aus' : 'Felder an'}</span>
+          </button>
+          <button
+            onClick={toggleTimestamps}
+            className="text-xs theme-text-secondary px-2 py-1 theme-button rounded flex items-center gap-1"
+            title="Zeitstempel ein/ausblenden"
+          >
+            <span>🕐</span>
+            <span>{showTimestamps ? 'Uhrzeit aus' : 'Uhrzeit an'}</span>
+          </button>
         </div>
       </div>
       <div className="flex-1 overflow-y-auto">
@@ -778,6 +782,84 @@ export default function TileChat() {
                     </div>
                     <div className="theme-text-secondary text-xs mt-1">
                       Deine Zuschauer werden zu {msg.raidTarget} weitergeleitet
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          // Watch Streak (Zuschauer-Serie)
+          if (msg.noticeType === 'watch-streak') {
+            return (
+              <div 
+                key={msg.id}
+                className="px-4 py-3 rounded mb-2 border-l-4"
+                style={{
+                  backgroundColor: 'rgba(147, 51, 234, 0.15)',
+                  borderLeftColor: '#9333EA'
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">🔥</span>
+                  <div className="flex-1">
+                    <div className="font-bold text-base" style={{ color: '#9333EA' }}>
+                      Zuschauerserie erreicht!
+                    </div>
+                    <div className="theme-text text-sm mt-1">
+                      {msg.message}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          // Channel Points Redemption
+          if (msg.noticeType === 'channel-points') {
+            return (
+              <div 
+                key={msg.id}
+                className="px-4 py-3 rounded mb-2 border-l-4"
+                style={{
+                  backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                  borderLeftColor: '#22C55E'
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">💎</span>
+                  <div className="flex-1">
+                    <div className="font-bold text-base" style={{ color: '#22C55E' }}>
+                      Kanalpunkte eingelöst
+                    </div>
+                    <div className="theme-text text-sm mt-1">
+                      {msg.message}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          // Highlighted Message
+          if (msg.noticeType === 'highlighted-message') {
+            return (
+              <div 
+                key={msg.id}
+                className="px-4 py-3 rounded mb-2 border-l-4"
+                style={{
+                  backgroundColor: 'rgba(251, 191, 36, 0.15)',
+                  borderLeftColor: '#FBBF24'
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">⭐</span>
+                  <div className="flex-1">
+                    <div className="font-bold text-base" style={{ color: '#FBBF24' }}>
+                      Hervorgehobene Nachricht
+                    </div>
+                    <div className="theme-text text-sm mt-1">
+                      <span className="font-semibold" style={{ color: msg.color }}>{msg.username}</span>: {msg.message}
                     </div>
                   </div>
                 </div>
