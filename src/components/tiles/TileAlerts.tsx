@@ -16,6 +16,52 @@ export default function TileAlerts() {
     setAlerts(notificationService.getAlertHistory());
   }, []);
 
+  // Listener für Test-Events
+  useEffect(() => {
+    const handleTestEvent = (event: CustomEvent) => {
+      const data = event.detail;
+      console.log('🧪 Alerts Test Event empfangen:', data);
+      
+      const testAlert: AlertEvent = {
+        id: `test-${Date.now()}`,
+        type: data.type === 'sub' || data.type === 'gift-sub' ? 'subscriber' : 
+              data.type === 'follow' ? 'follower' :
+              data.type === 'bits' || data.type === 'donation' ? 'bits' :
+              data.type === 'raid' ? 'raid' : 'other',
+        username: data.username,
+        message: getTestAlertMessage(data),
+        timestamp: new Date()
+      };
+      
+      setAlerts(prev => [testAlert, ...prev].slice(0, 20));
+    };
+
+    const getTestAlertMessage = (data: any) => {
+      switch (data.type) {
+        case 'sub':
+          return 'hat subscribed!';
+        case 'gift-sub':
+          return `hat ${data.amount || 1} Subs verschenkt!`;
+        case 'bits':
+          return `hat ${data.amount || 0} Bits gecheert!`;
+        case 'follow':
+          return 'folgt dir jetzt!';
+        case 'raid':
+          return `raidet mit ${data.amount || 0} Zuschauern!`;
+        case 'donation':
+          return `hat ${data.amount || 0}€ gespendet!`;
+        default:
+          return 'Test Event';
+      }
+    };
+
+    window.addEventListener('test-event-trigger' as any, handleTestEvent);
+
+    return () => {
+      window.removeEventListener('test-event-trigger' as any, handleTestEvent);
+    };
+  }, []);
+
   const toggleNotifications = () => {
     const newState = !enabled;
     setEnabled(newState);

@@ -201,6 +201,57 @@ export default function TileChat() {
     };
   }, []);
 
+  // Listener für Test-Events
+  useEffect(() => {
+    const handleTestEvent = (event: CustomEvent) => {
+      const data = event.detail;
+      console.log('🧪 Chat Test Event empfangen:', data);
+      
+      const testMessage: ChatMessage = {
+        id: `test-${Date.now()}`,
+        username: data.username,
+        message: getTestChatMessage(data),
+        timestamp: new Date(),
+        color: '#9147FF',
+        badges: getTestBadges(data.type),
+        tags: {}
+      };
+      
+      setMessages(prev => [...prev, testMessage].slice(-100));
+    };
+
+    const getTestChatMessage = (data: any) => {
+      switch (data.type) {
+        case 'sub':
+          return 'Danke für den Sub! ⭐';
+        case 'gift-sub':
+          return `Verschenkt ${data.amount || 1} Subs! 🎁`;
+        case 'bits':
+          return `Cheers ${data.amount || 0} Bits! 💎`;
+        case 'follow':
+          return 'Danke fürs Folgen! 👤';
+        case 'raid':
+          return `Raidet mit ${data.amount || 0} Zuschauern! 🚀`;
+        case 'donation':
+          return `Spendet ${data.amount || 0}€! 💵`;
+        default:
+          return 'Test Event 🎉';
+      }
+    };
+
+    const getTestBadges = (type: string) => {
+      if (type === 'sub' || type === 'gift-sub') return 'subscriber/1';
+      if (type === 'bits') return 'bits/1000';
+      return '';
+    };
+
+    window.addEventListener('test-event-trigger' as any, handleTestEvent);
+
+    return () => {
+      window.removeEventListener('test-event-trigger' as any, handleTestEvent);
+    };
+  }, []);
+
   // Lade Zuschauerzahl regelmäßig
   useEffect(() => {
     const loadViewerCount = async () => {

@@ -86,6 +86,50 @@ export default function TileActivity() {
     });
   };
 
+  // Listener für Test-Events
+  useEffect(() => {
+    const handleTestEvent = (event: CustomEvent) => {
+      const data = event.detail;
+      console.log('🧪 Test Event empfangen:', data);
+      
+      const activity: Activity = {
+        id: `test-${data.type}-${Date.now()}`,
+        type: data.type === 'donation' ? 'bits' : data.type === 'gift-sub' ? 'sub' : data.type,
+        username: data.username,
+        message: getTestMessage(data),
+        amount: data.amount,
+        timestamp: new Date()
+      };
+      
+      addActivity(activity);
+    };
+
+    const getTestMessage = (data: any) => {
+      switch (data.type) {
+        case 'sub':
+          return 'hat subscribed!';
+        case 'gift-sub':
+          return `hat ${data.amount || 1} Sub${(data.amount || 1) > 1 ? 's' : ''} verschenkt!`;
+        case 'bits':
+          return `hat ${data.amount || 0} Bits gecheert!`;
+        case 'follow':
+          return 'hat dir gefolgt';
+        case 'raid':
+          return `raidet mit ${data.amount || 0} Zuschauern!`;
+        case 'donation':
+          return `hat ${data.amount || 0}€ gespendet!`;
+        default:
+          return data.message || 'Event';
+      }
+    };
+
+    window.addEventListener('test-event-trigger' as any, handleTestEvent);
+
+    return () => {
+      window.removeEventListener('test-event-trigger' as any, handleTestEvent);
+    };
+  }, []);
+
   // Listener für Chat-Events (Bits, Subs, Raids)
   useEffect(() => {
     const handleChatMessage = (data: any) => {
