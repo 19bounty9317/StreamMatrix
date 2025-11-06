@@ -16,6 +16,10 @@ export default function TileRaidTargets() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
   const [isRaiding, setIsRaiding] = useState(false);
+  const [showOnlyLive, setShowOnlyLive] = useState(() => {
+    const saved = localStorage.getItem('raid-targets-show-only-live');
+    return saved ? JSON.parse(saved) : true;
+  });
 
   useEffect(() => {
     loadFollowedChannels();
@@ -70,14 +74,33 @@ export default function TileRaidTargets() {
         ])
       );
 
+      // Hole User-Infos für Profilbilder
+      const usersResponse = await fetch(
+        `https://api.twitch.tv/helix/users?id=${channelIds}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${TwitchService.getStoredToken()}`,
+            'Client-Id': TwitchService.getClientId()
+          }
+        }
+      );
+
+      const usersData = await usersResponse.json();
+      const userProfiles = new Map<string, string>(
+        (usersData.data || []).map((u: any) => [u.id, u.profile_image_url])
+      );
+
       // Kombiniere Daten
       const channelsWithStatus: Channel[] = followedChannels.map((c: any) => {
         const streamInfo = liveStreams.get(c.broadcaster_id);
+        const profileImage = userProfiles.get(c.broadcaster_id) || 
+          `https://static-cdn.jtvnw.net/user-default-pictures-uv/75305d54-c7cc-40d1-bb9c-91fbe85943c7-profile_image-70x70.png`;
+        
         return {
           id: c.broadcaster_id,
           login: c.broadcaster_login,
           display_name: c.broadcaster_name,
-          profile_image_url: `https://static-cdn.jtvnw.net/jtv_user_pictures/${c.broadcaster_login}-profile_image-70x70.png`,
+          profile_image_url: profileImage,
           is_live: !!streamInfo,
           viewer_count: streamInfo?.viewer_count || 0,
           game_name: streamInfo?.game_name || ''
@@ -140,28 +163,49 @@ export default function TileRaidTargets() {
     );
   }
 
+  const filteredChannels = showOnlyLive ? channels.filter(c => c.is_live) : channels;
+
   return (
     <div className="h-full flex flex-col">
       <div className="mb-3 pb-2 border-b theme-border">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-2">
           <span className="text-sm theme-text font-semibold">Raid-Ziele</span>
           <span className="text-xs theme-text-secondary">
-            {channels.filter(c => c.is_live).length} live
+            {channels.filter(c => c.is_live).length} live / {channels.length} total
           </span>
         </div>
-        <div className="text-xs theme-text-secondary mt-1">
-          Klick 1x = Auswählen, 2x = Raiden
+        
+        <div className="flex items-center justify-between">
+          <div className="text-xs theme-text-secondary">
+            Klick 1x = Auswählen, 2x = Raiden
+          </div>
+          <button
+            onClick={() => {
+              const newValue = !showOnlyLive;
+              setShowOnlyLive(newValue);
+              localStorage.setItem('raid-targets-show-only-live', JSON.stringify(newValue));
+            }}
+            className={`text-xs px-2 py-1 rounded transition-colors ${
+              showOnlyLive 
+                ? 'bg-red-600/30 text-red-300 border border-red-500/50' 
+                : 'bg-gray-600/30 text-gray-300 border border-gray-500/50'
+            }`}
+          >
+            {showOnlyLive ? '🔴 Nur Live' : '📺 Alle'}
+          </button>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-        {channels.length === 0 ? (
+        {filteredChannels.length === 0 ? (
           <div className="text-center theme-text-secondary py-8">
             <div className="text-4xl mb-2">👥</div>
-            <div className="text-sm">Keine gefolgten Kanäle</div>
+            <div className="text-sm">
+              {showOnlyLive ? 'Keine Live-Streams' : 'Keine gefolgten Kanäle'}
+            </div>
           </div>
         ) : (
-          channels.map(channel => (
+          filteredChannels.map(channel => (
             <div
               key={channel.id}
               onClick={() => handleRaidClick(channel)}
