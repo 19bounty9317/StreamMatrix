@@ -168,6 +168,16 @@ export default function TileActivity() {
           timestamp: new Date()
         };
         addActivity(activity);
+
+        // Trigger Celebration Event
+        const celebrationEvent = new CustomEvent('stream-celebration', {
+          detail: {
+            type: 'bits',
+            username: data.username,
+            amount: parseInt(data.bits)
+          }
+        });
+        window.dispatchEvent(celebrationEvent);
       }
 
       // USERNOTICE Events (Subs, Raids, etc.)
@@ -189,6 +199,15 @@ export default function TileActivity() {
             timestamp: new Date()
           };
           addActivity(activity);
+
+          // Trigger Celebration Event
+          const celebrationEvent = new CustomEvent('stream-celebration', {
+            detail: {
+              type: 'sub',
+              username: data.username
+            }
+          });
+          window.dispatchEvent(celebrationEvent);
         }
         
         // Gift Subs - Gruppiere mehrere Subs vom gleichen User
@@ -300,6 +319,16 @@ export default function TileActivity() {
             timestamp: new Date()
           };
           addActivity(activity);
+
+          // Trigger Celebration Event
+          const celebrationEvent = new CustomEvent('stream-celebration', {
+            detail: {
+              type: 'raid',
+              username: data.username,
+              amount: viewerCount
+            }
+          });
+          window.dispatchEvent(celebrationEvent);
         }
       }
     };
