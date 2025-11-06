@@ -10,10 +10,15 @@ export default function TileAlerts() {
     const notificationService = NotificationService.getInstance();
     
     notificationService.onAlert((event) => {
-      setAlerts(prev => [event, ...prev].slice(0, 20));
+      // Nur Raids anzeigen
+      if (event.type === 'raid') {
+        setAlerts(prev => [event, ...prev].slice(0, 20));
+      }
     });
 
-    setAlerts(notificationService.getAlertHistory());
+    // Lade nur Raid-Alerts aus der Historie
+    const history = notificationService.getAlertHistory();
+    setAlerts(history.filter(a => a.type === 'raid'));
   }, []);
 
   // Listener für Test-Events
@@ -22,14 +27,16 @@ export default function TileAlerts() {
       const data = event.detail;
       console.log('🧪 Alerts Test Event empfangen:', data);
       
+      // Nur Raids anzeigen, alles andere ist im Activity Feed
+      if (data.type !== 'raid') {
+        return;
+      }
+      
       const testAlert: AlertEvent = {
         id: `test-${Date.now()}`,
-        type: data.type === 'sub' || data.type === 'gift-sub' ? 'subscriber' : 
-              data.type === 'follow' ? 'follower' :
-              data.type === 'bits' ? 'bits' :
-              data.type === 'donation' ? 'donation' :
-              data.type === 'raid' ? 'raid' : 'other',
+        type: 'raid',
         username: data.username,
+        amount: data.amount || 0,
         message: getTestAlertMessage(data),
         timestamp: new Date()
       };
@@ -88,6 +95,17 @@ export default function TileAlerts() {
     NotificationService.getInstance().clearHistory();
   };
 
+  const sendShoutout = async (username: string) => {
+    try {
+      const { twitchChat } = await import('../../services/TwitchChatService');
+      // Verwende den offiziellen Twitch /shoutout Befehl
+      twitchChat.sendMessage(`/shoutout ${username}`);
+      console.log(`✅ Shoutout gesendet an ${username}`);
+    } catch (error) {
+      console.error('Fehler beim Senden des Shoutouts:', error);
+    }
+  };
+
   const getAlertIcon = (type: string) => {
     switch (type) {
       case 'follower': return '🎉';
@@ -140,27 +158,25 @@ export default function TileAlerts() {
       <div className="flex-1 overflow-y-auto space-y-2">
         {alerts.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
-            Keine Alerts bisher
+            <div className="text-4xl mb-2">🚀</div>
+            <div className="text-sm theme-text">Keine Raids bisher</div>
+            <div className="text-xs mt-2 theme-text-secondary">Raids werden hier angezeigt</div>
           </div>
         ) : (
           alerts.map((alert, index) => (
             <div
               key={index}
-              className="theme-tile-content-bg p-3 rounded border-l-4"
-              style={{ borderLeftColor: 'var(--color-accent)' }}
+              className="theme-tile-content-bg p-3 rounded border-l-4 border-red-500"
             >
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between mb-2">
                 <div className="flex items-start gap-2">
-                  <span className="text-xl">{getAlertIcon(alert.type)}</span>
+                  <span className="text-xl">🚀</span>
                   <div>
-                    <div className="font-semibold theme-text">
+                    <div className="font-semibold theme-text text-lg">
                       {alert.username}
                     </div>
-                    <div className="text-sm theme-text-secondary">
-                      {alert.type === 'bits' && `${alert.amount} Bits`}
-                      {alert.type === 'raid' && `${alert.amount} Zuschauer`}
-                      {alert.type === 'follower' && 'Neuer Follower'}
-                      {alert.type === 'subscriber' && 'Neuer Sub'}
+                    <div className="text-sm text-red-400 font-semibold">
+                      {alert.amount || 0} Zuschauer
                     </div>
                   </div>
                 </div>
@@ -168,6 +184,12 @@ export default function TileAlerts() {
                   {formatTime(alert.timestamp)}
                 </span>
               </div>
+              <button
+                onClick={() => sendShoutout(alert.username)}
+                className="w-full px-3 py-2 rounded bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-sm font-semibold transition-all shadow-md hover:shadow-lg"
+              >
+                📢 Shoutout senden
+              </button>
             </div>
           ))
         )}

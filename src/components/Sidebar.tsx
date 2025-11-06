@@ -218,8 +218,8 @@ export default function Sidebar({ tiles, onToggleTile, onReorderTiles, onOpenSet
           </button>
           <button
             onClick={() => {
-              localStorage.removeItem('tutorial-seen');
-              window.location.reload();
+              const event = new CustomEvent('show-tutorial');
+              window.dispatchEvent(event);
             }}
             className="w-full px-4 py-2 rounded-lg transition-colors text-sm font-medium"
             style={{ backgroundColor: 'var(--color-accent)', color: '#FFFFFF' }}

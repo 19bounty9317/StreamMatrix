@@ -5,6 +5,8 @@ export default function TileHypeTrain() {
   const [hypeTrainData, setHypeTrainData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [, setTick] = useState(0); // Für Countdown-Updates
+  const [lastEventId, setLastEventId] = useState<string | null>(null);
+  const [wasActive, setWasActive] = useState(false);
 
   useEffect(() => {
     const loadHypeTrain = async () => {
@@ -12,6 +14,68 @@ export default function TileHypeTrain() {
         const user = TwitchService.getUserFromStorage();
         if (user) {
           const data = await TwitchService.getHypeTrainEvents(user.id);
+          
+          // Prüfe ob neuer Hype Train gestartet wurde
+          if (data && data.id !== lastEventId) {
+            const isNewActive = data.event_type === 'hypetrain.progression' &&
+                               data.event_data?.expires_at &&
+                               new Date(data.event_data.expires_at) > new Date();
+            
+            if (isNewActive && !wasActive) {
+              // Hype Train START
+              const celebrationEvent = new CustomEvent('stream-celebration', {
+                detail: {
+                  type: 'hypetrain',
+                  username: 'Community',
+                  amount: data.event_data?.level || 1
+                }
+              });
+              window.dispatchEvent(celebrationEvent);
+              setWasActive(true);
+            } else if (!isNewActive && wasActive) {
+              // Hype Train ENDE
+              const level = data.event_data?.level || 1;
+              const topContributions = data.event_data?.top_contributions || [];
+              
+              // Berechne Gesamt-Beiträge
+              let totalSubs = 0;
+              let totalBits = 0;
+              
+              topContributions.forEach((contrib: any) => {
+                if (contrib.type === 'SUBS') {
+                  totalSubs += contrib.total || 0;
+                } else if (contrib.type === 'BITS') {
+                  totalBits += contrib.total || 0;
+                }
+              });
+              
+              // Celebration Event (für Animation)
+              const celebrationEvent = new CustomEvent('stream-celebration', {
+                detail: {
+                  type: 'hypetrain-end',
+                  username: 'Community',
+                  amount: level
+                }
+              });
+              window.dispatchEvent(celebrationEvent);
+              
+              // Activity Feed Event (mit Details)
+              const activityEvent = new CustomEvent('hypetrain-ended', {
+                detail: {
+                  level,
+                  totalSubs,
+                  totalBits,
+                  topContributions
+                }
+              });
+              window.dispatchEvent(activityEvent);
+              
+              setWasActive(false);
+            }
+            
+            setLastEventId(data.id);
+          }
+          
           setHypeTrainData(data);
         }
       } catch (error) {
@@ -34,7 +98,7 @@ export default function TileHypeTrain() {
       clearInterval(dataInterval);
       clearInterval(tickInterval);
     };
-  }, []);
+  }, [lastEventId, wasActive]);
 
   if (isLoading) {
     return (

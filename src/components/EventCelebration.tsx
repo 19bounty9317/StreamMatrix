@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 interface EventData {
-  type: 'sub' | 'bits' | 'follow' | 'raid' | 'donation' | 'hypetrain' | 'gift-sub';
+  type: 'sub' | 'bits' | 'follow' | 'raid' | 'donation' | 'hypetrain' | 'hypetrain-end' | 'gift-sub';
   username: string;
   amount?: number;
   message?: string;
@@ -25,6 +25,7 @@ interface EmojiParticle {
 export default function EventCelebration() {
   const [events, setEvents] = useState<CelebrationEvent[]>([]);
   const [particles, setParticles] = useState<EmojiParticle[]>([]);
+  const [trainAnimation, setTrainAnimation] = useState<{ id: string; direction: 'left' | 'right'; level?: number } | null>(null);
   const [duration, setDuration] = useState(() => {
     const saved = localStorage.getItem('celebration-duration');
     return saved ? parseInt(saved) : 5;
@@ -41,8 +42,15 @@ export default function EventCelebration() {
 
       setEvents(prev => [...prev, newEvent]);
 
-      // Erstelle Emoji-Regen
-      createEmojiRain(newEvent.type);
+      // Spezial-Animation für Hype Train
+      if (newEvent.type === 'hypetrain') {
+        createTrainAnimation('left', newEvent.amount);
+      } else if (newEvent.type === 'hypetrain-end') {
+        createTrainAnimation('right', newEvent.amount);
+      } else {
+        // Erstelle Emoji-Regen für andere Events
+        createEmojiRain(newEvent.type);
+      }
 
       // Entferne Event nach eingestellter Dauer
       setTimeout(() => {
@@ -71,6 +79,16 @@ export default function EventCelebration() {
     };
   }, []);
 
+  const createTrainAnimation = (direction: 'left' | 'right', level?: number) => {
+    const animationId = `train-${Date.now()}`;
+    setTrainAnimation({ id: animationId, direction, level });
+
+    // Entferne Animation nach 5 Sekunden
+    setTimeout(() => {
+      setTrainAnimation(null);
+    }, 5000);
+  };
+
   const createEmojiRain = (type: EventData['type']) => {
     const emoji = getEmojiForType(type);
     
@@ -78,8 +96,8 @@ export default function EventCelebration() {
     let particleCount = 30; // Standard
     if (type === 'bits' || type === 'donation') {
       particleCount = 50; // Stärkerer Regen für Bits und Donations
-    } else if (type === 'raid' || type === 'hypetrain') {
-      particleCount = 60; // Noch stärker für Raids und Hype Trains
+    } else if (type === 'raid') {
+      particleCount = 60; // Noch stärker für Raids
     } else if (type === 'gift-sub') {
       particleCount = 40; // Mittel für Gift Subs
     }
@@ -120,6 +138,7 @@ export default function EventCelebration() {
       case 'donation':
         return '💵';
       case 'hypetrain':
+      case 'hypetrain-end':
         return '🚂';
       default:
         return '🎉';
@@ -141,7 +160,9 @@ export default function EventCelebration() {
       case 'donation':
         return `${event.username} hat ${event.amount || 0}€ gespendet!`;
       case 'hypetrain':
-        return `Hype Train Level ${event.amount || 1}!`;
+        return `Hype Train Level ${event.amount || 1} gestartet!`;
+      case 'hypetrain-end':
+        return `Hype Train Level ${event.amount || 1} beendet!`;
       default:
         return `${event.username} - ${event.message || 'Event'}`;
     }
@@ -161,6 +182,7 @@ export default function EventCelebration() {
       case 'donation':
         return 'from-yellow-500 to-yellow-700';
       case 'hypetrain':
+      case 'hypetrain-end':
         return 'from-orange-500 to-orange-700';
       default:
         return 'from-gray-500 to-gray-700';
@@ -169,6 +191,24 @@ export default function EventCelebration() {
 
   return (
     <>
+      {/* Hype Train Animation */}
+      {trainAnimation && (
+        <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden flex items-center">
+          <div
+            className="text-9xl"
+            style={{
+              animation: trainAnimation.direction === 'left' 
+                ? 'trainSlideLeft 5s ease-in-out forwards'
+                : 'trainSlideRight 5s ease-in-out forwards',
+              transform: trainAnimation.direction === 'right' ? 'scaleX(-1)' : 'none',
+              filter: 'drop-shadow(0 0 20px rgba(255, 165, 0, 0.8))'
+            }}
+          >
+            🚂🚂🚂
+          </div>
+        </div>
+      )}
+
       {/* Emoji-Regen */}
       <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
         {particles.map(particle => (
@@ -251,6 +291,34 @@ export default function EventCelebration() {
           }
           100% {
             transform: translateY(100vh) rotate(360deg);
+            opacity: 0;
+          }
+        }
+
+        @keyframes trainSlideLeft {
+          0% {
+            transform: translateX(100vw);
+            opacity: 1;
+          }
+          50% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(-100vw);
+            opacity: 0;
+          }
+        }
+
+        @keyframes trainSlideRight {
+          0% {
+            transform: translateX(-100vw) scaleX(-1);
+            opacity: 1;
+          }
+          50% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(100vw) scaleX(-1);
             opacity: 0;
           }
         }
