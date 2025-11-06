@@ -5,6 +5,8 @@ import Footer from './components/Footer';
 import LoginScreen from './components/LoginScreen';
 import Tutorial from './components/Tutorial';
 import Settings from './components/Settings';
+import EventCelebration from './components/EventCelebration';
+import EventCelebrationTest from './components/EventCelebrationTest';
 import { TwitchService } from './services/TwitchService';
 import StreamQualityService from './services/StreamQualityService';
 import EventTracker from './services/EventTracker';
@@ -45,6 +47,7 @@ function App() {
   const [streamBitrate, setStreamBitrate] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [showTestPage, setShowTestPage] = useState(false);
 
   // Update-Listener
   useEffect(() => {
@@ -168,6 +171,7 @@ function App() {
     <div className="flex h-screen" style={{ backgroundColor: 'var(--color-background)' }}>
       <Tutorial />
       <Settings isOpen={showSettings} onClose={() => setShowSettings(false)} />
+      <EventCelebration />
       
       {/* Update-Banner */}
       {updateAvailable && (
@@ -182,21 +186,37 @@ function App() {
           </button>
         </div>
       )}
-      
-      <Sidebar
-        tiles={availableTiles}
-        onToggleTile={toggleTile}
-        onReorderTiles={reorderTiles}
-        onOpenSettings={() => setShowSettings(true)}
-        onLogout={handleLogout}
-      />
-      <div className="flex-1 flex flex-col">
-        <Dashboard 
-          tiles={availableTiles.filter(t => t.enabled)} 
-          onCloseTile={toggleTile}
-        />
-        <Footer status={connectionStatus} />
-      </div>
+
+      {/* Test-Button (nur im Test-Branch) */}
+      <button
+        onClick={() => setShowTestPage(!showTestPage)}
+        className="fixed bottom-4 left-4 z-50 px-4 py-2 rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105"
+      >
+        {showTestPage ? '← Zurück zum Dashboard' : '🎉 Test Event-Effekte'}
+      </button>
+
+      {showTestPage ? (
+        <div className="flex-1 overflow-auto">
+          <EventCelebrationTest />
+        </div>
+      ) : (
+        <>
+          <Sidebar
+            tiles={availableTiles}
+            onToggleTile={toggleTile}
+            onReorderTiles={reorderTiles}
+            onOpenSettings={() => setShowSettings(true)}
+            onLogout={handleLogout}
+          />
+          <div className="flex-1 flex flex-col">
+            <Dashboard 
+              tiles={availableTiles.filter(t => t.enabled)} 
+              onCloseTile={toggleTile}
+            />
+            <Footer status={connectionStatus} />
+          </div>
+        </>
+      )}
     </div>
   );
 }
