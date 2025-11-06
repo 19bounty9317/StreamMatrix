@@ -57,14 +57,15 @@ export default function TileViewerList() {
       try {
         const TwitchService = (await import('../../services/TwitchService')).TwitchService;
         const user = TwitchService.getUserFromStorage();
+        const token = TwitchService.getStoredToken();
         
-        if (user) {
+        if (user && token) {
           const response = await fetch(
-            `https://api.twitch.tv/helix/chat/chatters?broadcaster_id=${user.id}&moderator_id=${user.id}`,
+            `https://api.twitch.tv/helix/chat/chatters?broadcaster_id=${user.id}&moderator_id=${user.id}&first=1000`,
             {
               headers: {
-                'Authorization': `Bearer ${user.access_token}`,
-                'Client-Id': (await import('../../config/twitch.config')).TWITCH_CONFIG.CLIENT_ID
+                'Authorization': `Bearer ${token}`,
+                'Client-Id': TwitchService.getClientId()
               }
             }
           );
@@ -73,17 +74,27 @@ export default function TileViewerList() {
           
           if (response.ok) {
             const data = await response.json();
-            console.log('✅ Chatters geladen:', data.data?.length || 0, data);
+            console.log('✅ Chatters geladen:', data.data?.length || 0);
             
-            // Füge Chatters zur Liste hinzu
+            // Ersetze die komplette Liste (nicht nur hinzufügen)
             if (data.data && Array.isArray(data.data)) {
-              data.data.forEach((chatter: any) => {
-                trackViewer(chatter.user_login, {
-                  'display-name': chatter.user_name,
-                  'mod': '0',
-                  'subscriber': '0',
-                  'badges': ''
+              const newViewers: Viewer[] = data.data.map((chatter: any) => ({
+                username: chatter.user_login,
+                displayName: chatter.user_name,
+                isMod: false, // Wird durch Chat-Nachrichten aktualisiert
+                isVip: false,
+                isSubscriber: false,
+                lastSeen: new Date()
+              }));
+              
+              setViewers(prev => {
+                // Merge: Behalte Badge-Infos von existierenden Viewern
+                const merged = newViewers.map(newViewer => {
+                  const existing = prev.find(v => v.username === newViewer.username);
+                  return existing ? { ...newViewer, isMod: existing.isMod, isVip: existing.isVip, isSubscriber: existing.isSubscriber } : newViewer;
                 });
+                
+                return merged.sort((a, b) => a.displayName.localeCompare(b.displayName));
               });
             }
           } else {
@@ -97,20 +108,12 @@ export default function TileViewerList() {
       }
     };
 
-    // Lade Chatters initial und alle 60 Sekunden
+    // Lade Chatters initial und alle 30 Sekunden (häufiger für Live-Updates)
     loadChatters();
-    const chattersInterval = setInterval(loadChatters, 60000);
-
-    // Cleanup: Entferne Viewer die länger als 5 Minuten inaktiv sind
-    const cleanupInterval = setInterval(() => {
-      setViewers(prev => 
-        prev.filter(v => Date.now() - v.lastSeen.getTime() < 300000)
-      );
-    }, 60000);
+    const chattersInterval = setInterval(loadChatters, 30000);
 
     return () => {
       clearInterval(chattersInterval);
-      clearInterval(cleanupInterval);
     };
   }, []);
 

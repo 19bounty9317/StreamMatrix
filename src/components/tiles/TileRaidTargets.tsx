@@ -154,7 +154,7 @@ export default function TileRaidTargets() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-2">
+      <div className="flex-1 overflow-y-auto space-y-3 pr-1">
         {channels.length === 0 ? (
           <div className="text-center theme-text-secondary py-8">
             <div className="text-4xl mb-2">👥</div>
@@ -165,54 +165,77 @@ export default function TileRaidTargets() {
             <div
               key={channel.id}
               onClick={() => handleRaidClick(channel)}
-              className={`p-3 rounded theme-button cursor-pointer transition-all ${
+              className={`rounded-lg cursor-pointer transition-all duration-200 border-2 shadow-md hover:shadow-xl ${
                 selectedChannel === channel.login
-                  ? 'ring-2 ring-purple-500 bg-purple-500/20'
-                  : 'hover:bg-opacity-80'
+                  ? 'border-purple-500 bg-gradient-to-r from-purple-500/30 to-purple-600/30 shadow-purple-500/50 scale-[1.02] transform'
+                  : channel.is_live
+                    ? 'border-red-500/40 bg-gradient-to-r from-red-500/10 to-red-600/10 hover:border-red-500/60 hover:from-red-500/20 hover:to-red-600/20'
+                    : 'border-gray-600/30 theme-tile-content-bg hover:border-gray-500/50 hover:bg-gray-700/30'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <img
-                  src={channel.profile_image_url}
-                  alt={channel.display_name}
-                  className="w-10 h-10 rounded-full"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="theme-text font-semibold truncate">
-                      {channel.display_name}
-                    </span>
+              <div className="p-4">
+                <div className="flex items-center gap-4">
+                  <div className="relative flex-shrink-0">
+                    <img
+                      src={channel.profile_image_url}
+                      alt={channel.display_name}
+                      className={`w-14 h-14 rounded-full transition-all ${
+                        channel.is_live ? 'ring-4 ring-red-500 shadow-lg shadow-red-500/50' : 'ring-2 ring-gray-600'
+                      }`}
+                    />
                     {channel.is_live && (
-                      <span className="flex items-center gap-1 bg-red-600 text-white text-xs px-2 py-0.5 rounded font-semibold">
-                        <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-                        LIVE
-                      </span>
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 rounded-full border-2 border-white animate-pulse shadow-lg"></span>
                     )}
                   </div>
-                  {channel.is_live && (
-                    <div className="text-xs theme-text-secondary mt-1">
-                      {channel.game_name} • {channel.viewer_count?.toLocaleString()} Zuschauer
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className={`font-bold text-base truncate ${
+                        channel.is_live ? 'text-red-300' : 'theme-text'
+                      }`}>
+                        {channel.display_name}
+                      </span>
+                      {channel.is_live && (
+                        <span className="flex items-center gap-1 bg-red-600 text-white text-xs px-2.5 py-1 rounded-full font-bold shadow-md">
+                          ● LIVE
+                        </span>
+                      )}
                     </div>
-                  )}
-                  {!channel.is_live && (
-                    <div className="text-xs theme-text-secondary mt-1">
-                      Offline
-                    </div>
-                  )}
-                </div>
-                <div className="flex-shrink-0">
-                  {selectedChannel === channel.login ? (
-                    <button
-                      disabled={isRaiding}
-                      className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded font-semibold text-sm transition-colors disabled:opacity-50"
-                    >
-                      {isRaiding ? '⏳' : '🚀 Raiden!'}
-                    </button>
-                  ) : (
-                    <button className="theme-button px-3 py-2 rounded text-sm theme-text">
-                      Auswählen
-                    </button>
-                  )}
+                    
+                    {channel.is_live ? (
+                      <div className="space-y-1">
+                        <div className="text-sm theme-text font-medium truncate">
+                          🎮 {channel.game_name}
+                        </div>
+                        <div className="text-sm text-red-300 font-semibold">
+                          👥 {channel.viewer_count?.toLocaleString()} Zuschauer
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm theme-text-secondary font-medium">
+                        ⚫ Offline
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex-shrink-0">
+                    {selectedChannel === channel.login ? (
+                      <button
+                        disabled={isRaiding}
+                        className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-5 py-2.5 rounded-lg font-bold text-sm transition-all shadow-lg shadow-purple-500/50 disabled:opacity-50 animate-pulse"
+                      >
+                        {isRaiding ? '⏳ Raiding...' : '🚀 RAIDEN!'}
+                      </button>
+                    ) : (
+                      <button className={`px-4 py-2.5 rounded-lg text-sm font-bold transition-all shadow-md ${
+                        channel.is_live
+                          ? 'bg-red-600/30 text-red-300 hover:bg-red-600/50 border border-red-500/50 hover:border-red-500'
+                          : 'theme-button theme-text border border-gray-600/50 hover:border-gray-500'
+                      }`}>
+                        {channel.is_live ? '🎯 Raid' : '📡 Raid'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
