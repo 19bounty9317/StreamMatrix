@@ -6,7 +6,6 @@ import LoginScreen from './components/LoginScreen';
 import Tutorial from './components/Tutorial';
 import Settings from './components/Settings';
 import EventCelebration from './components/EventCelebration';
-import StreamSessionStats from './components/StreamSessionStats';
 import { TwitchService } from './services/TwitchService';
 import StreamQualityService from './services/StreamQualityService';
 import EventTracker from './services/EventTracker';
@@ -205,7 +204,6 @@ function App() {
       <Tutorial />
       <Settings isOpen={showSettings} onClose={() => setShowSettings(false)} />
       <EventCelebration />
-      <StreamSessionStats />
       
       {/* Update-Banner */}
       {updateAvailable && (
