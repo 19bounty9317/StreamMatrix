@@ -294,6 +294,111 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
             </label>
           </div>
 
+          {/* Event Celebrations */}
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold theme-text">🎉 Event-Effekte</h3>
+            
+            <div className="p-3 theme-tile-content-bg rounded">
+              <label className="block theme-text mb-2">
+                Anzeigedauer der Effekte
+              </label>
+              <input
+                type="range"
+                min="2"
+                max="20"
+                step="1"
+                value={(() => {
+                  const saved = localStorage.getItem('celebration-duration');
+                  return saved ? parseInt(saved) : 5;
+                })()}
+                onChange={(e) => {
+                  const duration = parseInt(e.target.value);
+                  localStorage.setItem('celebration-duration', duration.toString());
+                  // Trigger Event für EventCelebration
+                  const event = new CustomEvent('celebration-duration-change', { detail: duration });
+                  window.dispatchEvent(event);
+                  // Force re-render
+                  setSettings({...settings});
+                }}
+                className="w-full"
+              />
+              <div className="theme-text-secondary text-sm mt-1">
+                {(() => {
+                  const saved = localStorage.getItem('celebration-duration');
+                  return saved ? parseInt(saved) : 5;
+                })()} Sekunden
+              </div>
+            </div>
+
+            <div className="p-4 bg-gradient-to-r from-pink-500/20 to-purple-600/20 border border-pink-500/30 rounded-lg">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <div className="font-bold theme-text">Event-Effekte testen</div>
+                  <div className="text-xs theme-text-secondary mt-1">
+                    Teste die visuellen Effekte direkt im Dashboard
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => {
+                    const { triggerCelebration } = require('./EventCelebration');
+                    triggerCelebration({ type: 'sub', username: 'TestUser' });
+                  }}
+                  className="px-3 py-2 rounded bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold transition-colors"
+                >
+                  ⭐ Sub
+                </button>
+                <button
+                  onClick={() => {
+                    const { triggerCelebration } = require('./EventCelebration');
+                    triggerCelebration({ type: 'bits', username: 'TestUser', amount: 1000 });
+                  }}
+                  className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors"
+                >
+                  💎 Bits
+                </button>
+                <button
+                  onClick={() => {
+                    const { triggerCelebration } = require('./EventCelebration');
+                    triggerCelebration({ type: 'follow', username: 'NewFollower' });
+                  }}
+                  className="px-3 py-2 rounded bg-green-600 hover:bg-green-700 text-white text-sm font-semibold transition-colors"
+                >
+                  👤 Follow
+                </button>
+                <button
+                  onClick={() => {
+                    const { triggerCelebration } = require('./EventCelebration');
+                    triggerCelebration({ type: 'raid', username: 'Raider', amount: 250 });
+                  }}
+                  className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors"
+                >
+                  🚀 Raid
+                </button>
+                <button
+                  onClick={() => {
+                    const { triggerCelebration } = require('./EventCelebration');
+                    triggerCelebration({ type: 'donation', username: 'Donor', amount: 10 });
+                  }}
+                  className="px-3 py-2 rounded bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-semibold transition-colors"
+                >
+                  💵 Dono
+                </button>
+                <button
+                  onClick={() => {
+                    const { triggerCelebration } = require('./EventCelebration');
+                    triggerCelebration({ type: 'gift-sub', username: 'Gifter', amount: 5 });
+                  }}
+                  className="px-3 py-2 rounded bg-purple-700 hover:bg-purple-800 text-white text-sm font-semibold transition-colors"
+                >
+                  ⭐ Gift
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* OBS Integration */}
           <div className="space-y-3">
             <h3 className="text-lg font-semibold theme-text">🎥 OBS Integration</h3>

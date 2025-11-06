@@ -25,6 +25,10 @@ interface EmojiParticle {
 export default function EventCelebration() {
   const [events, setEvents] = useState<CelebrationEvent[]>([]);
   const [particles, setParticles] = useState<EmojiParticle[]>([]);
+  const [duration, setDuration] = useState(() => {
+    const saved = localStorage.getItem('celebration-duration');
+    return saved ? parseInt(saved) : 5;
+  });
 
   useEffect(() => {
     // Globaler Event-Listener für Celebrations
@@ -40,10 +44,10 @@ export default function EventCelebration() {
       // Erstelle Emoji-Regen
       createEmojiRain(newEvent.type);
 
-      // Entferne Event nach 5 Sekunden
+      // Entferne Event nach eingestellter Dauer
       setTimeout(() => {
         setEvents(prev => prev.filter(e => e.id !== newEvent.id));
-      }, 5000);
+      }, duration * 1000);
     };
 
     window.addEventListener('stream-celebration' as any, handleCelebration);
@@ -51,11 +55,35 @@ export default function EventCelebration() {
     return () => {
       window.removeEventListener('stream-celebration' as any, handleCelebration);
     };
+  }, [duration]);
+
+  // Listener für Dauer-Änderungen
+  useEffect(() => {
+    const handleDurationChange = (event: CustomEvent<number>) => {
+      setDuration(event.detail);
+      localStorage.setItem('celebration-duration', event.detail.toString());
+    };
+
+    window.addEventListener('celebration-duration-change' as any, handleDurationChange);
+
+    return () => {
+      window.removeEventListener('celebration-duration-change' as any, handleDurationChange);
+    };
   }, []);
 
   const createEmojiRain = (type: EventData['type']) => {
     const emoji = getEmojiForType(type);
-    const particleCount = 20; // Anzahl der fallenden Emojis
+    
+    // Mehr Partikel für bestimmte Event-Typen
+    let particleCount = 30; // Standard
+    if (type === 'bits' || type === 'donation') {
+      particleCount = 50; // Stärkerer Regen für Bits und Donations
+    } else if (type === 'raid' || type === 'hypetrain') {
+      particleCount = 60; // Noch stärker für Raids und Hype Trains
+    } else if (type === 'gift-sub') {
+      particleCount = 40; // Mittel für Gift Subs
+    }
+    
     const newParticles: EmojiParticle[] = [];
 
     for (let i = 0; i < particleCount; i++) {
@@ -66,7 +94,7 @@ export default function EventCelebration() {
         y: -10, // Startet über dem Bildschirm
         rotation: Math.random() * 360,
         duration: 2 + Math.random() * 2, // 2-4 Sekunden
-        delay: Math.random() * 0.5 // 0-0.5 Sekunden Verzögerung
+        delay: Math.random() * 0.8 // 0-0.8 Sekunden Verzögerung
       });
     }
 
@@ -75,7 +103,7 @@ export default function EventCelebration() {
     // Entferne Partikel nach Animation
     setTimeout(() => {
       setParticles(prev => prev.filter(p => !newParticles.find(np => np.id === p.id)));
-    }, 5000);
+    }, duration * 1000);
   };
 
   const getEmojiForType = (type: EventData['type']): string => {
@@ -167,7 +195,7 @@ export default function EventCelebration() {
             key={event.id}
             className="animate-slide-in-right"
             style={{
-              animation: 'slideInRight 0.5s ease-out, fadeOut 0.5s ease-in 4.5s forwards'
+              animation: `slideInRight 0.5s ease-out, fadeOut 0.5s ease-in ${duration - 0.5}s forwards`
             }}
           >
             <div
@@ -205,7 +233,7 @@ export default function EventCelebration() {
                 <div
                   className="h-full bg-white/60"
                   style={{
-                    animation: 'shrink 5s linear forwards'
+                    animation: `shrink ${duration}s linear forwards`
                   }}
                 ></div>
               </div>
@@ -239,10 +267,13 @@ export default function EventCelebration() {
         }
 
         @keyframes fadeOut {
-          from {
+          0% {
             opacity: 1;
           }
-          to {
+          90% {
+            opacity: 1;
+          }
+          100% {
             opacity: 0;
           }
         }
