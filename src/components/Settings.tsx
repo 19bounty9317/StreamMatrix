@@ -373,21 +373,24 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
                           localStorage.setItem('activity-feed', JSON.stringify(cleanedActivities));
                         }
                         
-                        // 2. Trigger Event zum Neuladen aller Kacheln
+                        // 2. Reset Session-Stats (entferne Test-Follower/Subs)
+                        const StreamSessionTracker = (await import('../services/StreamSessionTracker')).default;
+                        const tracker = StreamSessionTracker.getInstance();
+                        tracker.resetSession();
+                        
+                        // 3. Trigger Event zum Neuladen aller Kacheln
                         const reloadEvent = new CustomEvent('reload-tiles');
                         window.dispatchEvent(reloadEvent);
                         
-                        // 3. Lade echte Daten neu
+                        // 4. Lade echte Daten neu
                         const { TwitchService } = await import('../services/TwitchService');
                         const user = TwitchService.getUserFromStorage();
                         if (user) {
                           // Prüfe ob Stream live ist
                           const streamInfo = await TwitchService.getStreamInfo(user.id);
-                          const StreamSessionTracker = (await import('../services/StreamSessionTracker')).default;
-                          const tracker = StreamSessionTracker.getInstance();
                           
                           if (streamInfo) {
-                            // Stream ist live - aktualisiere Session
+                            // Stream ist live - aktualisiere Session mit echten Daten
                             await tracker.updateCurrentStats(user.id);
                           } else {
                             // Stream ist offline - beende Session

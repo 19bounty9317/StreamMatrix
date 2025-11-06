@@ -187,6 +187,23 @@ class StreamSessionTracker {
       this.saveSession();
     }
   }
+
+  // Reset Session (für Test-Modus beenden)
+  resetSession() {
+    if (this.stats) {
+      // Setze current auf start zurück
+      this.stats.currentFollowers = this.stats.startFollowers;
+      this.stats.currentSubs = this.stats.startSubs;
+      this.saveSession();
+    }
+  }
+
+  // Lösche Session komplett
+  clearSession() {
+    this.stats = null;
+    localStorage.removeItem('stream-session-stats');
+    this.notifyListeners();
+  }
 }
 
 export default StreamSessionTracker;
