@@ -3,7 +3,7 @@ import { TwitchService } from '../../services/TwitchService';
 
 interface Activity {
   id: string;
-  type: 'follow' | 'sub' | 'bits' | 'raid' | 'cheer';
+  type: 'follow' | 'sub' | 'bits' | 'raid' | 'cheer' | 'donation';
   username: string;
   message?: string;
   amount?: number;
@@ -94,7 +94,7 @@ export default function TileActivity() {
       
       const activity: Activity = {
         id: `test-${data.type}-${Date.now()}`,
-        type: data.type === 'donation' ? 'bits' : data.type === 'gift-sub' ? 'sub' : data.type,
+        type: data.type === 'gift-sub' ? 'sub' : data.type,
         username: data.username,
         message: getTestMessage(data),
         amount: data.amount,
@@ -304,6 +304,7 @@ export default function TileActivity() {
       case 'bits': return '💎';
       case 'cheer': return '💎';
       case 'raid': return '🚀';
+      case 'donation': return '💵';
       default: return '📢';
     }
   };
@@ -315,6 +316,7 @@ export default function TileActivity() {
       case 'bits': return 'text-yellow-400';
       case 'cheer': return 'text-yellow-400';
       case 'raid': return 'text-red-400';
+      case 'donation': return 'text-green-400';
       default: return 'text-gray-400';
     }
   };
