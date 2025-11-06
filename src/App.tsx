@@ -6,9 +6,11 @@ import LoginScreen from './components/LoginScreen';
 import Tutorial from './components/Tutorial';
 import Settings from './components/Settings';
 import EventCelebration from './components/EventCelebration';
+import StreamSessionStats from './components/StreamSessionStats';
 import { TwitchService } from './services/TwitchService';
 import StreamQualityService from './services/StreamQualityService';
 import EventTracker from './services/EventTracker';
+import StreamSessionTracker from './services/StreamSessionTracker';
 import { getTheme, applyTheme } from './styles/themes';
 
 function App() {
@@ -98,6 +100,23 @@ function App() {
               // Starte Event-Tracking für Notifications
               const eventTracker = EventTracker.getInstance();
               eventTracker.startTracking(userInfo.id);
+
+              // Prüfe ob Stream live ist und starte Session-Tracking
+              TwitchService.getStreamInfo(userInfo.id).then(streamInfo => {
+                const sessionTracker = StreamSessionTracker.getInstance();
+                if (streamInfo) {
+                  // Stream ist live - starte oder aktualisiere Session
+                  const existingStats = sessionTracker.getStats();
+                  if (!existingStats || !existingStats.isLive) {
+                    sessionTracker.startSession(userInfo.id);
+                  } else {
+                    sessionTracker.updateCurrentStats(userInfo.id);
+                  }
+                } else {
+                  // Stream ist offline - beende Session
+                  sessionTracker.endSession();
+                }
+              });
             }
           }).catch(console.error);
         } else {
@@ -186,6 +205,7 @@ function App() {
       <Tutorial />
       <Settings isOpen={showSettings} onClose={() => setShowSettings(false)} />
       <EventCelebration />
+      <StreamSessionStats />
       
       {/* Update-Banner */}
       {updateAvailable && (

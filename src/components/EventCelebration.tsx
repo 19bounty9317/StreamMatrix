@@ -311,5 +311,15 @@ export const triggerCelebration = (eventData: EventData) => {
       detail: eventData
     });
     window.dispatchEvent(tileEvent);
+
+    // Aktualisiere Session-Stats
+    import('../services/StreamSessionTracker').then(({ default: StreamSessionTracker }) => {
+      const tracker = StreamSessionTracker.getInstance();
+      if (eventData.type === 'follow') {
+        tracker.addFollower();
+      } else if (eventData.type === 'sub' || eventData.type === 'gift-sub') {
+        tracker.addSub();
+      }
+    });
   }
 };
