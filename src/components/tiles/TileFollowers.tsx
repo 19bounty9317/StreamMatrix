@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { TwitchService } from '../../services/TwitchService';
+import StreamSessionTracker from '../../services/StreamSessionTracker';
 
 export default function TileFollowers() {
   const [followerCount, setFollowerCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionDiff, setSessionDiff] = useState(0);
 
   useEffect(() => {
     const loadFollowers = async () => {
@@ -12,6 +14,13 @@ export default function TileFollowers() {
         if (user) {
           const count = await TwitchService.getFollowerCount(user.id);
           setFollowerCount(count);
+          
+          // Hole Session-Differenz
+          const tracker = StreamSessionTracker.getInstance();
+          const stats = tracker.getStats();
+          if (stats && stats.isLive) {
+            setSessionDiff(stats.currentFollowers - stats.startFollowers);
+          }
         }
       } catch (error) {
         console.error('Fehler beim Laden der Follower:', error);
@@ -28,7 +37,26 @@ export default function TileFollowers() {
       refreshService.register('tile-followers', loadFollowers);
     });
 
+    // Listener für Session-Updates
+    const tracker = StreamSessionTracker.getInstance();
+    tracker.onStatsUpdate((stats) => {
+      if (stats.isLive) {
+        setFollowerCount(stats.currentFollowers);
+        setSessionDiff(stats.currentFollowers - stats.startFollowers);
+      }
+    });
+
+    // Aktualisiere alle 5 Sekunden
+    const interval = setInterval(() => {
+      const stats = tracker.getStats();
+      if (stats && stats.isLive) {
+        setFollowerCount(stats.currentFollowers);
+        setSessionDiff(stats.currentFollowers - stats.startFollowers);
+      }
+    }, 5000);
+
     return () => {
+      clearInterval(interval);
       import('../../services/RefreshService').then(({ default: RefreshService }) => {
         const refreshService = RefreshService.getInstance();
         refreshService.unregister('tile-followers');
@@ -48,7 +76,14 @@ export default function TileFollowers() {
     <div className="h-full flex items-center justify-center gap-4">
       <div className="text-4xl">👥</div>
       <div className="flex-1">
-        <div className="text-3xl font-bold theme-text">{followerCount.toLocaleString()}</div>
+        <div className="text-3xl font-bold theme-text">
+          {followerCount.toLocaleString()}
+          {sessionDiff !== 0 && (
+            <span className={`ml-2 text-xl ${sessionDiff > 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {sessionDiff > 0 ? '+' : ''}{sessionDiff}
+            </span>
+          )}
+        </div>
         <div className="text-sm theme-text-secondary">Follower</div>
       </div>
     </div>
