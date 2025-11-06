@@ -349,18 +349,49 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
                       const isActive = e.target.checked;
                       localStorage.setItem('test-mode-active', isActive.toString());
                       
-                      // Wenn Test-Modus aktiviert wird, starte Test-Session
                       if (isActive) {
+                        // Test-Modus aktivieren - starte Test-Session
                         const StreamSessionTracker = (await import('../services/StreamSessionTracker')).default;
                         const tracker = StreamSessionTracker.getInstance();
                         const existingStats = tracker.getStats();
                         
                         if (!existingStats || !existingStats.isLive) {
-                          // Starte Test-Session mit Dummy-Werten
                           const { TwitchService } = await import('../services/TwitchService');
                           const user = TwitchService.getUserFromStorage();
                           if (user) {
                             await tracker.startSession(user.id);
+                          }
+                        }
+                      } else {
+                        // Test-Modus deaktivieren - lösche alle Test-Daten
+                        
+                        // 1. Lösche Activity Feed Test-Daten
+                        const activityFeed = localStorage.getItem('activity-feed');
+                        if (activityFeed) {
+                          const activities = JSON.parse(activityFeed);
+                          const cleanedActivities = activities.filter((a: any) => !a.id.startsWith('test-'));
+                          localStorage.setItem('activity-feed', JSON.stringify(cleanedActivities));
+                        }
+                        
+                        // 2. Trigger Event zum Neuladen aller Kacheln
+                        const reloadEvent = new CustomEvent('reload-tiles');
+                        window.dispatchEvent(reloadEvent);
+                        
+                        // 3. Lade echte Daten neu
+                        const { TwitchService } = await import('../services/TwitchService');
+                        const user = TwitchService.getUserFromStorage();
+                        if (user) {
+                          // Prüfe ob Stream live ist
+                          const streamInfo = await TwitchService.getStreamInfo(user.id);
+                          const StreamSessionTracker = (await import('../services/StreamSessionTracker')).default;
+                          const tracker = StreamSessionTracker.getInstance();
+                          
+                          if (streamInfo) {
+                            // Stream ist live - aktualisiere Session
+                            await tracker.updateCurrentStats(user.id);
+                          } else {
+                            // Stream ist offline - beende Session
+                            tracker.endSession();
                           }
                         }
                       }

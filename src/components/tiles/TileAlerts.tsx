@@ -58,8 +58,16 @@ export default function TileAlerts() {
 
     window.addEventListener('test-event-trigger' as any, handleTestEvent);
 
+    // Listener für Tile-Reload (beim Verlassen des Test-Modus)
+    const handleReload = () => {
+      // Entferne alle Test-Alerts
+      setAlerts(prev => prev.filter(a => !a.id.startsWith('test-')));
+    };
+    window.addEventListener('reload-tiles' as any, handleReload);
+
     return () => {
       window.removeEventListener('test-event-trigger' as any, handleTestEvent);
+      window.removeEventListener('reload-tiles' as any, handleReload);
     };
   }, []);
 
