@@ -54,10 +54,18 @@ export default function TileRaidTargets() {
       const data = await response.json();
       const followedChannels = data.data || [];
 
-      // Hole Stream-Infos für alle Kanäle
-      const channelIds = followedChannels.map((c: any) => c.broadcaster_id).join('&id=');
+      if (followedChannels.length === 0) {
+        setChannels([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Hole Stream-Infos für alle Kanäle (max 100 auf einmal)
+      const channelIds = followedChannels.map((c: any) => c.broadcaster_id);
+      const streamParams = channelIds.map((id: string) => `user_id=${id}`).join('&');
+      
       const streamsResponse = await fetch(
-        `https://api.twitch.tv/helix/streams?user_id=${channelIds}`,
+        `https://api.twitch.tv/helix/streams?${streamParams}`,
         {
           headers: {
             'Authorization': `Bearer ${TwitchService.getStoredToken()}`,
@@ -67,6 +75,8 @@ export default function TileRaidTargets() {
       );
 
       const streamsData = await streamsResponse.json();
+      console.log('🎮 Streams geladen:', streamsData.data?.length || 0, 'von', channelIds.length);
+      
       const liveStreams = new Map<string, { viewer_count: number; game_name: string }>(
         (streamsData.data || []).map((s: any) => [
           s.user_id,
@@ -75,8 +85,9 @@ export default function TileRaidTargets() {
       );
 
       // Hole User-Infos für Profilbilder
+      const userParams = channelIds.map((id: string) => `id=${id}`).join('&');
       const usersResponse = await fetch(
-        `https://api.twitch.tv/helix/users?id=${channelIds}`,
+        `https://api.twitch.tv/helix/users?${userParams}`,
         {
           headers: {
             'Authorization': `Bearer ${TwitchService.getStoredToken()}`,
