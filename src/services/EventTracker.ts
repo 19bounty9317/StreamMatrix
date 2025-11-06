@@ -64,6 +64,15 @@ class EventTracker {
             username: follower.user_name,
             timestamp: new Date(follower.followed_at)
           });
+
+          // Trigger Celebration Event
+          const celebrationEvent = new CustomEvent('stream-celebration', {
+            detail: {
+              type: 'follow',
+              username: follower.user_name
+            }
+          });
+          window.dispatchEvent(celebrationEvent);
         });
         
         this.lastFollowerCount = currentFollowers;
@@ -80,6 +89,16 @@ class EventTracker {
           amount: newSubs,
           timestamp: new Date()
         });
+
+        // Trigger Celebration Event
+        const celebrationEvent = new CustomEvent('stream-celebration', {
+          detail: {
+            type: 'sub',
+            username: 'Neuer Subscriber',
+            amount: newSubs
+          }
+        });
+        window.dispatchEvent(celebrationEvent);
         
         this.lastSubCount = currentSubs;
       }
@@ -97,6 +116,17 @@ class EventTracker {
       amount,
       timestamp: new Date()
     });
+
+    // Trigger auch Celebration Event für visuelle Effekte
+    const celebrationType = type === 'subscriber' ? 'sub' : type;
+    const celebrationEvent = new CustomEvent('stream-celebration', {
+      detail: {
+        type: celebrationType,
+        username,
+        amount
+      }
+    });
+    window.dispatchEvent(celebrationEvent);
   }
 }
 
