@@ -55,8 +55,12 @@ function App() {
   useEffect(() => {
     if (window.electron?.onUpdateAvailable) {
       window.electron.onUpdateAvailable((info) => {
-        setUpdateAvailable(true);
-        console.log('Update verfügbar:', info.version);
+        // Prüfe ob Update bereits abgelehnt wurde
+        const dismissedUpdate = localStorage.getItem('dismissed-update-version');
+        if (dismissedUpdate !== info.version) {
+          setUpdateAvailable(true);
+          console.log('Update verfügbar:', info.version);
+        }
       });
     }
   }, []);
@@ -205,19 +209,7 @@ function App() {
       <Settings isOpen={showSettings} onClose={() => setShowSettings(false)} />
       <EventCelebration />
       
-      {/* Update-Banner */}
-      {updateAvailable && (
-        <div className="fixed top-0 left-0 right-0 z-50 p-3 text-center text-white font-semibold shadow-lg"
-             style={{ backgroundColor: 'var(--color-accent)' }}>
-          🎉 Neues Update verfügbar! Wird beim nächsten Start installiert.
-          <button 
-            onClick={() => setUpdateAvailable(false)}
-            className="ml-4 px-3 py-1 rounded bg-white bg-opacity-20 hover:bg-opacity-30 transition-all"
-          >
-            ✕
-          </button>
-        </div>
-      )}
+      {/* Update-Banner - wird nicht mehr oben angezeigt, nur im Footer */}
 
       {/* Test-Mode Banner */}
       {testModeActive && (

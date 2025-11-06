@@ -178,6 +178,20 @@ export default function EventCelebrationTest() {
           <div className="text-xs mt-1 opacity-80">Level 5</div>
         </button>
 
+        {/* Hype Train Ende */}
+        <button
+          onClick={() => triggerCelebration({
+            type: 'hypetrain-end',
+            username: 'Community',
+            amount: 3
+          })}
+          className="p-6 rounded-xl bg-gradient-to-r from-orange-600 to-orange-800 text-white font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95"
+        >
+          <div className="text-4xl mb-2">🚂✅</div>
+          <div>Test Hype Train Ende</div>
+          <div className="text-xs mt-1 opacity-80">Level 3 beendet</div>
+        </button>
+
         {/* Spam Test */}
         <button
           onClick={() => {
@@ -232,7 +246,10 @@ export default function EventCelebrationTest() {
             <strong className="theme-text">💵 Donation:</strong> Geldspende
           </div>
           <div>
-            <strong className="theme-text">🚂 Hype Train:</strong> Hype Train Event
+            <strong className="theme-text">🚂 Hype Train:</strong> Hype Train Start
+          </div>
+          <div>
+            <strong className="theme-text">🚂✅ Hype Train Ende:</strong> Hype Train beendet
           </div>
         </div>
       </div>

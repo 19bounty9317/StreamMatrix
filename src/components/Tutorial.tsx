@@ -9,42 +9,59 @@ export default function Tutorial() {
     if (!hasSeenTutorial) {
       setTimeout(() => setShowTutorial(true), 2000);
     }
+
+    // Listener für manuelles Öffnen des Tutorials
+    const handleShowTutorial = () => {
+      setCurrentStep(0);
+      setShowTutorial(true);
+    };
+
+    window.addEventListener('show-tutorial' as any, handleShowTutorial);
+
+    return () => {
+      window.removeEventListener('show-tutorial' as any, handleShowTutorial);
+    };
   }, []);
 
   const steps = [
     {
       title: '👋 Willkommen bei StreamMatrix!',
-      content: 'Lass uns dir zeigen, wie du das Dashboard nutzt.',
+      content: 'Dein All-in-One Dashboard für Twitch Streaming. Lass uns dir die wichtigsten Features zeigen!',
       position: 'center'
     },
     {
-      title: '📋 Kacheln aktivieren',
-      content: 'Klicke in der linken Sidebar auf eine Kachel, um sie ein-/auszublenden.',
+      title: '📋 Kacheln verwalten',
+      content: 'Klicke in der linken Sidebar auf eine Kachel, um sie ein-/auszublenden. Ziehe sie per Drag & Drop, um die Reihenfolge zu ändern.',
       position: 'left'
     },
     {
-      title: '🔄 Kacheln sortieren',
-      content: 'Ziehe Kacheln in der Sidebar per Drag & Drop, um die Reihenfolge zu ändern.',
-      position: 'left'
-    },
-    {
-      title: '📐 Größe anpassen',
-      content: 'Ziehe an den Ecken einer Kachel, um sie zu vergrößern oder zu verkleinern.',
+      title: '📐 Layout anpassen',
+      content: 'Ziehe an den Ecken einer Kachel, um sie zu vergrößern oder zu verkleinern. Nutze A+/A- für die Schriftgröße.',
       position: 'center'
     },
     {
-      title: '🔤 Schriftgröße',
-      content: 'Nutze die A+ und A- Buttons in der Titelleiste jeder Kachel.',
+      title: '🎯 Schalter & Filter',
+      content: 'Viele Kacheln haben Schalter: Live Viewer (Aktiv/Alle), Raid-Ziele (Live/Alle), Test-Modus in Settings.',
       position: 'center'
     },
     {
-      title: '✕ Kacheln schließen',
-      content: 'Klicke auf das ✕ in der Titelleiste, um eine Kachel zu schließen.',
+      title: '🚀 Raid-Alerts',
+      content: 'Bei Raids erscheint eine Benachrichtigung mit Shoutout-Button. Ein Klick sendet automatisch /shoutout!',
       position: 'center'
     },
     {
-      title: '🎉 Fertig!',
-      content: 'Du kannst dieses Tutorial jederzeit über das Fragezeichen-Icon neu starten.',
+      title: '🚂 Hype Train',
+      content: 'Aktiviere die Hype Train Kachel! Sie zeigt Level, Progress und Details. Nach Ende erscheint ein Eintrag im Activity Feed.',
+      position: 'center'
+    },
+    {
+      title: '⚙️ Einstellungen',
+      content: 'Klicke auf das Zahnrad für Themes, OBS-Integration, Test-Modus und mehr. Test-Modus simuliert Events!',
+      position: 'center'
+    },
+    {
+      title: '🎉 Los geht\'s!',
+      content: 'Du kannst dieses Tutorial jederzeit über "Tutorial" in der Sidebar neu starten. Viel Erfolg beim Streamen!',
       position: 'center'
     }
   ];

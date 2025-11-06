@@ -3,12 +3,17 @@ import { TwitchService } from '../../services/TwitchService';
 
 interface Activity {
   id: string;
-  type: 'follow' | 'sub' | 'bits' | 'raid' | 'cheer' | 'donation';
+  type: 'follow' | 'sub' | 'bits' | 'raid' | 'cheer' | 'donation' | 'hypetrain';
   username: string;
   message?: string;
   amount?: number;
   timestamp: Date;
   recipients?: string[]; // Für Gift Sub Recipients
+  hypeTrainData?: {
+    level: number;
+    totalSubs: number;
+    totalBits: number;
+  };
 }
 
 export default function TileActivity() {
@@ -17,7 +22,9 @@ export default function TileActivity() {
     const saved = localStorage.getItem('activity-feed');
     if (saved) {
       const parsed = JSON.parse(saved);
-      return parsed.map((a: any) => ({ ...a, timestamp: new Date(a.timestamp) }));
+      const activities = parsed.map((a: any) => ({ ...a, timestamp: new Date(a.timestamp) }));
+      // Sortiere nach Timestamp (neueste zuerst)
+      return activities.sort((a: Activity, b: Activity) => b.timestamp.getTime() - a.timestamp.getTime());
     }
     return [];
   });
@@ -68,7 +75,9 @@ export default function TileActivity() {
         setActivities(prev => {
           const existingIds = new Set(prev.map(a => a.id));
           const newActivities = followerActivities.filter(a => !existingIds.has(a.id));
-          return [...newActivities, ...prev].slice(0, 50); // Max 50 Aktivitäten
+          const updated = [...newActivities, ...prev];
+          // Sortiere nach Timestamp (neueste zuerst)
+          return updated.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 50);
         });
       }
     } catch (error) {
@@ -82,7 +91,9 @@ export default function TileActivity() {
       if (prev.some(a => a.id === activity.id)) {
         return prev;
       }
-      return [activity, ...prev].slice(0, 50);
+      // Füge neue Activity hinzu und sortiere nach Timestamp (neueste zuerst)
+      const updated = [activity, ...prev];
+      return updated.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 50);
     });
   };
 
@@ -300,6 +311,36 @@ export default function TileActivity() {
     });
   }, []);
 
+  // Listener für Hype Train Ende
+  useEffect(() => {
+    const handleHypeTrainEnd = (event: CustomEvent) => {
+      const data = event.detail;
+      console.log('🚂 Hype Train beendet:', data);
+      
+      const activity: Activity = {
+        id: `hypetrain-${Date.now()}`,
+        type: 'hypetrain',
+        username: 'Community',
+        message: `Hype Train Level ${data.level} beendet!`,
+        amount: data.level,
+        timestamp: new Date(),
+        hypeTrainData: {
+          level: data.level,
+          totalSubs: data.totalSubs,
+          totalBits: data.totalBits
+        }
+      };
+      
+      addActivity(activity);
+    };
+
+    window.addEventListener('hypetrain-ended' as any, handleHypeTrainEnd);
+
+    return () => {
+      window.removeEventListener('hypetrain-ended' as any, handleHypeTrainEnd);
+    };
+  }, []);
+
   const clearActivities = () => {
     setActivities([]);
     localStorage.removeItem('activity-feed');
@@ -313,6 +354,7 @@ export default function TileActivity() {
       case 'cheer': return '💎';
       case 'raid': return '🚀';
       case 'donation': return '💵';
+      case 'hypetrain': return '🚂';
       default: return '📢';
     }
   };
@@ -325,6 +367,7 @@ export default function TileActivity() {
       case 'cheer': return 'text-yellow-400';
       case 'raid': return 'text-red-400';
       case 'donation': return 'text-green-400';
+      case 'hypetrain': return 'text-orange-400';
       default: return 'text-gray-400';
     }
   };
@@ -372,13 +415,21 @@ export default function TileActivity() {
               <span className="text-xs theme-text-secondary flex-shrink-0">{formatTime(activity.timestamp)}</span>
             </div>
             <p className="theme-text-secondary text-sm">{activity.message}</p>
-            {activity.amount && (
+            {activity.amount && !activity.hypeTrainData && (
               <p className={`text-sm font-semibold mt-1 ${getColor(activity.type)}`}>
                 {activity.type === 'raid' ? `${activity.amount} Zuschauer` : 
                  activity.type === 'bits' ? `${activity.amount} Bits` :
                  activity.type === 'sub' && activity.recipients ? `${activity.amount} Subs` : 
                  `${activity.amount}`}
               </p>
+            )}
+            {activity.hypeTrainData && (
+              <div className="mt-2 space-y-1">
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-purple-400">⭐ {activity.hypeTrainData.totalSubs} Subs</span>
+                  <span className="text-yellow-400">💎 {activity.hypeTrainData.totalBits} Bits</span>
+                </div>
+              </div>
             )}
             {activity.recipients && activity.recipients.length > 0 && (
               <div className="mt-2 text-xs theme-text-secondary">

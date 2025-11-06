@@ -14,6 +14,10 @@ export default function TileViewerList() {
   const [viewers, setViewers] = useState<Viewer[]>([]);
   const [filter, setFilter] = useState<'all' | 'mods' | 'vips' | 'subs'>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showOnlyActive, setShowOnlyActive] = useState(() => {
+    const saved = localStorage.getItem('viewer-list-show-only-active');
+    return saved ? JSON.parse(saved) : true;
+  });
 
   useEffect(() => {
     const chatService = TwitchChatService.getInstance();
@@ -118,6 +122,14 @@ export default function TileViewerList() {
   }, []);
 
   const filteredViewers = viewers.filter(viewer => {
+    // Filter nach Aktivität (letzte 5 Minuten)
+    if (showOnlyActive) {
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+      if (viewer.lastSeen < fiveMinutesAgo) {
+        return false;
+      }
+    }
+    
     if (searchTerm && !viewer.displayName.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
@@ -128,6 +140,11 @@ export default function TileViewerList() {
       case 'subs': return viewer.isSubscriber;
       default: return true;
     }
+  });
+
+  const activeViewers = viewers.filter(v => {
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    return v.lastSeen >= fiveMinutesAgo;
   });
 
   const getBadges = (viewer: Viewer) => {
@@ -141,13 +158,34 @@ export default function TileViewerList() {
   return (
     <div className="h-full flex flex-col">
       <div className="mb-3">
-        <input
-          type="text"
-          placeholder="Suche Viewer..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-3 py-2 theme-input rounded text-sm mb-2"
-        />
+        <div className="flex items-center justify-between mb-2">
+          <input
+            type="text"
+            placeholder="Suche Viewer..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1 px-3 py-2 theme-input rounded text-sm mr-2"
+          />
+          <button
+            onClick={() => {
+              const newValue = !showOnlyActive;
+              setShowOnlyActive(newValue);
+              localStorage.setItem('viewer-list-show-only-active', JSON.stringify(newValue));
+            }}
+            className={`px-3 py-2 rounded text-xs font-semibold whitespace-nowrap transition-colors ${
+              showOnlyActive 
+                ? 'bg-green-600 hover:bg-green-700 text-white' 
+                : 'bg-gray-600 hover:bg-gray-700 text-white'
+            }`}
+          >
+            {showOnlyActive ? '🟢 Aktiv' : '📺 Alle'}
+          </button>
+        </div>
+        <div className="text-xs theme-text-secondary mb-2">
+          {showOnlyActive 
+            ? `${activeViewers.length} aktive Viewer (letzte 5 Min)` 
+            : `${viewers.length} Viewer gesamt`}
+        </div>
         
         <div className="flex gap-2">
           <button

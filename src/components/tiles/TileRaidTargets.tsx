@@ -24,8 +24,8 @@ export default function TileRaidTargets() {
   useEffect(() => {
     loadFollowedChannels();
     
-    // Aktualisiere alle 60 Sekunden
-    const interval = setInterval(loadFollowedChannels, 60000);
+    // Aktualisiere alle 30 Sekunden
+    const interval = setInterval(loadFollowedChannels, 30000);
     return () => clearInterval(interval);
   }, []);
 

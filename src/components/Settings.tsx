@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { themes, getTheme, applyTheme } from '../styles/themes';
 import { triggerCelebration } from './EventCelebration';
+import { APP_VERSION } from '../config/version';
 
 interface SettingsProps {
   isOpen: boolean;
@@ -454,6 +455,18 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
                     >
                       ⭐ Gift
                     </button>
+                    <button
+                      onClick={() => triggerCelebration({ type: 'hypetrain', username: 'Community', amount: 3 })}
+                      className="px-3 py-2 rounded bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold transition-colors"
+                    >
+                      🚂 Train
+                    </button>
+                    <button
+                      onClick={() => triggerCelebration({ type: 'hypetrain-end', username: 'Community', amount: 3 })}
+                      className="px-3 py-2 rounded bg-orange-700 hover:bg-orange-800 text-white text-sm font-semibold transition-colors"
+                    >
+                      🚂 Ende
+                    </button>
                   </div>
                 </>
               )}
@@ -589,7 +602,7 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
             <div className="p-3 theme-tile-content-bg rounded space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="theme-text-secondary">Version:</span>
-                <span className="theme-text">1.3.4</span>
+                <span className="theme-text">{APP_VERSION}</span>
               </div>
               <div className="flex justify-between">
                 <span className="theme-text-secondary">Name:</span>
