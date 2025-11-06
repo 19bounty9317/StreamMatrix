@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { themes, getTheme, applyTheme } from '../styles/themes';
+import { triggerCelebration } from './EventCelebration';
 
 interface SettingsProps {
   isOpen: boolean;
@@ -333,69 +334,78 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
             <div className="p-4 bg-gradient-to-r from-pink-500/20 to-purple-600/20 border border-pink-500/30 rounded-lg">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <div className="font-bold theme-text">Event-Effekte testen</div>
+                  <div className="font-bold theme-text">Test-Modus</div>
                   <div className="text-xs theme-text-secondary mt-1">
-                    Teste die visuellen Effekte direkt im Dashboard
+                    Aktiviere den Test-Modus um Events in allen Kacheln zu simulieren
                   </div>
                 </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={(() => {
+                      return localStorage.getItem('test-mode-active') === 'true';
+                    })()}
+                    onChange={(e) => {
+                      const isActive = e.target.checked;
+                      localStorage.setItem('test-mode-active', isActive.toString());
+                      // Trigger Event für alle Komponenten
+                      const event = new CustomEvent('test-mode-change', { detail: isActive });
+                      window.dispatchEvent(event);
+                      // Force re-render
+                      setSettings({...settings});
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                </label>
               </div>
-              
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  onClick={() => {
-                    const { triggerCelebration } = require('./EventCelebration');
-                    triggerCelebration({ type: 'sub', username: 'TestUser' });
-                  }}
-                  className="px-3 py-2 rounded bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold transition-colors"
-                >
-                  ⭐ Sub
-                </button>
-                <button
-                  onClick={() => {
-                    const { triggerCelebration } = require('./EventCelebration');
-                    triggerCelebration({ type: 'bits', username: 'TestUser', amount: 1000 });
-                  }}
-                  className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors"
-                >
-                  💎 Bits
-                </button>
-                <button
-                  onClick={() => {
-                    const { triggerCelebration } = require('./EventCelebration');
-                    triggerCelebration({ type: 'follow', username: 'NewFollower' });
-                  }}
-                  className="px-3 py-2 rounded bg-green-600 hover:bg-green-700 text-white text-sm font-semibold transition-colors"
-                >
-                  👤 Follow
-                </button>
-                <button
-                  onClick={() => {
-                    const { triggerCelebration } = require('./EventCelebration');
-                    triggerCelebration({ type: 'raid', username: 'Raider', amount: 250 });
-                  }}
-                  className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors"
-                >
-                  🚀 Raid
-                </button>
-                <button
-                  onClick={() => {
-                    const { triggerCelebration } = require('./EventCelebration');
-                    triggerCelebration({ type: 'donation', username: 'Donor', amount: 10 });
-                  }}
-                  className="px-3 py-2 rounded bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-semibold transition-colors"
-                >
-                  💵 Dono
-                </button>
-                <button
-                  onClick={() => {
-                    const { triggerCelebration } = require('./EventCelebration');
-                    triggerCelebration({ type: 'gift-sub', username: 'Gifter', amount: 5 });
-                  }}
-                  className="px-3 py-2 rounded bg-purple-700 hover:bg-purple-800 text-white text-sm font-semibold transition-colors"
-                >
-                  ⭐ Gift
-                </button>
-              </div>
+
+              {localStorage.getItem('test-mode-active') === 'true' && (
+                <>
+                  <div className="mb-3 p-2 bg-orange-500/20 border border-orange-500/50 rounded text-xs theme-text">
+                    ⚠️ Test-Modus aktiv - Events werden in allen Kacheln simuliert
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      onClick={() => triggerCelebration({ type: 'sub', username: 'TestUser' })}
+                      className="px-3 py-2 rounded bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold transition-colors"
+                    >
+                      ⭐ Sub
+                    </button>
+                    <button
+                      onClick={() => triggerCelebration({ type: 'bits', username: 'TestUser', amount: 1000 })}
+                      className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors"
+                    >
+                      💎 Bits
+                    </button>
+                    <button
+                      onClick={() => triggerCelebration({ type: 'follow', username: 'NewFollower' })}
+                      className="px-3 py-2 rounded bg-green-600 hover:bg-green-700 text-white text-sm font-semibold transition-colors"
+                    >
+                      👤 Follow
+                    </button>
+                    <button
+                      onClick={() => triggerCelebration({ type: 'raid', username: 'Raider', amount: 250 })}
+                      className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors"
+                    >
+                      🚀 Raid
+                    </button>
+                    <button
+                      onClick={() => triggerCelebration({ type: 'donation', username: 'Donor', amount: 10 })}
+                      className="px-3 py-2 rounded bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-semibold transition-colors"
+                    >
+                      💵 Dono
+                    </button>
+                    <button
+                      onClick={() => triggerCelebration({ type: 'gift-sub', username: 'Gifter', amount: 5 })}
+                      className="px-3 py-2 rounded bg-purple-700 hover:bg-purple-800 text-white text-sm font-semibold transition-colors"
+                    >
+                      ⭐ Gift
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

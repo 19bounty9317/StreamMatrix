@@ -297,8 +297,19 @@ export default function EventCelebration() {
 
 // Helper-Funktion zum Triggern von Events
 export const triggerCelebration = (eventData: EventData) => {
-  const event = new CustomEvent('stream-celebration', {
+  // Trigger visuellen Effekt
+  const celebrationEvent = new CustomEvent('stream-celebration', {
     detail: eventData
   });
-  window.dispatchEvent(event);
+  window.dispatchEvent(celebrationEvent);
+
+  // Wenn Test-Modus aktiv, sende auch an Kacheln
+  const isTestMode = localStorage.getItem('test-mode-active') === 'true';
+  if (isTestMode) {
+    // Trigger Event für Activity Feed, Alerts, etc.
+    const tileEvent = new CustomEvent('test-event-trigger', {
+      detail: eventData
+    });
+    window.dispatchEvent(tileEvent);
+  }
 };
