@@ -46,6 +46,13 @@ export default function TileFollowers() {
       }
     });
 
+    // Listener für Tile-Reload (beim Verlassen des Test-Modus)
+    const handleReload = () => {
+      setSessionDiff(0);
+      loadFollowers();
+    };
+    window.addEventListener('reload-tiles' as any, handleReload);
+
     // Aktualisiere alle 5 Sekunden
     const interval = setInterval(() => {
       const stats = tracker.getStats();
@@ -57,6 +64,7 @@ export default function TileFollowers() {
 
     return () => {
       clearInterval(interval);
+      window.removeEventListener('reload-tiles' as any, handleReload);
       import('../../services/RefreshService').then(({ default: RefreshService }) => {
         const refreshService = RefreshService.getInstance();
         refreshService.unregister('tile-followers');

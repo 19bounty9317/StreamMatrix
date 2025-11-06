@@ -247,8 +247,16 @@ export default function TileChat() {
 
     window.addEventListener('test-event-trigger' as any, handleTestEvent);
 
+    // Listener für Tile-Reload (beim Verlassen des Test-Modus)
+    const handleReload = () => {
+      // Entferne alle Test-Nachrichten
+      setMessages(prev => prev.filter(m => !m.id.startsWith('test-')));
+    };
+    window.addEventListener('reload-tiles' as any, handleReload);
+
     return () => {
       window.removeEventListener('test-event-trigger' as any, handleTestEvent);
+      window.removeEventListener('reload-tiles' as any, handleReload);
     };
   }, []);
 
