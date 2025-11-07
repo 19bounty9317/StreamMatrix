@@ -38,23 +38,85 @@ function App() {
     const saved = localStorage.getItem('tiles-order');
     
     if (saved) {
-      const savedTiles = JSON.parse(saved);
-      const savedIds = new Set(savedTiles.map((t: any) => t.id));
-      
-      // Finde neue Kacheln, die im Code hinzugefügt wurden
-      const newTiles = defaultTiles.filter(dt => !savedIds.has(dt.id));
-      
-      if (newTiles.length > 0) {
-        console.log('🆕 Neue Kacheln gefunden:', newTiles.map(t => t.name).join(', '));
-        // Füge neue Kacheln am Ende hinzu
-        const mergedTiles = [...savedTiles, ...newTiles];
-        localStorage.setItem('tiles-order', JSON.stringify(mergedTiles));
+      try {
+        const savedTiles = JSON.parse(saved);
+        
+        // Prüfe ob das Format gültig ist
+        if (!Array.isArray(savedTiles) || savedTiles.length === 0) {
+          console.warn('⚠️ Ungültiges tiles-order Format, verwende Defaults');
+          return defaultTiles;
+        }
+        
+        // Prüfe ob alle Tiles das richtige Format haben
+        const hasValidFormat = savedTiles.every((t: any) => 
+          t && typeof t === 'object' && 'id' in t && 'enabled' in t
+        );
+        
+        if (!hasValidFormat) {
+          console.warn('⚠️ Tiles haben ungültiges Format, verwende Defaults');
+          return defaultTiles;
+        }
+        
+        const defaultTilesMap = new Map(defaultTiles.map(t => [t.id, t]));
+        const savedIds = new Set(savedTiles.map((t: any) => t.id));
+        
+        // 1. Aktualisiere bestehende Kacheln (Namen könnten sich geändert haben)
+        // und behalte die enabled-Einstellung des Users
+        const updatedTiles = savedTiles
+          .filter((t: any) => defaultTilesMap.has(t.id)) // Entferne gelöschte Kacheln
+          .map((t: any) => {
+            const defaultTile = defaultTilesMap.get(t.id)!; // ! weil wir oben geprüft haben dass es existiert
+            return {
+              id: defaultTile.id,
+              name: defaultTile.name, // Aktualisierter Name
+              enabled: t.enabled !== undefined ? t.enabled : defaultTile.enabled // User-Einstellung beibehalten
+            };
+          });
+        
+        // 2. Finde neue Kacheln, die im Code hinzugefügt wurden
+        const newTiles = defaultTiles.filter(dt => !savedIds.has(dt.id));
+        
+        // 3. Merge: Bestehende Kacheln + neue Kacheln
+        const mergedTiles = [...updatedTiles, ...newTiles];
+        
+        // 4. Prüfe ob wir genug Kacheln haben (mindestens 5)
+        const enabledCount = mergedTiles.filter(t => t.enabled).length;
+        if (enabledCount < 3) {
+          console.warn('⚠️ Zu wenige aktivierte Kacheln gefunden, aktiviere Standard-Kacheln');
+          // Aktiviere die wichtigsten Kacheln
+          mergedTiles.forEach(t => {
+            if (['chat', 'activity', 'stream-info', 'followers', 'alerts'].includes(t.id)) {
+              t.enabled = true;
+            }
+          });
+        }
+        
+        // 5. Speichere nur wenn sich etwas geändert hat
+        const hasChanges = newTiles.length > 0 || updatedTiles.length !== savedTiles.length || enabledCount < 3;
+        if (hasChanges) {
+          console.log('🔄 Kachel-Migration durchgeführt:');
+          console.log('  📊 Gespeicherte Kacheln:', savedTiles.length);
+          console.log('  ✅ Gültige Kacheln:', updatedTiles.length);
+          if (newTiles.length > 0) {
+            console.log('  🆕 Neue Kacheln:', newTiles.map(t => t.name).join(', '));
+          }
+          if (updatedTiles.length !== savedTiles.length) {
+            console.log('  🗑️ Entfernte Kacheln:', savedTiles.length - updatedTiles.length);
+          }
+          console.log('  🎯 Aktivierte Kacheln:', mergedTiles.filter(t => t.enabled).length);
+          localStorage.setItem('tiles-order', JSON.stringify(mergedTiles));
+        }
+        
         return mergedTiles;
+      } catch (error) {
+        console.error('❌ Fehler beim Laden der Kacheln:', error);
+        console.log('🔄 Verwende Default-Kacheln');
+        return defaultTiles;
       }
-      
-      return savedTiles;
     }
     
+    // Kein gespeichertes Layout gefunden - erste Installation oder v1.3.8 Migration
+    console.log('🆕 Keine gespeicherten Kacheln gefunden, verwende Defaults');
     return defaultTiles;
   });
 
