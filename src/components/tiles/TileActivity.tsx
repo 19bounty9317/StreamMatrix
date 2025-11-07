@@ -241,6 +241,16 @@ export default function TileActivity() {
                     timestamp: new Date()
                   };
                   addActivity(activity);
+
+                  // Trigger Celebration Event für Sub-Bombe
+                  const celebrationEvent = new CustomEvent('stream-celebration', {
+                    detail: {
+                      type: 'sub-bomb',
+                      username: data.username,
+                      amount: count
+                    }
+                  });
+                  window.dispatchEvent(celebrationEvent);
                 } else {
                   // Weniger als 5: Zeige einzeln
                   recipients.forEach(rec => {
@@ -361,6 +371,17 @@ export default function TileActivity() {
       };
       
       addActivity(activity);
+
+      // Trigger Celebration Event für visuelle Effekte
+      const celebrationEvent = new CustomEvent('stream-celebration', {
+        detail: {
+          type: 'hypetrain',
+          level: data.level,
+          totalSubs: data.totalSubs,
+          totalBits: data.totalBits
+        }
+      });
+      window.dispatchEvent(celebrationEvent);
     };
 
     window.addEventListener('hypetrain-ended' as any, handleHypeTrainEnd);

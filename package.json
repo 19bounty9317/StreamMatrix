@@ -1,6 +1,6 @@
 {
     "name": "streammatrix",
-    "version": "1.4.1",
+    "version": "1.4.2",
     "description": "StreamMatrix - Ein modernes Twitch-Dashboard für Streamer mit OBS-Integration",
     "main": "dist/main.js",
     "scripts": {

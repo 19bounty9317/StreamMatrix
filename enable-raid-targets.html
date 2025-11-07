@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Raid-Ziele Kachel aktivieren</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #0e0e10;
+            color: #efeff1;
+        }
+        button {
+            background: #9147ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #772ce8;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background: #00c853;
+            color: white;
+        }
+        .info {
+            background: #18181b;
+            border: 1px solid #464649;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Raid-Ziele Kachel aktivieren</h1>
+    <p>Klicke auf den Button, um die Raid-Ziele Kachel in der Sidebar zu aktivieren.</p>
+    
+    <button onclick="enableRaidTargets()">Raid-Ziele aktivieren</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        function enableRaidTargets() {
+            const resultDiv = document.getElementById('result');
+            
+            // Lade aktuelle Tiles
+            const tilesStr = localStorage.getItem('tiles-order');
+            let tiles;
+            
+            if (tilesStr) {
+                tiles = JSON.parse(tilesStr);
+            } else {
+                // Erstelle Standard-Tiles wenn keine vorhanden
+                tiles = [
+                    { id: 'chat', name: 'Chat', enabled: true },
+                    { id: 'activity', name: 'Aktivitätsfeed', enabled: true },
+                    { id: 'stream-info', name: 'Stream-Info', enabled: true },
+                    { id: 'stream-preview', name: 'Stream-Vorschau', enabled: true },
+                    { id: 'followers', name: 'Follower', enabled: true },
+                    { id: 'alerts', name: 'Alerts & Benachrichtigungen', enabled: true },
+                    { id: 'viewer-stats', name: 'Viewer-Statistiken', enabled: true },
+                    { id: 'quick-actions', name: 'Quick Actions', enabled: true },
+                    { id: 'viewer-list', name: 'Live Viewer', enabled: true },
+                    { id: 'subs', name: 'Abonnenten', enabled: false },
+                    { id: 'bits', name: 'Einnahmen-Übersicht', enabled: true },
+                    { id: 'channel-points', name: 'Rewards Queue', enabled: false },
+                    { id: 'hype-train', name: 'Hype Train', enabled: false },
+                    { id: 'stream-settings', name: 'Stream-Einstellungen', enabled: false },
+                    { id: 'raid-targets', name: 'Raid-Ziele', enabled: true }
+                ];
+            }
+            
+            // Finde Raid-Targets Kachel
+            const raidTargetsTile = tiles.find(t => t.id === 'raid-targets');
+            
+            if (raidTargetsTile) {
+                // Aktiviere die Kachel
+                raidTargetsTile.enabled = true;
+                localStorage.setItem('tiles-order', JSON.stringify(tiles));
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <strong>✅ Erfolgreich!</strong><br>
+                        Die Raid-Ziele Kachel wurde aktiviert.<br>
+                        <strong>Bitte lade die App neu (F5 oder Strg+R)</strong>
+                    </div>
+                `;
+            } else {
+                // Kachel existiert nicht, füge sie hinzu
+                tiles.push({ id: 'raid-targets', name: 'Raid-Ziele', enabled: true });
+                localStorage.setItem('tiles-order', JSON.stringify(tiles));
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <strong>✅ Erfolgreich!</strong><br>
+                        Die Raid-Ziele Kachel wurde hinzugefügt und aktiviert.<br>
+                        <strong>Bitte lade die App neu (F5 oder Strg+R)</strong>
+                    </div>
+                `;
+            }
+            
+            // Zeige aktuelle Konfiguration
+            setTimeout(() => {
+                const enabledTiles = tiles.filter(t => t.enabled).map(t => t.name).join(', ');
+                resultDiv.innerHTML += `
+                    <div class="result info" style="margin-top: 10px;">
+                        <strong>Aktivierte Kacheln:</strong><br>
+                        ${enabledTiles}
+                    </div>
+                `;
+            }, 100);
+        }
+        
+        // Zeige aktuelle Konfiguration beim Laden
+        window.addEventListener('load', () => {
+            const tilesStr = localStorage.getItem('tiles-order');
+            if (tilesStr) {
+                const tiles = JSON.parse(tilesStr);
+                const raidTargetsTile = tiles.find(t => t.id === 'raid-targets');
+                
+                if (raidTargetsTile) {
+                    const status = raidTargetsTile.enabled ? '✅ Aktiviert' : '❌ Deaktiviert';
+                    document.getElementById('result').innerHTML = `
+                        <div class="result info">
+                            <strong>Aktueller Status:</strong> ${status}
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <div class="result info">
+                            <strong>Status:</strong> Raid-Ziele Kachel nicht gefunden
+                        </div>
+                    `;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kacheln zurücksetzen</title>
+</head>
+<body>
+    <h1>Kacheln-Konfiguration zurücksetzen</h1>
+    <button onclick="resetTiles()">Kacheln zurücksetzen</button>
+    <div id="result"></div>
+    
+    <script>
+        function resetTiles() {
+            localStorage.removeItem('tiles-order');
+            document.getElementById('result').innerHTML = '<p style="color: green;">Kacheln wurden zurückgesetzt! Bitte App neu laden.</p>';
+        }
+    </script>
+</body>
+</html>

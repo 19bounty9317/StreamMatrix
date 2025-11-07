@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tiles Debug</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            background: #0e0e10;
+            color: #efeff1;
+        }
+        .tile {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border: 2px solid;
+        }
+        .enabled {
+            background: #9147ff;
+            border-color: #772ce8;
+        }
+        .disabled {
+            background: #18181b;
+            border-color: #464649;
+        }
+        button {
+            background: #9147ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #772ce8;
+        }
+        .success {
+            background: #00c853;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Tiles Debug Tool</h1>
+    
+    <button onclick="showTiles()">Tiles anzeigen</button>
+    <button onclick="enableRaidTargets()">Raid-Ziele aktivieren</button>
+    <button onclick="resetTiles()">Alle Tiles zurücksetzen</button>
+    
+    <div id="output"></div>
+    
+    <script>
+        function showTiles() {
+            const tilesStr = localStorage.getItem('tiles-order');
+            const output = document.getElementById('output');
+            
+            if (!tilesStr) {
+                output.innerHTML = '<div class="tile disabled">❌ Keine Tiles im localStorage gefunden!</div>';
+                return;
+            }
+            
+            const tiles = JSON.parse(tilesStr);
+            let html = '<h2>Gefundene Tiles:</h2>';
+            
+            tiles.forEach(tile => {
+                html += `
+                    <div class="tile ${tile.enabled ? 'enabled' : 'disabled'}">
+                        <strong>${tile.name}</strong> (${tile.id})
+                        <br>Status: ${tile.enabled ? '✅ Aktiviert' : '❌ Deaktiviert'}
+                    </div>
+                `;
+            });
+            
+            output.innerHTML = html;
+        }
+        
+        function enableRaidTargets() {
+            const tilesStr = localStorage.getItem('tiles-order');
+            let tiles;
+            
+            if (!tilesStr) {
+                // Erstelle Standard-Tiles
+                tiles = [
+                    { id: 'chat', name: 'Chat', enabled: true },
+                    { id: 'activity', name: 'Aktivitätsfeed', enabled: true },
+                    { id: 'stream-info', name: 'Stream-Info', enabled: true },
+                    { id: 'stream-preview', name: 'Stream-Vorschau', enabled: true },
+                    { id: 'followers', name: 'Follower', enabled: true },
+                    { id: 'alerts', name: 'Alerts & Benachrichtigungen', enabled: true },
+                    { id: 'viewer-stats', name: 'Viewer-Statistiken', enabled: true },
+                    { id: 'quick-actions', name: 'Quick Actions', enabled: true },
+                    { id: 'viewer-list', name: 'Live Viewer', enabled: true },
+                    { id: 'subs', name: 'Abonnenten', enabled: false },
+                    { id: 'bits', name: 'Einnahmen-Übersicht', enabled: true },
+                    { id: 'channel-points', name: 'Rewards Queue', enabled: false },
+                    { id: 'hype-train', name: 'Hype Train', enabled: false },
+                    { id: 'stream-settings', name: 'Stream-Einstellungen', enabled: false },
+                    { id: 'raid-targets', name: 'Raid-Ziele', enabled: true }
+                ];
+            } else {
+                tiles = JSON.parse(tilesStr);
+            }
+            
+            // Finde oder erstelle Raid-Targets
+            let raidTile = tiles.find(t => t.id === 'raid-targets');
+            
+            if (raidTile) {
+                raidTile.enabled = true;
+            } else {
+                tiles.push({ id: 'raid-targets', name: 'Raid-Ziele', enabled: true });
+            }
+            
+            localStorage.setItem('tiles-order', JSON.stringify(tiles));
+            
+            document.getElementById('output').innerHTML = `
+                <div class="success">
+                    ✅ Raid-Ziele wurde aktiviert!<br>
+                    <strong>Bitte App neu laden (F5 oder Strg+R)</strong>
+                </div>
+            `;
+            
+            setTimeout(showTiles, 500);
+        }
+        
+        function resetTiles() {
+            localStorage.removeItem('tiles-order');
+            document.getElementById('output').innerHTML = `
+                <div class="success">
+                    ✅ Tiles wurden zurückgesetzt!<br>
+                    <strong>Bitte App neu laden (F5 oder Strg+R)</strong>
+                </div>
+            `;
+        }
+        
+        // Zeige Tiles beim Laden
+        window.addEventListener('load', showTiles);
+    </script>
+</body>
+</html>

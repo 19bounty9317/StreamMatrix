@@ -14,28 +14,48 @@ import { getTheme, applyTheme } from './styles/themes';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  // Definiere alle verfügbaren Kacheln mit Defaults
+  const defaultTiles = [
+    { id: 'chat', name: 'Chat', enabled: true },
+    { id: 'activity', name: 'Aktivitätsfeed', enabled: true },
+    { id: 'stream-info', name: 'Stream-Info', enabled: true },
+    { id: 'stream-preview', name: 'Stream-Vorschau', enabled: true },
+    { id: 'followers', name: 'Follower', enabled: true },
+    { id: 'alerts', name: 'Alerts & Benachrichtigungen', enabled: true },
+    { id: 'viewer-stats', name: 'Viewer-Statistiken', enabled: true },
+    { id: 'quick-actions', name: 'Quick Actions', enabled: true },
+    { id: 'viewer-list', name: 'Live Viewer', enabled: true },
+    { id: 'subs', name: 'Abonnenten', enabled: false },
+    { id: 'bits', name: 'Einnahmen-Übersicht', enabled: true },
+    { id: 'channel-points', name: 'Rewards Queue', enabled: false },
+    { id: 'hype-train', name: 'Hype Train', enabled: false },
+    { id: 'stream-settings', name: 'Stream-Einstellungen', enabled: false },
+    { id: 'raid-targets', name: 'Raid-Ziele', enabled: true }
+  ];
+  
   const [availableTiles, setAvailableTiles] = useState(() => {
     const saved = localStorage.getItem('tiles-order');
+    
     if (saved) {
-      return JSON.parse(saved);
+      const savedTiles = JSON.parse(saved);
+      const savedIds = new Set(savedTiles.map((t: any) => t.id));
+      
+      // Finde neue Kacheln, die im Code hinzugefügt wurden
+      const newTiles = defaultTiles.filter(dt => !savedIds.has(dt.id));
+      
+      if (newTiles.length > 0) {
+        console.log('🆕 Neue Kacheln gefunden:', newTiles.map(t => t.name).join(', '));
+        // Füge neue Kacheln am Ende hinzu
+        const mergedTiles = [...savedTiles, ...newTiles];
+        localStorage.setItem('tiles-order', JSON.stringify(mergedTiles));
+        return mergedTiles;
+      }
+      
+      return savedTiles;
     }
-    return [
-      { id: 'chat', name: 'Chat', enabled: true },
-      { id: 'activity', name: 'Aktivitätsfeed', enabled: true },
-      { id: 'stream-info', name: 'Stream-Info', enabled: true },
-      { id: 'stream-preview', name: 'Stream-Vorschau', enabled: true },
-      { id: 'followers', name: 'Follower', enabled: true },
-      { id: 'alerts', name: 'Alerts & Benachrichtigungen', enabled: true },
-      { id: 'viewer-stats', name: 'Viewer-Statistiken', enabled: true },
-      { id: 'quick-actions', name: 'Quick Actions', enabled: true },
-      { id: 'viewer-list', name: 'Live Viewer', enabled: true },
-      { id: 'subs', name: 'Abonnenten', enabled: false },
-      { id: 'bits', name: 'Einnahmen-Übersicht', enabled: true },
-      { id: 'channel-points', name: 'Rewards Queue', enabled: false },
-      { id: 'hype-train', name: 'Hype Train', enabled: false },
-      { id: 'stream-settings', name: 'Stream-Einstellungen', enabled: false },
-      { id: 'raid-targets', name: 'Raid-Ziele', enabled: true }
-    ];
+    
+    return defaultTiles;
   });
 
   const [connectionStatus, setConnectionStatus] = useState({
@@ -172,8 +192,8 @@ function App() {
   };
 
   const toggleTile = (tileId: string) => {
-    setAvailableTiles(tiles =>
-      tiles.map(tile =>
+    setAvailableTiles((tiles: typeof defaultTiles) =>
+      tiles.map((tile: typeof defaultTiles[0]) =>
         tile.id === tileId ? { ...tile, enabled: !tile.enabled } : tile
       )
     );
@@ -238,7 +258,7 @@ function App() {
       />
       <div className="flex-1 flex flex-col">
         <Dashboard 
-          tiles={availableTiles.filter(t => t.enabled)} 
+          tiles={availableTiles.filter((t: typeof defaultTiles[0]) => t.enabled)} 
           onCloseTile={toggleTile}
         />
         <Footer status={connectionStatus} />
