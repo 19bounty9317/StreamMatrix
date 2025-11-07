@@ -52,6 +52,11 @@ export default function TileChat() {
   const [viewerCount, setViewerCount] = useState(0);
   const [selectedUser, setSelectedUser] = useState<{ username: string; color: string; badges: string; position: { x: number; y: number } } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [autoScroll, setAutoScroll] = useState(() => {
+    const saved = localStorage.getItem('chat-auto-scroll');
+    return saved ? JSON.parse(saved) : true;
+  });
+  const [showScrollButton, setShowScrollButton] = useState(false);
 
   const toggleTimestamps = () => {
     const newValue = !showTimestamps;
@@ -69,6 +74,15 @@ export default function TileChat() {
     const newValue = !showViewerCount;
     setShowViewerCount(newValue);
     localStorage.setItem('chat-show-viewer-count', JSON.stringify(newValue));
+  };
+
+  const toggleAutoScroll = () => {
+    const newValue = !autoScroll;
+    setAutoScroll(newValue);
+    localStorage.setItem('chat-auto-scroll', JSON.stringify(newValue));
+    if (newValue) {
+      scrollToBottom();
+    }
   };
 
   const formatTime = (date: Date) => {
@@ -134,17 +148,44 @@ export default function TileChat() {
   };
 
   useEffect(() => {
-    // Nur nach unten scrollen wenn User bereits am Ende ist (innerhalb 150px)
-    const chatContainer = messagesEndRef.current?.parentElement;
-    if (chatContainer) {
-      const scrollBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight;
-      const isNearBottom = scrollBottom < 150;
-      
-      if (isNearBottom) {
-        scrollToBottom();
+    if (autoScroll) {
+      // Immer nach unten scrollen wenn Auto-Scroll aktiviert ist
+      scrollToBottom();
+    } else {
+      // Prüfe ob User am Ende ist und zeige ggf. Scroll-Button
+      const chatContainer = messagesEndRef.current?.parentElement;
+      if (chatContainer) {
+        const scrollBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight;
+        setShowScrollButton(scrollBottom > 150);
       }
     }
-  }, [messages]);
+  }, [messages, autoScroll]);
+
+  // Listener für manuelles Scrollen
+  useEffect(() => {
+    const chatContainer = messagesEndRef.current?.parentElement;
+    if (!chatContainer) return;
+
+    const handleScroll = () => {
+      const scrollBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight;
+      const isAtBottom = scrollBottom < 50;
+      
+      if (isAtBottom && !autoScroll) {
+        // User ist manuell nach unten gescrollt -> aktiviere Auto-Scroll wieder
+        setAutoScroll(true);
+        localStorage.setItem('chat-auto-scroll', JSON.stringify(true));
+        setShowScrollButton(false);
+      } else if (!isAtBottom && autoScroll) {
+        // User scrollt nach oben -> deaktiviere Auto-Scroll
+        setAutoScroll(false);
+        localStorage.setItem('chat-auto-scroll', JSON.stringify(false));
+        setShowScrollButton(true);
+      }
+    };
+
+    chatContainer.addEventListener('scroll', handleScroll);
+    return () => chatContainer.removeEventListener('scroll', handleScroll);
+  }, [autoScroll]);
 
   // Verbinde zum Chat und lade Emotes
   useEffect(() => {
@@ -788,6 +829,14 @@ export default function TileChat() {
         )}
         <div className="flex items-center gap-2">
           <button
+            onClick={toggleAutoScroll}
+            className={`text-xs px-2 py-1 theme-button rounded flex items-center gap-1 ${autoScroll ? 'theme-text' : 'theme-text-secondary'}`}
+            title="Auto-Scroll ein/ausblenden"
+          >
+            <span>{autoScroll ? '📜' : '⏸️'}</span>
+            <span>{autoScroll ? 'Auto' : 'Manuell'}</span>
+          </button>
+          <button
             onClick={toggleHighlight}
             className="text-xs theme-text-secondary px-2 py-1 theme-button rounded flex items-center gap-1"
             title="Nachrichten hervorheben"
@@ -805,6 +854,28 @@ export default function TileChat() {
           </button>
         </div>
       </div>
+      
+      {/* Scroll-to-Bottom Button */}
+      {showScrollButton && !autoScroll && (
+        <button
+          onClick={() => {
+            scrollToBottom();
+            setAutoScroll(true);
+            localStorage.setItem('chat-auto-scroll', JSON.stringify(true));
+          }}
+          className="absolute bottom-20 right-4 z-10 px-4 py-2 rounded-full shadow-lg transition-all hover:scale-110"
+          style={{
+            backgroundColor: 'var(--color-accent)',
+            color: '#FFFFFF'
+          }}
+          title="Zu neuen Nachrichten springen"
+        >
+          <span className="flex items-center gap-2">
+            <span>↓</span>
+            <span className="text-sm font-semibold">Neue Nachrichten</span>
+          </span>
+        </button>
+      )}
       <div className="flex-1 overflow-y-auto">
         {isConnecting && (
           <div className="h-full flex flex-col items-center justify-center theme-text-secondary">
