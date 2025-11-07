@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 
 interface EventData {
-  type: 'sub' | 'bits' | 'follow' | 'raid' | 'donation' | 'hypetrain' | 'hypetrain-end' | 'gift-sub';
-  username: string;
+  type: 'sub' | 'bits' | 'follow' | 'raid' | 'donation' | 'hypetrain' | 'hypetrain-end' | 'gift-sub' | 'sub-bomb';
+  username?: string;
   amount?: number;
   message?: string;
+  level?: number;
+  totalSubs?: number;
+  totalBits?: number;
 }
 
 interface CelebrationEvent extends EventData {
@@ -54,12 +57,13 @@ export default function EventCelebration() {
       // Spezial-Animation für Hype Train (nur bei 'full' Mode)
       if (celebrationMode === 'full') {
         if (newEvent.type === 'hypetrain') {
-          createTrainAnimation('left', newEvent.amount);
+          createTrainAnimation('left', newEvent.level || newEvent.amount);
+          createEmojiRain(newEvent.type, newEvent.amount);
         } else if (newEvent.type === 'hypetrain-end') {
-          createTrainAnimation('right', newEvent.amount);
+          createTrainAnimation('right', newEvent.level || newEvent.amount);
         } else {
           // Erstelle Emoji-Regen für andere Events
-          createEmojiRain(newEvent.type);
+          createEmojiRain(newEvent.type, newEvent.amount);
         }
       }
       // Bei 'visual' Mode: Nur Benachrichtigung, kein Emoji-Regen
@@ -115,7 +119,7 @@ export default function EventCelebration() {
     }, 5000);
   };
 
-  const createEmojiRain = (type: EventData['type']) => {
+  const createEmojiRain = (type: EventData['type'], amount?: number) => {
     const emoji = getEmojiForType(type);
     
     // Mehr Partikel für bestimmte Event-Typen
@@ -126,6 +130,10 @@ export default function EventCelebration() {
       particleCount = 60; // Noch stärker für Raids
     } else if (type === 'gift-sub') {
       particleCount = 40; // Mittel für Gift Subs
+    } else if (type === 'sub-bomb') {
+      particleCount = 80; // Massiver Regen für Sub-Bomben (5+ Subs)
+    } else if (type === 'hypetrain') {
+      particleCount = Math.min(100, 40 + (amount || 0) * 10); // Mehr Partikel je höher das Level
     }
     
     const newParticles: EmojiParticle[] = [];
@@ -155,6 +163,8 @@ export default function EventCelebration() {
       case 'sub':
       case 'gift-sub':
         return '⭐';
+      case 'sub-bomb':
+        return '💣'; // Spezial-Emoji für Sub-Bomben
       case 'bits':
         return '💎';
       case 'follow':
@@ -177,6 +187,8 @@ export default function EventCelebration() {
         return `${event.username} hat abonniert!`;
       case 'gift-sub':
         return `${event.username} verschenkt ${event.amount || 1} Sub${(event.amount || 1) > 1 ? 's' : ''}!`;
+      case 'sub-bomb':
+        return `💣 ${event.username} hat ${event.amount || 5} Subs verschenkt! SUB-BOMBE!`;
       case 'bits':
         return `${event.username} hat ${event.amount || 0} Bits gespendet!`;
       case 'follow':
@@ -186,9 +198,9 @@ export default function EventCelebration() {
       case 'donation':
         return `${event.username} hat ${event.amount || 0}€ gespendet!`;
       case 'hypetrain':
-        return `Hype Train Level ${event.amount || 1} gestartet!`;
+        return `🚂 Hype Train Level ${event.level || event.amount || 1} gestartet!`;
       case 'hypetrain-end':
-        return `Hype Train Level ${event.amount || 1} beendet!`;
+        return `🚂 Hype Train Level ${event.level || event.amount || 1} beendet!`;
       default:
         return `${event.username} - ${event.message || 'Event'}`;
     }
@@ -199,6 +211,8 @@ export default function EventCelebration() {
       case 'sub':
       case 'gift-sub':
         return 'from-purple-500 to-purple-700';
+      case 'sub-bomb':
+        return 'from-pink-500 to-purple-700'; // Spezielle Farbe für Sub-Bomben
       case 'bits':
         return 'from-blue-500 to-blue-700';
       case 'follow':
