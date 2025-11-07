@@ -1,10 +1,13 @@
-# StreamMatrix v1.4.2 - Bugfix Release
+# StreamMatrix v1.4.2 - Bugfix & Feature Release
 
 ## 🐛 Fehlerbehebungen
 
-### Automatische Kachel-Migration
+### Automatische Kachel-Migration (v1.3.8 Kompatibilität)
 - **Neue Kacheln werden automatisch hinzugefügt**: Wenn neue Kacheln im Code hinzugefügt werden, erscheinen sie automatisch in der Sidebar
 - **Raid-Ziele & Stream-Vorschau**: Diese Kacheln werden jetzt bei bestehenden Installationen automatisch hinzugefügt
+- **v1.3.8 Migration**: Beim Update von v1.3.8 werden jetzt alle aktivierten Kacheln korrekt übernommen
+- **Sicherheitsmechanismus**: Wenn weniger als 3 Kacheln aktiviert sind, werden automatisch die wichtigsten 5 Kacheln aktiviert
+- **Format-Validierung**: Prüft localStorage auf Gültigkeit und verwendet Fallback bei Fehlern
 - Keine manuelle localStorage-Manipulation mehr nötig
 
 ### Visuelle Effekte - Vollständige Integration
@@ -35,14 +38,27 @@
 - Verbesserte Zug-Animation
 - Korrekte Level-Anzeige in Nachrichten
 
+## ✨ Neue Features
+
+### Chat Auto-Scroll
+- **Auto-Scroll Toggle**: Button zum Ein-/Ausschalten des automatischen Scrollens
+- **Intelligentes Verhalten**: Deaktiviert sich automatisch beim Hochscrollen, aktiviert sich beim manuellen Nach-unten-Scrollen
+- **"Neue Nachrichten" Button**: Erscheint wenn neue Nachrichten da sind und du hochgescrollt bist
+- **Persistente Einstellung**: Auto-Scroll Einstellung wird gespeichert
+
 ## 📋 Technische Details
 
 ### Geänderte Dateien
-- `src/App.tsx`: Automatische Tile-Migration implementiert
+- `src/App.tsx`: Automatische Tile-Migration mit v1.3.8 Kompatibilität und Sicherheitsmechanismen
+- `src/components/tiles/TileChat.tsx`: Auto-Scroll Funktionalität hinzugefügt
 - `src/components/tiles/TileActivity.tsx`: Sub-Bomb und Hype Train Celebration-Events hinzugefügt
 - `src/components/EventCelebration.tsx`: Sub-Bomb Event-Typ und verbesserte Hype Train Unterstützung
 - `src/config/version.ts`: Version auf 1.4.2 aktualisiert
 - `package.json`: Version auf 1.4.2 aktualisiert
+
+### Neue Dokumentation
+- `EINSTELLUNGEN-MIGRATION.md`: Detaillierte Dokumentation der Migrations-Logik
+- `MIGRATION-v1.3.8-zu-v1.4.x.md`: Spezifische Anleitung für v1.3.8 Updates
 
 ### Event-Dispatching
 Alle Events dispatchen jetzt korrekt `stream-celebration` Events:
