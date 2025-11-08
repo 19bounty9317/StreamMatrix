@@ -137,13 +137,10 @@ export default function TileChat() {
   };
 
   const scrollToBottom = () => {
-    // Scrolle nur innerhalb des Chat-Containers, nicht das gesamte Dashboard
-    const chatContainer = messagesEndRef.current?.parentElement;
-    if (chatContainer) {
-      // Verwende requestAnimationFrame für smooth scroll ohne Dashboard-Scroll
-      requestAnimationFrame(() => {
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-      });
+    // Finde den Chat-Container direkt über das Ref
+    if (messagesEndRef.current) {
+      // Scrolle zum Ref-Element (am Ende der Nachrichten)
+      messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
     }
   };
 
@@ -161,25 +158,16 @@ export default function TileChat() {
     }
   }, [messages, autoScroll]);
 
-  // Listener für manuelles Scrollen
+  // Listener für manuelles Scrollen - nur für Scroll-Button Anzeige
   useEffect(() => {
     const chatContainer = messagesEndRef.current?.parentElement;
     if (!chatContainer) return;
 
     const handleScroll = () => {
-      const scrollBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight;
-      const isAtBottom = scrollBottom < 50;
-      
-      if (isAtBottom && !autoScroll) {
-        // User ist manuell nach unten gescrollt -> aktiviere Auto-Scroll wieder
-        setAutoScroll(true);
-        localStorage.setItem('chat-auto-scroll', JSON.stringify(true));
-        setShowScrollButton(false);
-      } else if (!isAtBottom && autoScroll) {
-        // User scrollt nach oben -> deaktiviere Auto-Scroll
-        setAutoScroll(false);
-        localStorage.setItem('chat-auto-scroll', JSON.stringify(false));
-        setShowScrollButton(true);
+      if (!autoScroll) {
+        // Nur im manuellen Modus: Zeige Button wenn nicht am Ende
+        const scrollBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight;
+        setShowScrollButton(scrollBottom > 150);
       }
     };
 
@@ -1091,6 +1079,7 @@ export default function TileChat() {
           placeholder="Nachricht senden... (Tipp: /help für Befehle)"
           className="w-full theme-input px-3 py-2 rounded"
         />
+        <div ref={messagesEndRef} style={{ height: 0 }} />
       </form>
 
       {/* User Card Popup */}

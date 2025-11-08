@@ -8,6 +8,7 @@ interface Viewer {
   isVip: boolean;
   isSubscriber: boolean;
   lastSeen: Date;
+  lastMessage?: Date; // Letzte Chat-Nachricht (für "Aktiv" Filter)
 }
 
 export default function TileViewerList() {
@@ -26,6 +27,7 @@ export default function TileViewerList() {
     const trackViewer = (username: string, tags: any) => {
       setViewers(prev => {
         const existing = prev.find(v => v.username === username);
+        const now = new Date();
         
         const viewer: Viewer = {
           username,
@@ -33,7 +35,8 @@ export default function TileViewerList() {
           isMod: tags.mod === '1' || tags.badges?.includes('moderator'),
           isVip: tags.badges?.includes('vip') || false,
           isSubscriber: tags.subscriber === '1' || tags.badges?.includes('subscriber'),
-          lastSeen: new Date()
+          lastSeen: now,
+          lastMessage: now // Markiere als aktiv (hat Nachricht geschrieben)
         };
 
         if (existing) {
@@ -82,20 +85,23 @@ export default function TileViewerList() {
             
             // Ersetze die komplette Liste (nicht nur hinzufügen)
             if (data.data && Array.isArray(data.data)) {
+              const now = new Date();
               const newViewers: Viewer[] = data.data.map((chatter: any) => ({
                 username: chatter.user_login,
                 displayName: chatter.user_name,
                 isMod: false, // Wird durch Chat-Nachrichten aktualisiert
                 isVip: false,
                 isSubscriber: false,
-                lastSeen: new Date()
+                lastSeen: now // Alle Chatters sind "aktiv" da sie von der API kommen
               }));
               
               setViewers(prev => {
-                // Merge: Behalte Badge-Infos von existierenden Viewern
+                // Merge: Behalte Badge-Infos von existierenden Viewern, aber aktualisiere lastSeen
                 const merged = newViewers.map(newViewer => {
                   const existing = prev.find(v => v.username === newViewer.username);
-                  return existing ? { ...newViewer, isMod: existing.isMod, isVip: existing.isVip, isSubscriber: existing.isSubscriber } : newViewer;
+                  return existing 
+                    ? { ...newViewer, isMod: existing.isMod, isVip: existing.isVip, isSubscriber: existing.isSubscriber, lastSeen: now } 
+                    : newViewer;
                 });
                 
                 return merged.sort((a, b) => a.displayName.localeCompare(b.displayName));
@@ -122,10 +128,13 @@ export default function TileViewerList() {
   }, []);
 
   const filteredViewers = viewers.filter(viewer => {
-    // Filter nach Aktivität (letzte 5 Minuten)
+    // Filter nach Aktivität (hat in letzten 5 Minuten geschrieben)
     if (showOnlyActive) {
+      if (!viewer.lastMessage) {
+        return false; // Keine Nachricht = nicht aktiv
+      }
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-      if (viewer.lastSeen < fiveMinutesAgo) {
+      if (viewer.lastMessage < fiveMinutesAgo) {
         return false;
       }
     }
@@ -143,8 +152,9 @@ export default function TileViewerList() {
   });
 
   const activeViewers = viewers.filter(v => {
+    if (!v.lastMessage) return false;
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    return v.lastSeen >= fiveMinutesAgo;
+    return v.lastMessage >= fiveMinutesAgo;
   });
 
   const getBadges = (viewer: Viewer) => {
