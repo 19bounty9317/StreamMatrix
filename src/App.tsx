@@ -31,7 +31,8 @@ function App() {
     { id: 'channel-points', name: 'Rewards Queue', enabled: false },
     { id: 'hype-train', name: 'Hype Train', enabled: false },
     { id: 'stream-settings', name: 'Stream-Einstellungen', enabled: false },
-    { id: 'raid-targets', name: 'Raid-Ziele', enabled: true }
+    { id: 'raid-targets', name: 'Raid-Ziele', enabled: true },
+    { id: 'stream-history', name: 'Stream-Historie', enabled: true }
   ];
   
   const [availableTiles, setAvailableTiles] = useState(() => {
