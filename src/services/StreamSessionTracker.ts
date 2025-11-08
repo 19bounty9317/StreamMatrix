@@ -127,11 +127,54 @@ class StreamSessionTracker {
     }
   }
 
-  endSession() {
+  async endSession(avgViewers: number = 0, peakViewers: number = 0) {
     if (this.stats) {
       this.stats.isLive = false;
       this.saveSession();
+      
+      // Speichere Session in Historie
+      await this.saveToHistory(avgViewers, peakViewers);
+      
       console.log('📊 Stream-Session beendet:', this.stats);
+    }
+  }
+
+  private async saveToHistory(avgViewers: number, peakViewers: number) {
+    if (!this.stats) return;
+
+    try {
+      const startTime = new Date(this.stats.sessionStartTime);
+      const endTime = new Date();
+      const duration = Math.round((endTime.getTime() - startTime.getTime()) / 1000 / 60); // Minuten
+
+      const session = {
+        date: startTime.toISOString().split('T')[0], // YYYY-MM-DD
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        duration,
+        avgViewers,
+        peakViewers,
+        newFollowers: this.getFollowerDiff(),
+        newSubs: this.getSubDiff()
+      };
+
+      // Lade bestehende Historie
+      const saved = localStorage.getItem('stream-history');
+      const history = saved ? JSON.parse(saved) : [];
+
+      // Füge neue Session hinzu
+      history.push(session);
+
+      // Behalte nur die letzten 90 Tage
+      const ninetyDaysAgo = new Date();
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+      const filtered = history.filter((s: any) => new Date(s.date) >= ninetyDaysAgo);
+
+      // Speichere
+      localStorage.setItem('stream-history', JSON.stringify(filtered));
+      console.log('📊 Session in Historie gespeichert:', session);
+    } catch (error) {
+      console.error('Fehler beim Speichern der Historie:', error);
     }
   }
 
