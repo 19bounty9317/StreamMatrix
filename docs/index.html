@@ -653,25 +653,15 @@
         }
 
         .demo-dashboard {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
             gap: 1.5rem;
             padding: 2rem;
             background: var(--dark-light);
             border-radius: 16px;
             border: 2px dashed rgba(145, 71, 255, 0.3);
             min-height: 400px;
-            transition: all 0.3s;
-        }
-
-        .demo-dashboard.size-small {
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-
-        .demo-dashboard.size-large {
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 2rem;
+            align-content: flex-start;
         }
 
         .demo-tile {
@@ -684,9 +674,11 @@
             user-select: none;
             animation: fadeIn 0.3s ease-in;
             position: relative;
+            width: 280px;
+            height: 200px;
             min-width: 200px;
             min-height: 150px;
-            resize: both;
+            flex-shrink: 0;
         }
 
         .demo-tile[data-visible="false"] {
@@ -766,7 +758,6 @@
 
         .demo-tile.dragging {
             opacity: 0.5;
-            transform: rotate(2deg);
         }
 
         .demo-tile-header {
@@ -1431,11 +1422,15 @@
 
             tile.addEventListener('dragover', (e) => {
                 e.preventDefault();
-                const afterElement = getDragAfterElement(demoDashboard, e.clientY);
-                if (afterElement == null) {
-                    demoDashboard.appendChild(draggedTile);
-                } else {
-                    demoDashboard.insertBefore(draggedTile, afterElement);
+                if (draggedTile && draggedTile !== tile) {
+                    const rect = tile.getBoundingClientRect();
+                    const midX = rect.left + rect.width / 2;
+                    
+                    if (e.clientX < midX) {
+                        demoDashboard.insertBefore(draggedTile, tile);
+                    } else {
+                        demoDashboard.insertBefore(draggedTile, tile.nextSibling);
+                    }
                 }
             });
         });
@@ -1444,20 +1439,9 @@
             e.preventDefault();
         });
 
-        function getDragAfterElement(container, y) {
-            const draggableElements = [...container.querySelectorAll('.demo-tile:not(.dragging)')];
-
-            return draggableElements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect();
-                const offset = y - box.top - box.height / 2;
-
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset: offset, element: child };
-                } else {
-                    return closest;
-                }
-            }, { offset: Number.NEGATIVE_INFINITY }).element;
-        }
+        demoDashboard.addEventListener('drop', (e) => {
+            e.preventDefault();
+        });
 
         // Resize functionality
         document.addEventListener('DOMContentLoaded', () => {
