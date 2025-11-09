@@ -472,6 +472,125 @@
             transform: scale(1.2);
         }
 
+        /* Demo Section */
+        .demo-section {
+            padding: 6rem 2rem;
+            background: var(--dark);
+        }
+
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .demo-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem;
+            background: var(--dark-light);
+            border-radius: 16px;
+            border: 2px dashed rgba(145, 71, 255, 0.3);
+            min-height: 400px;
+        }
+
+        .demo-tile {
+            background: var(--dark-lighter);
+            border-radius: 12px;
+            border: 1px solid rgba(145, 71, 255, 0.3);
+            overflow: hidden;
+            cursor: move;
+            transition: all 0.3s;
+            user-select: none;
+        }
+
+        .demo-tile:hover {
+            border-color: var(--purple);
+            box-shadow: 0 5px 20px rgba(145, 71, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .demo-tile.dragging {
+            opacity: 0.5;
+            transform: rotate(2deg);
+        }
+
+        .demo-tile-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: rgba(145, 71, 255, 0.1);
+            border-bottom: 1px solid rgba(145, 71, 255, 0.2);
+            font-weight: 600;
+        }
+
+        .demo-tile-header span:first-child {
+            font-size: 1.2rem;
+        }
+
+        .drag-handle {
+            margin-left: auto;
+            color: var(--text-secondary);
+            cursor: grab;
+            font-size: 1.2rem;
+        }
+
+        .demo-tile:active .drag-handle {
+            cursor: grabbing;
+        }
+
+        .demo-tile-content {
+            padding: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .demo-chat-message {
+            padding: 0.5rem 0;
+            color: var(--text-secondary);
+        }
+
+        .demo-badge {
+            margin-right: 0.25rem;
+        }
+
+        .demo-username {
+            color: var(--purple-light);
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .demo-stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            color: var(--text-secondary);
+        }
+
+        .demo-stat-value {
+            color: var(--purple-light);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .demo-activity {
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            background: rgba(145, 71, 255, 0.1);
+            border-radius: 8px;
+            color: var(--text);
+        }
+
+        .demo-activity span:first-child {
+            margin-right: 0.5rem;
+        }
+
+        .demo-viewer {
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+            color: var(--text-secondary);
+        }
+
         /* About Section */
         .about {
             padding: 6rem 2rem;
@@ -604,6 +723,89 @@
                 <div class="stat-number">∞</div>
                 <div class="stat-label">Anpassbar</div>
             </div>
+        </div>
+    </section>
+
+    <!-- Interactive Demo Section -->
+    <section class="demo-section">
+        <div class="demo-container">
+            <h2 class="section-title">Probiere es selbst aus!</h2>
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem; font-size: 1.1rem;">
+                Verschiebe die Kacheln per Drag & Drop - genau wie in der echten App
+            </p>
+            <div class="demo-dashboard">
+                <div class="demo-tile" draggable="true" data-tile="chat">
+                    <div class="demo-tile-header">
+                        <span>💬</span>
+                        <span>Chat</span>
+                        <span class="drag-handle">⋮⋮</span>
+                    </div>
+                    <div class="demo-tile-content">
+                        <div class="demo-chat-message">
+                            <span class="demo-badge">🎖️</span>
+                            <span class="demo-username">Viewer123:</span>
+                            <span>Hallo! 👋</span>
+                        </div>
+                        <div class="demo-chat-message">
+                            <span class="demo-badge">⭐</span>
+                            <span class="demo-username">Subscriber:</span>
+                            <span>Cooles Dashboard!</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="demo-tile" draggable="true" data-tile="stats">
+                    <div class="demo-tile-header">
+                        <span>📊</span>
+                        <span>Statistiken</span>
+                        <span class="drag-handle">⋮⋮</span>
+                    </div>
+                    <div class="demo-tile-content">
+                        <div class="demo-stat-row">
+                            <span>👁️ Viewer:</span>
+                            <span class="demo-stat-value">42</span>
+                        </div>
+                        <div class="demo-stat-row">
+                            <span>❤️ Follower:</span>
+                            <span class="demo-stat-value">1.234</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="demo-tile" draggable="true" data-tile="activity">
+                    <div class="demo-tile-header">
+                        <span>🎯</span>
+                        <span>Aktivität</span>
+                        <span class="drag-handle">⋮⋮</span>
+                    </div>
+                    <div class="demo-tile-content">
+                        <div class="demo-activity">
+                            <span>⭐</span>
+                            <span>Neuer Follower!</span>
+                        </div>
+                        <div class="demo-activity">
+                            <span>💜</span>
+                            <span>Neuer Sub!</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="demo-tile" draggable="true" data-tile="viewers">
+                    <div class="demo-tile-header">
+                        <span>👥</span>
+                        <span>Viewer-Liste</span>
+                        <span class="drag-handle">⋮⋮</span>
+                    </div>
+                    <div class="demo-tile-content">
+                        <div class="demo-viewer">🎖️ Moderator</div>
+                        <div class="demo-viewer">⭐ Subscriber</div>
+                        <div class="demo-viewer">👤 Viewer123</div>
+                    </div>
+                </div>
+            </div>
+            <p style="text-align: center; color: var(--text-secondary); margin-top: 2rem; font-size: 0.95rem;">
+                💡 Tipp: In der echten App kannst du auch die Größe anpassen und Kacheln in separate Fenster öffnen!
+            </p>
         </div>
     </section>
 
@@ -886,6 +1088,53 @@
                 document.body.style.overflow = 'auto';
             }
         });
+
+        // Interactive Demo - Drag & Drop
+        const demoTiles = document.querySelectorAll('.demo-tile');
+        const demoDashboard = document.querySelector('.demo-dashboard');
+        let draggedTile = null;
+
+        demoTiles.forEach(tile => {
+            tile.addEventListener('dragstart', (e) => {
+                draggedTile = tile;
+                tile.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+
+            tile.addEventListener('dragend', () => {
+                tile.classList.remove('dragging');
+                draggedTile = null;
+            });
+
+            tile.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(demoDashboard, e.clientY);
+                if (afterElement == null) {
+                    demoDashboard.appendChild(draggedTile);
+                } else {
+                    demoDashboard.insertBefore(draggedTile, afterElement);
+                }
+            });
+        });
+
+        demoDashboard.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.demo-tile:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
     </script>
 </body>
 </html>
