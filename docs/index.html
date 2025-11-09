@@ -550,6 +550,53 @@
             margin: 0 auto;
         }
 
+        .demo-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--dark-light);
+            border-radius: 12px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .control-label {
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .control-btn {
+            padding: 0.5rem 1rem;
+            background: var(--dark);
+            color: var(--text);
+            border: 1px solid rgba(145, 71, 255, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .control-btn:hover {
+            background: var(--purple);
+            border-color: var(--purple);
+            transform: translateY(-2px);
+        }
+
+        .control-btn.active {
+            background: var(--purple);
+            border-color: var(--purple);
+        }
+
         .demo-dashboard {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -559,6 +606,17 @@
             border-radius: 16px;
             border: 2px dashed rgba(145, 71, 255, 0.3);
             min-height: 400px;
+            transition: all 0.3s;
+        }
+
+        .demo-dashboard.size-small {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .demo-dashboard.size-large {
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
         }
 
         .demo-tile {
@@ -569,6 +627,22 @@
             cursor: move;
             transition: all 0.3s;
             user-select: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .demo-tile[data-visible="false"] {
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         .demo-tile:hover {
@@ -801,11 +875,29 @@
     <section class="demo-section">
         <div class="demo-container">
             <h2 class="section-title">Probiere es selbst aus!</h2>
-            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem; font-size: 1.1rem;">
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 1rem; font-size: 1.1rem;">
                 Verschiebe die Kacheln per Drag & Drop - genau wie in der echten App
             </p>
+            
+            <!-- Demo Controls -->
+            <div class="demo-controls">
+                <div class="control-group">
+                    <span class="control-label">Kacheln:</span>
+                    <button class="control-btn" onclick="toggleTile('chat')">💬 Chat</button>
+                    <button class="control-btn" onclick="toggleTile('stats')">📊 Stats</button>
+                    <button class="control-btn" onclick="toggleTile('activity')">🎯 Aktivität</button>
+                    <button class="control-btn" onclick="toggleTile('viewers')">👥 Viewer</button>
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Größe:</span>
+                    <button class="control-btn" onclick="changeSize('small')">Klein</button>
+                    <button class="control-btn" onclick="changeSize('medium')">Mittel</button>
+                    <button class="control-btn" onclick="changeSize('large')">Groß</button>
+                </div>
+            </div>
+
             <div class="demo-dashboard">
-                <div class="demo-tile" draggable="true" data-tile="chat">
+                <div class="demo-tile" draggable="true" data-tile="chat" data-visible="true">
                     <div class="demo-tile-header">
                         <span>💬</span>
                         <span>Chat</span>
@@ -825,7 +917,7 @@
                     </div>
                 </div>
 
-                <div class="demo-tile" draggable="true" data-tile="stats">
+                <div class="demo-tile" draggable="true" data-tile="stats" data-visible="true">
                     <div class="demo-tile-header">
                         <span>📊</span>
                         <span>Statistiken</span>
@@ -843,7 +935,7 @@
                     </div>
                 </div>
 
-                <div class="demo-tile" draggable="true" data-tile="activity">
+                <div class="demo-tile" draggable="true" data-tile="activity" data-visible="true">
                     <div class="demo-tile-header">
                         <span>🎯</span>
                         <span>Aktivität</span>
@@ -861,7 +953,7 @@
                     </div>
                 </div>
 
-                <div class="demo-tile" draggable="true" data-tile="viewers">
+                <div class="demo-tile" draggable="true" data-tile="viewers" data-visible="true">
                     <div class="demo-tile-header">
                         <span>👥</span>
                         <span>Viewer-Liste</span>
@@ -875,7 +967,8 @@
                 </div>
             </div>
             <p style="text-align: center; color: var(--text-secondary); margin-top: 2rem; font-size: 0.95rem;">
-                💡 Tipp: In der echten App kannst du auch die Größe anpassen und Kacheln in separate Fenster öffnen!
+                💡 Tipp: Klicke auf die Buttons oben, um Kacheln ein-/auszublenden oder die Größe zu ändern!<br>
+                In der echten App kannst du auch Kacheln in separate Fenster öffnen.
             </p>
         </div>
     </section>
@@ -1236,6 +1329,40 @@
                 }
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
+
+        // Toggle tile visibility
+        function toggleTile(tileName) {
+            const tile = document.querySelector(`.demo-tile[data-tile="${tileName}"]`);
+            const isVisible = tile.getAttribute('data-visible') === 'true';
+            tile.setAttribute('data-visible', !isVisible);
+            
+            // Update button state
+            const btn = event.target;
+            btn.classList.toggle('active');
+        }
+
+        // Change dashboard size
+        function changeSize(size) {
+            const dashboard = document.querySelector('.demo-dashboard');
+            dashboard.className = 'demo-dashboard';
+            if (size !== 'medium') {
+                dashboard.classList.add(`size-${size}`);
+            }
+            
+            // Update button states
+            document.querySelectorAll('.control-group:last-child .control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // Set initial active states
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.control-group:first-child .control-btn').forEach(btn => {
+                btn.classList.add('active');
+            });
+            document.querySelectorAll('.control-group:last-child .control-btn')[1].classList.add('active');
+        });
     </script>
 </body>
 </html>
