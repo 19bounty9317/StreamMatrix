@@ -16,20 +16,8 @@ export default function TileStreamHistory() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [lastSync, setLastSync] = useState<Date | null>(() => {
-    const saved = localStorage.getItem('stream-history-last-sync');
-    return saved ? new Date(saved) : null;
-  });
-
   useEffect(() => {
     loadStreamHistory();
-    
-    // Prüfe ob Sync nötig ist (älter als 1 Stunde)
-    const needsSync = !lastSync || (Date.now() - lastSync.getTime()) > 60 * 60 * 1000;
-    if (needsSync) {
-      syncWithTwitch();
-    }
   }, []);
 
   const loadStreamHistory = () => {
@@ -50,106 +38,9 @@ export default function TileStreamHistory() {
     }
   };
 
-  const syncWithTwitch = async () => {
-    setIsLoading(true);
-    try {
-      const { TwitchService } = await import('../../services/TwitchService');
-      const user = TwitchService.getUserFromStorage();
-      const token = TwitchService.getStoredToken();
 
-      if (!user || !token) {
-        console.warn('Kein User oder Token für Twitch API');
-        setIsLoading(false);
-        return;
-      }
 
-      console.log('🔄 Synchronisiere Stream-Historie mit Twitch...');
 
-      // Hole Videos (VODs) der letzten 90 Tage
-      const response = await fetch(
-        `https://api.twitch.tv/helix/videos?user_id=${user.id}&type=archive&first=100`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Client-Id': TwitchService.getClientId()
-          }
-        }
-      );
-
-      if (!response.ok) {
-        console.error('Fehler beim Laden der Videos:', response.status);
-        setIsLoading(false);
-        return;
-      }
-
-      const data = await response.json();
-      const videos = data.data || [];
-
-      console.log(`📊 ${videos.length} VODs von Twitch geladen`);
-
-      // Konvertiere VODs zu Sessions
-      const twitchSessions: StreamSession[] = videos.map((video: any) => {
-        const startTime = new Date(video.created_at);
-        const duration = parseDuration(video.duration); // z.B. "3h45m12s"
-        const endTime = new Date(startTime.getTime() + duration * 60 * 1000);
-
-        return {
-          date: startTime.toISOString().split('T')[0],
-          startTime,
-          endTime,
-          duration,
-          avgViewers: video.view_count || 0, // Approximation
-          peakViewers: video.view_count || 0, // Approximation
-          newFollowers: 0, // Nicht verfügbar von API
-          newSubs: 0 // Nicht verfügbar von API
-        };
-      });
-
-      // Merge mit bestehenden Sessions (behalte lokale Daten wenn vorhanden)
-      const saved = localStorage.getItem('stream-history');
-      const existingSessions = saved ? JSON.parse(saved) : [];
-      const existingDates = new Set(existingSessions.map((s: any) => s.date));
-
-      const newSessions = twitchSessions.filter(s => !existingDates.has(s.date));
-      const merged = [...existingSessions, ...newSessions];
-
-      // Sortiere nach Datum
-      merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-      // Behalte nur letzte 90 Tage
-      const ninetyDaysAgo = new Date();
-      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-      const filtered = merged.filter((s: any) => new Date(s.date) >= ninetyDaysAgo);
-
-      // Speichere
-      localStorage.setItem('stream-history', JSON.stringify(filtered));
-      localStorage.setItem('stream-history-last-sync', new Date().toISOString());
-      
-      setLastSync(new Date());
-      loadStreamHistory();
-
-      console.log(`✅ ${newSessions.length} neue Sessions von Twitch hinzugefügt`);
-    } catch (error) {
-      console.error('Fehler beim Sync mit Twitch:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Parse Twitch Duration Format (z.B. "3h45m12s" -> Minuten)
-  const parseDuration = (duration: string): number => {
-    let totalMinutes = 0;
-    
-    const hoursMatch = duration.match(/(\d+)h/);
-    const minutesMatch = duration.match(/(\d+)m/);
-    const secondsMatch = duration.match(/(\d+)s/);
-
-    if (hoursMatch) totalMinutes += parseInt(hoursMatch[1]) * 60;
-    if (minutesMatch) totalMinutes += parseInt(minutesMatch[1]);
-    if (secondsMatch) totalMinutes += Math.round(parseInt(secondsMatch[1]) / 60);
-
-    return totalMinutes;
-  };
 
   // Hole alle Tage im aktuellen Monat
   const getDaysInMonth = (date: Date) => {
@@ -292,22 +183,11 @@ export default function TileStreamHistory() {
         </button>
       </div>
 
-      {/* Sync-Button */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="text-xs theme-text-secondary">
-          {lastSync ? (
-            <>Letzter Sync: {lastSync.toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</>
-          ) : (
-            <>Noch nicht synchronisiert</>
-          )}
+      {/* Info-Banner */}
+      <div className="mb-3 p-2 rounded bg-blue-500/10 border border-blue-500/30">
+        <div className="text-xs theme-text">
+          💡 <strong>Automatisches Tracking:</strong> Streams werden live beim Streamen getrackt und hier angezeigt.
         </div>
-        <button
-          onClick={syncWithTwitch}
-          disabled={isLoading}
-          className="px-3 py-1 text-xs rounded theme-button hover:opacity-80 transition-opacity disabled:opacity-50"
-        >
-          {isLoading ? '🔄 Lädt...' : '🔄 Sync'}
-        </button>
       </div>
 
       {/* Streak-Anzeige */}
@@ -412,15 +292,55 @@ export default function TileStreamHistory() {
 
                 {/* Hover-Vorschau */}
                 {isHovered && session && (
-                  <div className="absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 mb-2 p-2 rounded shadow-lg border theme-tile-content theme-border whitespace-nowrap text-xs">
-                    <div className="font-bold theme-text mb-1">
-                      {day.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })}
+                  <div 
+                    className="absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 mb-2 p-3 rounded-lg shadow-2xl border-2 whitespace-nowrap text-xs"
+                    style={{
+                      backgroundColor: 'var(--color-tile)',
+                      borderColor: getPerformanceColor(session, monthStats.avgViewers) === 'green' 
+                        ? '#22c55e' 
+                        : getPerformanceColor(session, monthStats.avgViewers) === 'yellow'
+                          ? '#eab308'
+                          : '#ef4444'
+                    }}
+                  >
+                    {/* Pfeil nach unten */}
+                    <div 
+                      className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1"
+                      style={{
+                        width: 0,
+                        height: 0,
+                        borderLeft: '6px solid transparent',
+                        borderRight: '6px solid transparent',
+                        borderTop: `6px solid ${
+                          getPerformanceColor(session, monthStats.avgViewers) === 'green' 
+                            ? '#22c55e' 
+                            : getPerformanceColor(session, monthStats.avgViewers) === 'yellow'
+                              ? '#eab308'
+                              : '#ef4444'
+                        }`
+                      }}
+                    />
+                    
+                    <div className="font-bold theme-text mb-2 text-center border-b pb-1" style={{ borderColor: 'var(--color-border)' }}>
+                      {day.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' })}
                     </div>
-                    <div className="space-y-0.5 theme-text-secondary">
-                      <div>⏱️ {formatDuration(session.duration)}</div>
-                      <div>👁️ Ø {session.avgViewers} (Peak: {session.peakViewers})</div>
-                      <div>👥 +{session.newFollowers} Follower</div>
-                      <div>⭐ +{session.newSubs} Subs</div>
+                    <div className="space-y-1 theme-text">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400">⏱️</span>
+                        <span>{formatDuration(session.duration)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400">👁️</span>
+                        <span>Ø {session.avgViewers} <span className="text-xs theme-text-secondary">(Peak: {session.peakViewers})</span></span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-blue-400">👥</span>
+                        <span className="text-blue-400">+{session.newFollowers} Follower</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-purple-400">⭐</span>
+                        <span className="text-purple-400">+{session.newSubs} Subs</span>
+                      </div>
                     </div>
                   </div>
                 )}

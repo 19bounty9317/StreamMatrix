@@ -1,5 +1,49 @@
 # 📝 Changelog
 
+## Version 1.4.4 - Multi-Window & Chat-Verbesserungen (08.11.2025)
+
+### 🎉 Neue Features
+- **Multi-Window Support**
+  - Mehrere Fenster für Kacheln
+  - **Drag & Drop zwischen Fenstern** ⭐
+  - Visueller Drop-Zone-Indikator
+  - Kacheln auch per Rechtsklick verschieben
+  - Automatische Synchronisation
+  - Perfekt für Dual-Monitor-Setups
+  - `Strg+N` für neues Fenster
+
+- **Menüleiste**
+  - File, Edit, View, Window, Help
+  - Tastenkombinationen (Strg+N, Strg+,, F12)
+  - Professionelles Interface
+
+- **Chat-Modi Buttons**
+  - 🐌 Slow Mode Button mit Sekundenanzeige
+  - 😀 Emote-Only Button
+  - Visuelles Feedback (orange/lila)
+  - Schneller Zugriff ohne Befehle
+
+- **UserCard-Verbesserungen**
+  - ⚠️ Verwarnen-Funktion
+  - 📺 Profil im Browser öffnen
+  - Bestätigungsdialoge beim Bannen
+  - Fehler-Feedback mit Hinweisen
+  - Bessere Positionierung
+
+### 🔧 Verbesserungen
+- Optimierte Fenster-Synchronisation
+- Effizientes Kachel-Management
+- Theme-Synchronisation in allen Fenstern
+- Intuitive Kontextmenüs
+- Robuste Fehlerbehandlung
+
+### 📖 Dokumentation
+- `MULTI-WINDOW-ANLEITUNG.md` - Ausführliche Anleitung
+- `BUILD-v1.4.4.md` - Build-Anleitung
+- `GITHUB-RELEASE-v1.4.4.md` - Release Notes
+
+---
+
 ## Version 1.3.7 - Activity Feed & Chat Verbesserungen (05.11.2025)
 
 ### ✨ Neue Features

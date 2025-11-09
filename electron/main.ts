@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, session, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, session, shell, Menu } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 import { startOAuthServer } from './oauth-server';
@@ -7,6 +7,7 @@ import { AppUpdater } from './updater';
 let mainWindow: BrowserWindow | null = null;
 let oauthServer: any = null;
 let appUpdater: AppUpdater | null = null;
+let tileWindows: Map<string, BrowserWindow> = new Map();
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -135,6 +136,9 @@ function createWindow() {
     mainWindow = null;
   });
 
+  // Erstelle Menüleiste
+  createMenu();
+
   // Erlaube Navigation zu Twitch OAuth
   mainWindow.webContents.on('will-navigate', (event, url) => {
     // Erlaube Twitch OAuth URLs
@@ -206,6 +210,62 @@ ipcMain.handle('open-external', async (event, url: string) => {
   
   await shell.openExternal(url);
   return { success: true };
+});
+
+// Kachel zwischen Fenstern verschieben
+ipcMain.handle('move-tile', async (event, data: { tileId: string; targetWindowId: string }) => {
+  console.log('📦 IPC: move-tile', data);
+  
+  // Benachrichtige alle Fenster über die Änderung
+  if (mainWindow) {
+    mainWindow.webContents.send('tile-moved', data);
+  }
+  tileWindows.forEach(win => {
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('tile-moved', data);
+    }
+  });
+  
+  return { success: true };
+});
+
+// Hole Kachel-Definitionen vom Hauptfenster
+ipcMain.handle('get-tiles-order', async () => {
+  console.log('📡 IPC: get-tiles-order aufgerufen');
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    try {
+      // Warte kurz, damit das Hauptfenster Zeit hat zu laden
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const tilesOrder = await mainWindow.webContents.executeJavaScript(
+        'localStorage.getItem("tiles-order")'
+      );
+      console.log('📦 IPC: tiles-order vom Hauptfenster:', tilesOrder ? `${tilesOrder.substring(0, 50)}...` : 'null');
+      
+      if (!tilesOrder) {
+        console.log('⚠️ IPC: tiles-order ist null, versuche aus userData zu laden');
+        // Fallback: Lade aus userData-Verzeichnis
+        const { app } = require('electron');
+        const fs = require('fs');
+        const path = require('path');
+        const userDataPath = app.getPath('userData');
+        const settingsPath = path.join(userDataPath, 'tiles-order.json');
+        
+        if (fs.existsSync(settingsPath)) {
+          const data = fs.readFileSync(settingsPath, 'utf-8');
+          console.log('✅ IPC: tiles-order aus userData geladen');
+          return { tilesOrder: data };
+        }
+      }
+      
+      return { tilesOrder };
+    } catch (error) {
+      console.error('❌ IPC: Fehler beim Abrufen von tiles-order:', error);
+      return { tilesOrder: null };
+    }
+  }
+  console.log('⚠️ IPC: Hauptfenster nicht verfügbar');
+  return { tilesOrder: null };
 });
 
 // System-Stats mit Windows Performance Counter
@@ -284,6 +344,169 @@ async function getSystemGpuUsage(): Promise<number> {
     }
   }
   return 0;
+}
+
+function createMenu() {
+  const template: any = [
+    {
+      label: 'File',
+      submenu: [
+        {
+          label: 'Einstellungen',
+          accelerator: 'CmdOrCtrl+,',
+          click: () => {
+            mainWindow?.webContents.send('open-settings');
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Beenden',
+          accelerator: 'CmdOrCtrl+Q',
+          click: () => {
+            app.quit();
+          }
+        }
+      ]
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo', label: 'Rückgängig' },
+        { role: 'redo', label: 'Wiederholen' },
+        { type: 'separator' },
+        { role: 'cut', label: 'Ausschneiden' },
+        { role: 'copy', label: 'Kopieren' },
+        { role: 'paste', label: 'Einfügen' },
+        { role: 'selectAll', label: 'Alles auswählen' }
+      ]
+    },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload', label: 'Neu laden' },
+        { role: 'forceReload', label: 'Erzwungenes Neuladen' },
+        { role: 'toggleDevTools', label: 'Entwicklertools' },
+        { type: 'separator' },
+        { role: 'resetZoom', label: 'Zoom zurücksetzen' },
+        { role: 'zoomIn', label: 'Vergrößern' },
+        { role: 'zoomOut', label: 'Verkleinern' },
+        { type: 'separator' },
+        { role: 'togglefullscreen', label: 'Vollbild' }
+      ]
+    },
+    {
+      label: 'Window',
+      submenu: [
+        {
+          label: 'Neues Kachel-Fenster',
+          accelerator: 'CmdOrCtrl+N',
+          click: () => {
+            createTileWindow();
+          }
+        },
+        { type: 'separator' },
+        { role: 'minimize', label: 'Minimieren' },
+        { role: 'close', label: 'Schließen' }
+      ]
+    },
+    {
+      label: 'Help',
+      submenu: [
+        {
+          label: 'Tutorial',
+          click: () => {
+            mainWindow?.webContents.send('show-tutorial');
+          }
+        },
+        {
+          label: 'Über StreamMatrix',
+          click: () => {
+            const { dialog } = require('electron');
+            dialog.showMessageBox(mainWindow!, {
+              type: 'info',
+              title: 'Über StreamMatrix',
+              message: 'StreamMatrix',
+              detail: `Version: ${app.getVersion()}\n\nEin Dashboard für Twitch-Streamer\n\n© 2024 StreamMatrix`
+            });
+          }
+        }
+      ]
+    }
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}
+
+async function createTileWindow() {
+  const windowId = `tile-window-${Date.now()}`;
+  
+  const tileWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    backgroundColor: '#0E0E10',
+    title: 'Kachel-Fenster',
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
+    },
+    frame: true,
+    titleBarStyle: 'default'
+  });
+
+  tileWindows.set(windowId, tileWindow);
+
+  // Hole tiles-order vom Hauptfenster BEVOR wir das Fenster laden
+  let tilesOrderData = null;
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    try {
+      tilesOrderData = await mainWindow.webContents.executeJavaScript(
+        'localStorage.getItem("tiles-order")'
+      );
+      console.log('📦 Electron: tiles-order für neues Fenster:', tilesOrderData ? 'vorhanden' : 'null');
+    } catch (error) {
+      console.error('❌ Electron: Fehler beim Abrufen von tiles-order:', error);
+    }
+  }
+
+  // Prüfe ob wir im Development-Modus sind
+  const indexPath = path.join(__dirname, 'renderer', 'index.html');
+  const fs = require('fs');
+  const isDev = !fs.existsSync(indexPath);
+  
+  if (isDev) {
+    // Prüfe welcher Port verwendet wird (5173 oder 5174)
+    const port = process.env.VITE_PORT || '5173';
+    await tileWindow.loadURL(`http://localhost:${port}/tile-window.html?windowId=${windowId}`);
+  } else {
+    const fileUrl = url.format({
+      protocol: 'file',
+      slashes: true,
+      pathname: path.join(__dirname, 'renderer', 'tile-window.html')
+    });
+    await tileWindow.loadURL(`${fileUrl}?windowId=${windowId}`);
+  }
+
+  // NACH dem Laden: Setze tiles-order im localStorage des neuen Fensters
+  if (tilesOrderData) {
+    try {
+      await tileWindow.webContents.executeJavaScript(
+        `localStorage.setItem("tiles-order", ${JSON.stringify(tilesOrderData)})`
+      );
+      console.log('✅ Electron: tiles-order in neues Fenster kopiert');
+    } catch (error) {
+      console.error('❌ Electron: Fehler beim Setzen von tiles-order:', error);
+    }
+  }
+
+  tileWindow.on('closed', () => {
+    tileWindows.delete(windowId);
+    mainWindow?.webContents.send('tile-window-closed', windowId);
+  });
+
+  // Sende Event an Hauptfenster
+  mainWindow?.webContents.send('tile-window-opened', windowId);
 }
 
 // Manuell nach Updates suchen

@@ -13,5 +13,23 @@ contextBridge.exposeInMainWorld('electron', {
   },
   onUpdateStatus: (callback: (status: any) => void) => {
     ipcRenderer.on('update-status', (event, status) => callback(status));
-  }
+  },
+  onOpenSettings: (callback: () => void) => {
+    ipcRenderer.on('open-settings', () => callback());
+  },
+  onShowTutorial: (callback: () => void) => {
+    ipcRenderer.on('show-tutorial', () => callback());
+  },
+  onTileWindowOpened: (callback: (windowId: string) => void) => {
+    ipcRenderer.on('tile-window-opened', (event, windowId) => callback(windowId));
+  },
+  onTileWindowClosed: (callback: (windowId: string) => void) => {
+    ipcRenderer.on('tile-window-closed', (event, windowId) => callback(windowId));
+  },
+  moveTile: (tileId: string, targetWindowId: string) => 
+    ipcRenderer.invoke('move-tile', { tileId, targetWindowId }),
+  onTileMoved: (callback: (data: { tileId: string; targetWindowId: string }) => void) => {
+    ipcRenderer.on('tile-moved', (event, data) => callback(data));
+  },
+  getTilesOrder: () => ipcRenderer.invoke('get-tiles-order')
 });
