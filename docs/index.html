@@ -339,6 +339,59 @@
             font-size: 0.9rem;
         }
 
+        /* Contact Section */
+        .contact-section {
+            padding: 6rem 2rem;
+            background: var(--dark-light);
+        }
+
+        .contact-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .contact-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .contact-card {
+            background: var(--dark);
+            padding: 3rem 2rem;
+            border-radius: 16px;
+            border: 1px solid rgba(145, 71, 255, 0.2);
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--purple);
+            box-shadow: 0 10px 40px rgba(145, 71, 255, 0.3);
+        }
+
+        .contact-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .contact-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--purple-light);
+        }
+
+        .contact-card p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-card .btn {
+            margin-top: 1rem;
+        }
+
         /* Footer */
         footer {
             background: var(--dark-light);
@@ -986,6 +1039,34 @@
         </div>
     </section>
 
+    <!-- Contact Section -->
+    <section class="contact-section">
+        <div class="contact-container">
+            <h2 class="section-title">Fehler melden oder Feedback geben</h2>
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem; font-size: 1.1rem;">
+                Hast du einen Bug gefunden oder Verbesserungsvorschläge? Wir freuen uns über dein Feedback!
+            </p>
+            <div class="contact-options">
+                <div class="contact-card">
+                    <div class="contact-icon">📧</div>
+                    <h3>E-Mail</h3>
+                    <p>Schreibe uns direkt eine E-Mail</p>
+                    <a href="mailto:streammatrix@web.de" class="btn btn-primary">
+                        streammatrix@web.de
+                    </a>
+                </div>
+                <div class="contact-card">
+                    <div class="contact-icon">🐛</div>
+                    <h3>GitHub Issues</h3>
+                    <p>Erstelle ein Issue auf GitHub</p>
+                    <a href="https://github.com/19bounty9317/StreamMatrix/issues/new" target="_blank" class="btn btn-secondary">
+                        Issue erstellen
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer>
         <div class="footer-links">
@@ -993,6 +1074,8 @@
             <a href="https://github.com/19bounty9317/StreamMatrix/releases" target="_blank">Releases</a>
             <a href="https://github.com/19bounty9317/StreamMatrix/issues" target="_blank">Support</a>
             <a href="https://github.com/19bounty9317/StreamMatrix/blob/main/LICENSE" target="_blank">Lizenz</a>
+            <a href="impressum.html">Impressum</a>
+            <a href="datenschutz.html">Datenschutz</a>
         </div>
         <div class="copyright">
             © 2025 StreamMatrix • Made with 💜 for Twitch Streamers
