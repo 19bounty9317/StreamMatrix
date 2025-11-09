@@ -1307,9 +1307,6 @@
             }
         }
 
-        // Load download count on page load
-        fetchDownloadCount();
-
         // Lightbox functionality
         const lightbox = document.createElement('div');
         lightbox.className = 'lightbox';
@@ -1423,13 +1420,22 @@
             event.target.classList.add('active');
         }
 
-        // Set initial active states
+        // Set initial active states and load download count
         document.addEventListener('DOMContentLoaded', () => {
+            // Set demo button states
             document.querySelectorAll('.control-group:first-child .control-btn').forEach(btn => {
                 btn.classList.add('active');
             });
             document.querySelectorAll('.control-group:last-child .control-btn')[1].classList.add('active');
+            
+            // Load download count
+            fetchDownloadCount();
         });
+
+        // Also try to load immediately if DOM is already loaded
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            setTimeout(fetchDownloadCount, 100);
+        }
     </script>
 </body>
 </html>
