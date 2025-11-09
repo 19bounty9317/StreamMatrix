@@ -179,9 +179,36 @@ function App() {
       // Deaktiviere Test-Modus falls aktiv
       localStorage.removeItem('test-mode-active');
       
-      // Lösche Stream-Historie komplett (wird neu aufgebaut mit echten Streams)
-      localStorage.removeItem('stream-history');
-      console.log('🗑️ Stream-Historie komplett gelöscht');
+      // Bereinige Stream-Historie: Behalte nur echte Streams (mit Dauer > 5 Minuten)
+      const history = localStorage.getItem('stream-history');
+      if (history) {
+        try {
+          const sessions = JSON.parse(history);
+          // Filtere Test-Daten: Behalte nur Sessions mit realistischer Dauer (> 5 Min)
+          // und nicht zu viele Sessions am gleichen Tag
+          const filtered = sessions.filter((s: any) => {
+            return s.duration > 5; // Mindestens 5 Minuten
+          });
+          
+          // Entferne Duplikate vom gleichen Tag (behalte nur die längste Session)
+          const uniqueByDate = filtered.reduce((acc: any[], curr: any) => {
+            const existing = acc.find(s => s.date === curr.date);
+            if (!existing) {
+              acc.push(curr);
+            } else if (curr.duration > existing.duration) {
+              // Ersetze mit längerer Session
+              const index = acc.indexOf(existing);
+              acc[index] = curr;
+            }
+            return acc;
+          }, []);
+          
+          localStorage.setItem('stream-history', JSON.stringify(uniqueByDate));
+          console.log(`🧹 Stream-Historie bereinigt: ${sessions.length} → ${uniqueByDate.length} Sessions`);
+        } catch (e) {
+          console.error('Fehler beim Bereinigen der Historie:', e);
+        }
+      }
       
       localStorage.setItem('cleanup-v1.4.4-done', 'true');
       console.log('✅ Cleanup abgeschlossen');

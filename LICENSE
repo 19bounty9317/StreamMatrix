@@ -2,27 +2,46 @@ Copyright (c) 2025 Michael Mader
 
 Alle Rechte vorbehalten.
 
-PROPRIETÄRE SOFTWARE-LIZENZ
+PROPRIETÄRE SOFTWARE-LIZENZ (FREEWARE)
 
 Diese Software und die zugehörige Dokumentation sind urheberrechtlich geschützt.
 
-VERBOTEN:
-- Kopieren, Vervielfältigen oder Verbreiten der Software
-- Ändern, Anpassen oder Erstellen abgeleiteter Werke
-- Reverse Engineering, Dekompilieren oder Disassemblieren
-- Kommerzielle Nutzung ohne schriftliche Genehmigung
-- Entfernen von Copyright-Hinweisen
-
 ERLAUBT:
-- Persönliche Nutzung der Software
-- Installation auf eigenen Geräten
-- Nutzung für Twitch-Streaming
+- Kostenlose Nutzung der Software für private und kommerzielle Zwecke
+- Installation auf beliebig vielen eigenen Geräten
+- Nutzung für Twitch-Streaming und Content-Erstellung
+- Weitergabe des Original-Installers an andere Nutzer
+- Teilen von Screenshots und Videos der Software
+
+VERBOTEN:
+- Kopieren, Modifizieren oder Dekompilieren des Quellcodes
+- Erstellen abgeleiteter Werke oder modifizierter Versionen
+- Reverse Engineering oder Disassemblieren der Software
+- Verbreitung modifizierter Versionen
+- Entfernen oder Ändern von Copyright-Hinweisen
+- Verkauf oder kommerzielle Lizenzierung der Software ohne Genehmigung
+- Verwendung des Codes in anderen Projekten
+
+QUELLCODE:
+Der Quellcode ist auf GitHub verfügbar, jedoch ausschließlich zu Transparenz- und 
+Sicherheitszwecken. Die Einsicht in den Code berechtigt nicht zur Nutzung, Kopie 
+oder Modifikation ohne ausdrückliche schriftliche Genehmigung.
 
 HAFTUNGSAUSSCHLUSS:
 Diese Software wird "wie besehen" ohne jegliche Gewährleistung bereitgestellt.
-Der Autor haftet nicht für Schäden, die durch die Nutzung entstehen.
+Der Autor haftet nicht für direkte oder indirekte Schäden, die durch die Nutzung 
+der Software entstehen. Die Nutzung erfolgt auf eigenes Risiko.
 
-Für kommerzielle Lizenzen oder Fragen kontaktieren Sie:
+UPDATES UND SUPPORT:
+Updates werden kostenlos über GitHub Releases bereitgestellt. Support erfolgt 
+auf freiwilliger Basis über GitHub Issues. Es besteht kein Anspruch auf Updates 
+oder Support.
+
+DATENSCHUTZ:
+Alle Daten werden ausschließlich lokal auf dem Gerät des Nutzers gespeichert.
+Es erfolgt keine Übertragung von Nutzerdaten an Server des Entwicklers.
+
+Für kommerzielle Lizenzen, Partnerschaften oder Fragen kontaktieren Sie:
 StreamMatrix@web.de
 
-StreamMatrix v1.3.3
+StreamMatrix v1.4.4
