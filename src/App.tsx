@@ -179,24 +179,9 @@ function App() {
       // Deaktiviere Test-Modus falls aktiv
       localStorage.removeItem('test-mode-active');
       
-      // Lösche Stream-Historie (wird neu aufgebaut mit echten Daten)
-      const history = localStorage.getItem('stream-history');
-      if (history) {
-        try {
-          const sessions = JSON.parse(history);
-          // Behalte nur Sessions der letzten 7 Tage (echte Streams)
-          const sevenDaysAgo = new Date();
-          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-          const filtered = sessions.filter((s: any) => {
-            const sessionDate = new Date(s.date);
-            return sessionDate >= sevenDaysAgo;
-          });
-          localStorage.setItem('stream-history', JSON.stringify(filtered));
-          console.log(`🧹 Stream-Historie bereinigt: ${sessions.length} → ${filtered.length} Sessions`);
-        } catch (e) {
-          console.error('Fehler beim Bereinigen der Historie:', e);
-        }
-      }
+      // Lösche Stream-Historie komplett (wird neu aufgebaut mit echten Streams)
+      localStorage.removeItem('stream-history');
+      console.log('🗑️ Stream-Historie komplett gelöscht');
       
       localStorage.setItem('cleanup-v1.4.4-done', 'true');
       console.log('✅ Cleanup abgeschlossen');
