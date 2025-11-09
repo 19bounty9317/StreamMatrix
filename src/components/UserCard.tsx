@@ -85,16 +85,19 @@ export default function UserCard({ username, color, badges, onClose, position }:
       onClose();
     } catch (error) {
       console.error('Fehler beim Timeout:', error);
+      alert('Fehler beim Timeout. Stelle sicher, dass du Moderator-Rechte hast.');
     }
   };
 
   const handleBan = async () => {
+    if (!confirm(`Möchtest du ${username} wirklich permanent bannen?`)) return;
     try {
       const { twitchChat } = await import('../services/TwitchChatService');
       twitchChat.banUser(username);
       onClose();
     } catch (error) {
       console.error('Fehler beim Bannen:', error);
+      alert('Fehler beim Bannen. Stelle sicher, dass du Moderator-Rechte hast.');
     }
   };
 
@@ -105,6 +108,7 @@ export default function UserCard({ username, color, badges, onClose, position }:
       onClose();
     } catch (error) {
       console.error('Fehler beim Mod geben:', error);
+      alert('Fehler beim Mod geben. Stelle sicher, dass du Broadcaster bist.');
     }
   };
 
@@ -115,6 +119,18 @@ export default function UserCard({ username, color, badges, onClose, position }:
       onClose();
     } catch (error) {
       console.error('Fehler beim VIP geben:', error);
+      alert('Fehler beim VIP geben. Stelle sicher, dass du Broadcaster bist.');
+    }
+  };
+
+  const handleWarn = async () => {
+    try {
+      const { twitchChat } = await import('../services/TwitchChatService');
+      twitchChat.sendMessage(`/warn ${username} Verstoß gegen die Chat-Regeln`);
+      onClose();
+    } catch (error) {
+      console.error('Fehler beim Verwarnen:', error);
+      alert('Fehler beim Verwarnen. Stelle sicher, dass du Moderator-Rechte hast.');
     }
   };
 
@@ -130,8 +146,8 @@ export default function UserCard({ username, color, badges, onClose, position }:
       <div 
         className="fixed z-50 rounded-lg shadow-2xl"
         style={{
-          left: `${position.x}px`,
-          top: `${position.y}px`,
+          left: `${Math.min(position.x, window.innerWidth - 340)}px`,
+          top: `${Math.min(position.y, window.innerHeight - 520)}px`,
           width: '320px',
           maxHeight: '500px',
           overflow: 'auto',
@@ -221,6 +237,13 @@ export default function UserCard({ username, color, badges, onClose, position }:
                     💎 VIP
                   </button>
                 </div>
+
+                <button
+                  onClick={handleWarn}
+                  className="w-full bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded text-sm transition-colors"
+                >
+                  ⚠️ Verwarnen
+                </button>
 
                 <div className="grid grid-cols-3 gap-2">
                   <button

@@ -6,6 +6,7 @@ export class TwitchChatService {
   private username: string = '';
   private token: string = '';
   private messageHandlers: ((message: any) => void)[] = [];
+  private roomStateHandlers: ((state: any) => void)[] = [];
   private isConnected = false;
 
   private constructor() {}
@@ -107,6 +108,15 @@ export class TwitchChatService {
     // Channel Join bestätigt
     if (rawMessage.includes('JOIN')) {
       console.log('✅ Channel erfolgreich beigetreten');
+    }
+    
+    // ROOMSTATE - Chat-Modus-Änderungen
+    if (rawMessage.includes('ROOMSTATE')) {
+      const parsed = this.parseRoomState(rawMessage);
+      if (parsed) {
+        console.log('🏠 ROOMSTATE Update:', parsed);
+        this.roomStateHandlers.forEach(handler => handler(parsed));
+      }
     }
   }
 
@@ -287,6 +297,36 @@ export class TwitchChatService {
 
   onMessage(handler: (message: any) => void) {
     this.messageHandlers.push(handler);
+  }
+
+  onRoomState(handler: (state: any) => void) {
+    this.roomStateHandlers.push(handler);
+  }
+
+  private parseRoomState(rawMessage: string) {
+    try {
+      // Parse IRC Tags
+      const tagMatch = rawMessage.match(/^@([^ ]+) /);
+      if (!tagMatch) return null;
+
+      const tags: any = {};
+      const tagString = tagMatch[1];
+      tagString.split(';').forEach(tag => {
+        const [key, value] = tag.split('=');
+        tags[key] = value;
+      });
+
+      return {
+        emoteOnly: tags['emote-only'] === '1',
+        followersOnly: tags['followers-only'] !== '-1',
+        r9k: tags['r9k'] === '1',
+        slow: parseInt(tags['slow'] || '0'),
+        subsOnly: tags['subs-only'] === '1'
+      };
+    } catch (error) {
+      console.error('Fehler beim Parsen von ROOMSTATE:', error);
+      return null;
+    }
   }
 
   disconnect() {

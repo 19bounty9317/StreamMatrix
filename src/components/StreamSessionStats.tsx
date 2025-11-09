@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import StreamSessionTracker from '../services/StreamSessionTracker';
+import { TwitchService } from '../services/TwitchService';
 
 export default function StreamSessionStats() {
   const [stats, setStats] = useState(StreamSessionTracker.getInstance().getStats());
@@ -30,7 +31,6 @@ export default function StreamSessionStats() {
       }
       
       if (!isTestMode) {
-        const { TwitchService } = require('../services/TwitchService');
         const user = TwitchService.getUserFromStorage();
         if (user) {
           tracker.updateCurrentStats(user.id);

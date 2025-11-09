@@ -11,6 +11,7 @@ import StreamQualityService from './services/StreamQualityService';
 import EventTracker from './services/EventTracker';
 import StreamSessionTracker from './services/StreamSessionTracker';
 import { getTheme, applyTheme } from './styles/themes';
+import WindowManager from './services/WindowManager';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -118,6 +119,9 @@ function App() {
     
     // Kein gespeichertes Layout gefunden - erste Installation oder v1.3.8 Migration
     console.log('🆕 Keine gespeicherten Kacheln gefunden, verwende Defaults');
+    // Speichere die Defaults im localStorage für zukünftige Verwendung
+    localStorage.setItem('tiles-order', JSON.stringify(defaultTiles));
+    console.log('💾 Default-Kacheln im localStorage gespeichert');
     return defaultTiles;
   });
 
@@ -133,6 +137,10 @@ function App() {
   const [testModeActive, setTestModeActive] = useState(() => {
     return localStorage.getItem('test-mode-active') === 'true';
   });
+  const [visibleTiles, setVisibleTiles] = useState<typeof defaultTiles>(() => {
+    // Initial alle aktivierten Kacheln anzeigen
+    return availableTiles.filter(t => t.enabled);
+  });
 
   // Update-Listener
   useEffect(() => {
@@ -145,6 +153,53 @@ function App() {
           console.log('Update verfügbar:', info.version);
         }
       });
+    }
+
+    // Menü-Event-Listener
+    if (window.electron?.onOpenSettings) {
+      window.electron.onOpenSettings(() => {
+        setShowSettings(true);
+      });
+    }
+
+    if (window.electron?.onShowTutorial) {
+      window.electron.onShowTutorial(() => {
+        const event = new CustomEvent('show-tutorial');
+        window.dispatchEvent(event);
+      });
+    }
+  }, []);
+
+  // Cleanup: Entferne Test-Daten beim Start (einmalig)
+  useEffect(() => {
+    const cleanupDone = localStorage.getItem('cleanup-v1.4.4-done');
+    if (!cleanupDone) {
+      console.log('🧹 Cleanup: Entferne alte Test-Daten...');
+      
+      // Deaktiviere Test-Modus falls aktiv
+      localStorage.removeItem('test-mode-active');
+      
+      // Lösche Stream-Historie (wird neu aufgebaut mit echten Daten)
+      const history = localStorage.getItem('stream-history');
+      if (history) {
+        try {
+          const sessions = JSON.parse(history);
+          // Behalte nur Sessions der letzten 7 Tage (echte Streams)
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          const filtered = sessions.filter((s: any) => {
+            const sessionDate = new Date(s.date);
+            return sessionDate >= sevenDaysAgo;
+          });
+          localStorage.setItem('stream-history', JSON.stringify(filtered));
+          console.log(`🧹 Stream-Historie bereinigt: ${sessions.length} → ${filtered.length} Sessions`);
+        } catch (e) {
+          console.error('Fehler beim Bereinigen der Historie:', e);
+        }
+      }
+      
+      localStorage.setItem('cleanup-v1.4.4-done', 'true');
+      console.log('✅ Cleanup abgeschlossen');
     }
   }, []);
 
@@ -160,6 +215,28 @@ function App() {
       window.removeEventListener('test-mode-change' as any, handleTestModeChange);
     };
   }, []);
+
+  // Filtere Kacheln basierend auf Fenster-Zuordnung
+  useEffect(() => {
+    const updateVisibleTiles = () => {
+      const manager = WindowManager.getInstance();
+      const enabledTiles = availableTiles.filter(t => t.enabled);
+      const allTileIds = enabledTiles.map(t => t.id);
+      const mainTileIds = manager.getMainWindowTiles(allTileIds);
+      const visible = enabledTiles.filter(t => mainTileIds.includes(t.id));
+      setVisibleTiles(visible);
+    };
+
+    updateVisibleTiles();
+
+    // Aktualisiere bei Änderungen
+    const manager = WindowManager.getInstance();
+    const unsubscribe = manager.onConfigChange(updateVisibleTiles);
+
+    return () => {
+      unsubscribe();
+    };
+  }, [availableTiles]);
 
   useEffect(() => {
     const token = TwitchService.getStoredToken();
@@ -321,7 +398,7 @@ function App() {
       />
       <div className="flex-1 flex flex-col">
         <Dashboard 
-          tiles={availableTiles.filter((t: typeof defaultTiles[0]) => t.enabled)} 
+          tiles={visibleTiles} 
           onCloseTile={toggleTile}
         />
         <Footer status={connectionStatus} />

@@ -6,6 +6,13 @@ export interface IElectronAPI {
   checkForUpdates?: () => Promise<{ success: boolean }>;
   onUpdateAvailable?: (callback: (info: any) => void) => void;
   onUpdateStatus?: (callback: (status: { status: string; message: string; progress?: number }) => void) => void;
+  onOpenSettings?: (callback: () => void) => void;
+  onShowTutorial?: (callback: () => void) => void;
+  onTileWindowOpened?: (callback: (windowId: string) => void) => void;
+  onTileWindowClosed?: (callback: (windowId: string) => void) => void;
+  moveTile?: (tileId: string, targetWindowId: string) => Promise<{ success: boolean }>;
+  onTileMoved?: (callback: (data: { tileId: string; targetWindowId: string }) => void) => void;
+  getTilesOrder?: () => Promise<{ tilesOrder: string | null }>;
 }
 
 declare global {

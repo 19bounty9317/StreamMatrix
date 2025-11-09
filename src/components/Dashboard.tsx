@@ -17,6 +17,7 @@ import TileViewerList from './tiles/TileViewerList';
 import TileStreamPreview from './tiles/TileStreamPreview';
 import TileRaidTargets from './tiles/TileRaidTargets';
 import TileStreamHistory from './tiles/TileStreamHistory';
+import WindowManager from '../services/WindowManager';
 
 interface Tile {
   id: string;
@@ -40,6 +41,8 @@ export default function Dashboard({ tiles, onCloseTile }: DashboardProps) {
     }
     return false;
   });
+  const [contextMenu, setContextMenu] = useState<{ tileId: string; x: number; y: number } | null>(null);
+  const [availableWindows, setAvailableWindows] = useState<Array<{ id: string; name: string }>>([]);
 
   const tileComponents: Record<string, React.ComponentType> = {
     'chat': TileChat,
@@ -207,8 +210,104 @@ export default function Dashboard({ tiles, onCloseTile }: DashboardProps) {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
+  // Lade verfügbare Fenster
+  useEffect(() => {
+    const updateWindows = () => {
+      const manager = WindowManager.getInstance();
+      const configs = manager.getWindowConfigs();
+      
+      setAvailableWindows([
+        { id: 'main', name: 'Hauptfenster' },
+        ...configs.map((config: any, index: number) => ({
+          id: config.id,
+          name: `Fenster ${index + 1}`
+        }))
+      ]);
+    };
+
+    updateWindows();
+
+    // Höre auf Fenster-Änderungen
+    if (window.electron?.onTileWindowOpened) {
+      window.electron.onTileWindowOpened(updateWindows);
+    }
+    if (window.electron?.onTileWindowClosed) {
+      window.electron.onTileWindowClosed(updateWindows);
+    }
+
+    const interval = setInterval(updateWindows, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Schließe Kontextmenü bei Klick außerhalb
+  useEffect(() => {
+    const handleClick = () => setContextMenu(null);
+    if (contextMenu) {
+      document.addEventListener('click', handleClick);
+      return () => document.removeEventListener('click', handleClick);
+    }
+  }, [contextMenu]);
+
+  const handleContextMenu = (e: React.MouseEvent, tileId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({
+      tileId,
+      x: e.clientX,
+      y: e.clientY
+    });
+  };
+
+  const moveTileToWindow = (tileId: string, targetWindowId: string) => {
+    const manager = WindowManager.getInstance();
+    manager.moveTileToWindow(tileId, targetWindowId);
+    setContextMenu(null);
+  };
+
+  // Drag & Drop zwischen Fenstern wurde entfernt
+  // Verwende stattdessen das Kontextmenü (Rechtsklick auf Kachel)
+
   return (
-    <div ref={containerRef} className={`flex-1 overflow-auto ${compactMode ? 'p-2' : 'p-4'}`} style={{ backgroundColor: 'var(--color-background)' }}>
+    <div 
+      ref={containerRef} 
+      className={`flex-1 overflow-auto ${compactMode ? 'p-2' : 'p-4'}`} 
+      style={{ 
+        backgroundColor: 'var(--color-background)'
+      }}
+    >
+      
+      {/* Kontextmenü */}
+      {contextMenu && (
+        <div
+          className="fixed z-50 rounded-lg shadow-2xl py-2 min-w-[200px]"
+          style={{
+            left: `${contextMenu.x}px`,
+            top: `${contextMenu.y}px`,
+            backgroundColor: 'var(--color-tile)',
+            border: '1px solid var(--color-border)'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="px-3 py-2 text-xs font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
+            Verschieben nach:
+          </div>
+          {availableWindows
+            .filter(w => w.id !== 'main' || window.location.pathname !== '/')
+            .map(window => (
+              <button
+                key={window.id}
+                onClick={() => moveTileToWindow(contextMenu.tileId, window.id)}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-opacity-10 transition-colors"
+                style={{ color: 'var(--color-text)' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(145, 71, 255, 0.1)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                📺 {window.name}
+              </button>
+            ))}
+        </div>
+      )}
+      
       <GridLayout
         className="layout"
         layout={layout}
@@ -224,8 +323,19 @@ export default function Dashboard({ tiles, onCloseTile }: DashboardProps) {
           const TileComponent = tileComponents[tile.id];
           const fontSize = fontSizes[tile.id] || 14;
           return (
-            <div key={tile.id} className="rounded-lg border overflow-hidden" style={{ backgroundColor: 'var(--color-tile)', borderColor: 'var(--color-tile-border)' }}>
-              <div className="drag-handle px-4 py-2 cursor-move flex items-center justify-between" style={{ backgroundColor: 'var(--color-tile-header)' }}>
+            <div 
+              key={tile.id} 
+              className="rounded-lg border overflow-hidden" 
+              style={{ 
+                backgroundColor: 'var(--color-tile)', 
+                borderColor: 'var(--color-tile-border)'
+              }}
+            >
+              <div 
+                className="drag-handle px-4 py-2 cursor-move flex items-center justify-between" 
+                style={{ backgroundColor: 'var(--color-tile-header)' }}
+                onContextMenu={(e) => handleContextMenu(e, tile.id)}
+              >
                 <span className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{tile.name}</span>
                 <div className="flex items-center gap-2">
                   <button
@@ -251,6 +361,19 @@ export default function Dashboard({ tiles, onCloseTile }: DashboardProps) {
                   >
                     A+
                   </button>
+                  {availableWindows.length > 1 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleContextMenu(e, tile.id);
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      className="text-gray-400 hover:text-white text-xs px-2 py-1 hover:bg-twitch-gray rounded"
+                      title="Zu anderem Fenster verschieben"
+                    >
+                      📺
+                    </button>
+                  )}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

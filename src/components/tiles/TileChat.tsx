@@ -57,6 +57,88 @@ export default function TileChat() {
     return saved ? JSON.parse(saved) : true;
   });
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [slowModeActive, setSlowModeActive] = useState(false);
+  const [slowModeSeconds, setSlowModeSeconds] = useState(30);
+  const [emoteOnlyActive, setEmoteOnlyActive] = useState(false);
+
+  const toggleSlowMode = async () => {
+    try {
+      const { TwitchService } = await import('../../services/TwitchService');
+      const user = TwitchService.getUserFromStorage();
+      const token = TwitchService.getStoredToken();
+      
+      if (!user || !token) {
+        console.error('❌ Nicht eingeloggt');
+        return;
+      }
+
+      // Verwende Twitch Helix API statt IRC-Befehle
+      const response = await fetch(
+        `https://api.twitch.tv/helix/chat/settings?broadcaster_id=${user.id}&moderator_id=${user.id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Client-Id': '29m9wd4tyae2dgkvgr8ddqv45rxpwk',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            slow_mode: !slowModeActive,
+            slow_mode_wait_time: slowModeActive ? null : slowModeSeconds
+          })
+        }
+      );
+
+      if (response.ok) {
+        setSlowModeActive(!slowModeActive);
+        console.log(`✅ Slow Mode ${!slowModeActive ? 'aktiviert' : 'deaktiviert'}`);
+      } else {
+        const error = await response.text();
+        console.error('❌ Fehler beim Umschalten des Slow Mode:', error);
+      }
+    } catch (error) {
+      console.error('Fehler beim Umschalten des Slow Mode:', error);
+    }
+  };
+
+  const toggleEmoteOnly = async () => {
+    try {
+      const { TwitchService } = await import('../../services/TwitchService');
+      const user = TwitchService.getUserFromStorage();
+      const token = TwitchService.getStoredToken();
+      
+      if (!user || !token) {
+        console.error('❌ Nicht eingeloggt');
+        return;
+      }
+
+      // Verwende Twitch Helix API statt IRC-Befehle
+      const response = await fetch(
+        `https://api.twitch.tv/helix/chat/settings?broadcaster_id=${user.id}&moderator_id=${user.id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Client-Id': '29m9wd4tyae2dgkvgr8ddqv45rxpwk',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            emote_mode: !emoteOnlyActive
+          })
+        }
+      );
+
+      if (response.ok) {
+        setEmoteOnlyActive(!emoteOnlyActive);
+        console.log(`✅ Emote-Only ${!emoteOnlyActive ? 'aktiviert' : 'deaktiviert'}`);
+      } else {
+        const error = await response.text();
+        console.error('❌ Fehler beim Umschalten des Emote-Only:', error);
+      }
+    } catch (error) {
+      console.error('Fehler beim Umschalten des Emote-Only:', error);
+    }
+  };
 
   const toggleTimestamps = () => {
     const newValue = !showTimestamps;
@@ -210,6 +292,16 @@ export default function TileChat() {
               
               return [...prev, msg].slice(-100); // Max 100 Nachrichten
             });
+          });
+          
+          // Höre auf ROOMSTATE-Updates
+          twitchChat.onRoomState((state: any) => {
+            console.log('🏠 ROOMSTATE Update empfangen:', state);
+            setSlowModeActive(state.slow > 0);
+            if (state.slow > 0) {
+              setSlowModeSeconds(state.slow);
+            }
+            setEmoteOnlyActive(state.emoteOnly);
           });
           
           setIsConnecting(false);
@@ -815,7 +907,31 @@ export default function TileChat() {
             👁️
           </button>
         )}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={toggleSlowMode}
+            className={`text-xs px-2 py-1 rounded flex items-center gap-1 transition-colors ${
+              slowModeActive 
+                ? 'bg-orange-600 text-white hover:bg-orange-700' 
+                : 'theme-button theme-text-secondary hover:theme-text'
+            }`}
+            title={slowModeActive ? `Slow Mode aktiv (${slowModeSeconds}s)` : 'Slow Mode aktivieren'}
+          >
+            <span>🐌</span>
+            <span>{slowModeActive ? `${slowModeSeconds}s` : 'Slow'}</span>
+          </button>
+          <button
+            onClick={toggleEmoteOnly}
+            className={`text-xs px-2 py-1 rounded flex items-center gap-1 transition-colors ${
+              emoteOnlyActive 
+                ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                : 'theme-button theme-text-secondary hover:theme-text'
+            }`}
+            title={emoteOnlyActive ? 'Emote-Only aktiv' : 'Emote-Only aktivieren'}
+          >
+            <span>😀</span>
+            <span>{emoteOnlyActive ? 'Emote' : 'Emote'}</span>
+          </button>
           <button
             onClick={toggleAutoScroll}
             className={`text-xs px-2 py-1 theme-button rounded flex items-center gap-1 ${autoScroll ? 'theme-text' : 'theme-text-secondary'}`}
