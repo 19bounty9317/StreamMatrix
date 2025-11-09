@@ -65,8 +65,25 @@
         }
 
         .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
             font-size: 1.5rem;
             font-weight: 800;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .logo-text {
             background: var(--gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -121,7 +138,26 @@
         .hero-content {
             position: relative;
             z-index: 1;
-            max-width: 800px;
+            max-width: 900px;
+        }
+
+        .hero-logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 2rem;
+            background: var(--gradient);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            box-shadow: 0 10px 50px rgba(145, 71, 255, 0.5);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
         }
 
         h1 {
@@ -343,6 +379,106 @@
             }
         }
 
+        /* Screenshots Section */
+        .screenshots {
+            background: var(--dark-lighter);
+            padding: 6rem 2rem;
+        }
+
+        .screenshots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 3rem auto 0;
+        }
+
+        .screenshot-card {
+            background: var(--dark-light);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(145, 71, 255, 0.2);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .screenshot-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--purple);
+            box-shadow: 0 10px 40px rgba(145, 71, 255, 0.3);
+        }
+
+        .screenshot-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-bottom: 1px solid rgba(145, 71, 255, 0.2);
+        }
+
+        .screenshot-info {
+            padding: 1.5rem;
+        }
+
+        .screenshot-info h3 {
+            color: var(--purple-light);
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .screenshot-info p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* About Section */
+        .about {
+            padding: 6rem 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .about-content {
+            background: var(--dark-light);
+            padding: 3rem;
+            border-radius: 16px;
+            border: 1px solid rgba(145, 71, 255, 0.2);
+        }
+
+        .about-content h3 {
+            color: var(--purple-light);
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .about-content p {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            font-size: 1.05rem;
+        }
+
+        .about-content ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .about-content li {
+            color: var(--text-secondary);
+            padding: 0.75rem 0;
+            padding-left: 2rem;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .about-content li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--purple);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
         /* Animations */
         @keyframes fadeInUp {
             from {
@@ -364,9 +500,13 @@
     <!-- Header -->
     <header>
         <nav>
-            <div class="logo">StreamMatrix</div>
+            <div class="logo">
+                <div class="logo-icon">📊</div>
+                <span class="logo-text">StreamMatrix</span>
+            </div>
             <ul class="nav-links">
                 <li><a href="#features">Features</a></li>
+                <li><a href="#screenshots">Screenshots</a></li>
                 <li><a href="#download">Download</a></li>
                 <li><a href="https://github.com/19bounty9317/StreamMatrix" target="_blank">GitHub</a></li>
             </ul>
@@ -376,11 +516,13 @@
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content fade-in-up">
+            <div class="hero-logo">📊</div>
             <h1>StreamMatrix</h1>
             <p class="subtitle">Dein professionelles Twitch Dashboard</p>
-            <p style="color: var(--text-secondary); margin-bottom: 2rem;">
-                Behalte alles im Blick - Chat, Follower, Alerts und mehr.<br>
-                Alles in einem anpassbaren Dashboard.
+            <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 1.1rem; max-width: 700px; margin-left: auto; margin-right: auto;">
+                StreamMatrix ist eine kostenlose Desktop-Anwendung für Windows, die speziell für Twitch-Streamer entwickelt wurde. 
+                Mit einem vollständig anpassbaren Dashboard behältst du alle wichtigen Informationen im Blick - 
+                von Live-Chat über Follower-Benachrichtigungen bis hin zu detaillierten Stream-Statistiken.
             </p>
             <div class="cta-buttons">
                 <a href="#download" class="btn btn-primary">
@@ -417,44 +559,147 @@
         </div>
     </section>
 
+    <!-- About Section -->
+    <section class="about">
+        <div class="about-content">
+            <h3>Was ist StreamMatrix?</h3>
+            <p>
+                StreamMatrix ist eine leistungsstarke Desktop-Anwendung, die speziell für Twitch-Streamer entwickelt wurde. 
+                Die App bietet ein vollständig anpassbares Dashboard mit verschiedenen Kacheln, die alle wichtigen Informationen 
+                während deines Streams anzeigen.
+            </p>
+            <p>
+                <strong>Perfekt für:</strong>
+            </p>
+            <ul>
+                <li>Streamer, die mehrere Monitore nutzen und Informationen auf verschiedene Fenster verteilen möchten</li>
+                <li>Content Creator, die ihre Community besser im Blick behalten wollen</li>
+                <li>Moderatoren, die schnellen Zugriff auf Chat-Tools benötigen</li>
+                <li>Alle, die ihre Stream-Statistiken und -Historie verfolgen möchten</li>
+            </ul>
+            <p>
+                Die App ist <strong>100% kostenlos</strong>, benötigt <strong>keine Registrierung</strong> und speichert alle Daten 
+                lokal auf deinem Computer. Deine Twitch-Zugangsdaten werden sicher verschlüsselt und niemals an Dritte weitergegeben.
+            </p>
+        </div>
+    </section>
+
     <!-- Features Section -->
     <section class="section" id="features">
         <h2 class="section-title">Hauptfunktionen</h2>
+        <p style="text-align: center; color: var(--text-secondary); margin-bottom: 3rem; font-size: 1.1rem;">
+            Alles was du für erfolgreiches Streaming brauchst - in einer App
+        </p>
         <div class="features-grid">
             <div class="feature-card">
                 <div class="feature-icon">💬</div>
                 <h3>Live Chat</h3>
-                <p>Echtzeit-Chat mit Emote-Unterstützung (Twitch, BTTV, FFZ, 7TV) und vollständigen Moderations-Tools.</p>
+                <p>Vollständiger Twitch-Chat mit Echtzeit-Nachrichten, Emote-Unterstützung (Twitch, BTTV, FFZ, 7TV), Badges und umfangreichen Moderations-Tools. Unterstützt verschiedene Chat-Modi: Kompakt, Normal und Detailliert.</p>
             </div>
 
             <div class="feature-card">
                 <div class="feature-icon">📊</div>
                 <h3>Stream-Statistiken</h3>
-                <p>Live Viewer-Zahlen, Follower, Subscriber und detaillierte Stream-Historie mit Kalenderansicht.</p>
+                <p>Live Viewer-Zahlen, Follower-Count, Subscriber-Anzahl und detaillierte Stream-Historie mit Kalenderansicht. Verfolge deine Performance über Wochen und Monate hinweg.</p>
             </div>
 
             <div class="feature-card">
                 <div class="feature-icon">🎯</div>
                 <h3>Aktivitätsfeed</h3>
-                <p>Echtzeit-Benachrichtigungen für Follows, Subs, Raids, Bits und Channel Points Redemptions.</p>
+                <p>Echtzeit-Benachrichtigungen für alle wichtigen Events: Follows, Subs, Raids, Bits, Hype Trains und Channel Points Redemptions. Verpasse nie wieder ein wichtiges Event!</p>
             </div>
 
             <div class="feature-card">
                 <div class="feature-icon">🪟</div>
-                <h3>Multi-Window</h3>
-                <p>Öffne Kacheln in separaten Fenstern - perfekt für Multi-Monitor-Setups.</p>
+                <h3>Multi-Window Support</h3>
+                <p>Öffne beliebige Kacheln in separaten Fenstern - perfekt für Multi-Monitor-Setups. Verteile Chat, Alerts und Statistiken auf verschiedene Bildschirme.</p>
             </div>
 
             <div class="feature-card">
                 <div class="feature-icon">🎨</div>
-                <h3>Anpassbar</h3>
-                <p>Drag & Drop Layout, 8 Themes und vollständig konfigurierbare Kacheln.</p>
+                <h3>Vollständig Anpassbar</h3>
+                <p>Drag & Drop Layout-Editor, 8 verschiedene Themes (Dark, Purple, Cyberpunk, Neon, etc.), konfigurierbare Kacheln und visuelle Effekte für Events.</p>
             </div>
 
             <div class="feature-card">
                 <div class="feature-icon">🔧</div>
                 <h3>Moderations-Tools</h3>
-                <p>Timeout, Ban, Nachrichten löschen, Slow Mode, Emote-Only und Warn-System.</p>
+                <p>Timeout, Ban, Nachrichten löschen, Slow Mode, Emote-Only Mode, Follower-Only Mode und Warn-System. Alles was du für effektive Chat-Moderation brauchst.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">👥</div>
+                <h3>Viewer-Liste</h3>
+                <p>Zeigt alle aktiven Viewer in deinem Stream an. Filtere nach Moderatoren, VIPs oder Subscribern. Klicke auf User für schnellen Zugriff auf Moderations-Aktionen.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🎉</div>
+                <h3>Event-Feiern</h3>
+                <p>Spektakuläre visuelle Effekte für Follows, Subs, Raids und mehr. Konfetti, Sterne, Emojis und animierte Overlays machen jedes Event zu etwas Besonderem.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🚂</div>
+                <h3>Hype Train Tracker</h3>
+                <p>Verfolge Hype Trains in Echtzeit mit Fortschrittsbalken, Level-Anzeige und Countdown. Sieh wer am meisten zum Hype Train beiträgt.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>Raid-Ziele</h3>
+                <p>Verwalte deine Lieblings-Streamer für Raids. Schneller Zugriff auf deren Kanäle und Stream-Status. Perfekt für Community-Building.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📈</div>
+                <h3>Stream-Historie</h3>
+                <p>Detaillierte Aufzeichnung aller Streams mit Datum, Dauer, Peak Viewer, durchschnittlichen Viewern und Kalenderansicht. Analysiere deine Performance.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔔</div>
+                <h3>Alert-System</h3>
+                <p>Konfigurierbare Benachrichtigungen für alle Events. Wähle zwischen verschiedenen Sounds und visuellen Effekten. Teste Alerts im Test-Modus.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Screenshots Section -->
+    <section class="screenshots">
+        <h2 class="section-title">Screenshots</h2>
+        <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem; font-size: 1.1rem;">
+            Sieh dir an, wie StreamMatrix aussieht und funktioniert
+        </p>
+        <div class="screenshots-grid">
+            <div class="screenshot-card">
+                <img src="https://raw.githubusercontent.com/19bounty9317/StreamMatrix/main/screenshots/dashboard.png" 
+                     alt="StreamMatrix Dashboard" 
+                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22500%22%3E%3Crect fill=%22%231F1F23%22 width=%22800%22 height=%22500%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22%239147FF%22%3EDashboard Ansicht%3C/text%3E%3C/svg%3E'">
+                <div class="screenshot-info">
+                    <h3>📊 Dashboard Ansicht</h3>
+                    <p>Vollständig anpassbares Dashboard mit Drag & Drop Layout. Alle Kacheln können frei positioniert und in der Größe angepasst werden.</p>
+                </div>
+            </div>
+
+            <div class="screenshot-card">
+                <img src="https://raw.githubusercontent.com/19bounty9317/StreamMatrix/main/screenshots/settings.png" 
+                     alt="StreamMatrix Einstellungen" 
+                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22500%22%3E%3Crect fill=%22%231F1F23%22 width=%22800%22 height=%22500%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22%239147FF%22%3EEinstellungen%3C/text%3E%3C/svg%3E'">
+                <div class="screenshot-info">
+                    <h3>⚙️ Einstellungen & Themes</h3>
+                    <p>Umfangreiche Einstellungsmöglichkeiten mit 8 verschiedenen Themes, Test-Modus für Events und visuellen Effekten.</p>
+                </div>
+            </div>
+
+            <div class="screenshot-card">
+                <img src="https://raw.githubusercontent.com/19bounty9317/StreamMatrix/main/screenshots/chat.png" 
+                     alt="StreamMatrix Chat" 
+                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22500%22%3E%3Crect fill=%22%231F1F23%22 width=%22800%22 height=%22500%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22%239147FF%22%3ELive Chat%3C/text%3E%3C/svg%3E'">
+                <div class="screenshot-info">
+                    <h3>💬 Live Chat mit Emotes</h3>
+                    <p>Vollständiger Twitch-Chat mit Unterstützung für Twitch, BTTV, FFZ und 7TV Emotes. Inklusive Moderations-Tools.</p>
+                </div>
             </div>
         </div>
     </section>
