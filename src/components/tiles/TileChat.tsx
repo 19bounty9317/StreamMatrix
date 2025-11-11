@@ -219,24 +219,17 @@ export default function TileChat() {
   };
 
   const scrollToBottom = () => {
-    // Finde den Chat-Container direkt über das Ref
     if (messagesEndRef.current) {
-      // Scrolle zum Ref-Element (am Ende der Nachrichten)
-      messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   };
 
   useEffect(() => {
     if (autoScroll) {
-      // Immer nach unten scrollen wenn Auto-Scroll aktiviert ist
-      scrollToBottom();
-    } else {
-      // Prüfe ob User am Ende ist und zeige ggf. Scroll-Button
-      const chatContainer = messagesEndRef.current?.parentElement;
-      if (chatContainer) {
-        const scrollBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight;
-        setShowScrollButton(scrollBottom > 150);
-      }
+      // Kleine Verzögerung damit DOM aktualisiert ist
+      setTimeout(() => {
+        scrollToBottom();
+      }, 10);
     }
   }, [messages, autoScroll]);
 
@@ -1185,7 +1178,7 @@ export default function TileChat() {
           </div>
           );
         })}
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} style={{ height: '1px' }} />
       </div>
       <form onSubmit={handleSendMessage} className="mt-2 pt-2" style={{ borderTop: '1px solid var(--color-border)' }}>
         <input
@@ -1195,7 +1188,6 @@ export default function TileChat() {
           placeholder="Nachricht senden... (Tipp: /help für Befehle)"
           className="w-full theme-input px-3 py-2 rounded"
         />
-        <div ref={messagesEndRef} style={{ height: 0 }} />
       </form>
 
       {/* User Card Popup */}
