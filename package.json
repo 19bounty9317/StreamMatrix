@@ -7,10 +7,12 @@
         "dev": "concurrently \"npm run dev:renderer\" \"npm run dev:electron\"",
         "dev:renderer": "vite",
         "dev:electron": "wait-on http://localhost:5173 && tsc -p tsconfig.electron.json && electron .",
+        "dev:web": "vite --config vite.config.web.ts",
         "build": "tsc -p tsconfig.electron.json && vite build",
         "build:win": "npm run build && electron-builder --win --config",
         "build:mac": "npm run build && electron-builder --mac --config",
         "build:linux": "npm run build && electron-builder --linux --config",
+        "build:web": "vite build --config vite.config.web.ts",
         "test:build": "npm run build && electron dist/main.js"
     },
     "keywords": [
