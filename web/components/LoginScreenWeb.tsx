@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAuthUrlWeb } from '../../src/config/twitch.config.web';
+import { getWebAuthUrl } from '../config';
 
 interface LoginScreenWebProps {
   onLogin: (token: string) => void;
@@ -28,9 +28,11 @@ export default function LoginScreenWeb({ onLogin }: LoginScreenWebProps) {
     setError(null);
     
     try {
-      const authUrl = getAuthUrlWeb();
+      const authUrl = getWebAuthUrl();
+      console.log('🚀 Redirecting to:', authUrl);
       window.location.href = authUrl;
     } catch (err) {
+      console.error('❌ Login error:', err);
       setError('Login fehlgeschlagen. Bitte versuche es erneut.');
       setIsLoading(false);
     }
