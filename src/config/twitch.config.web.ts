@@ -2,10 +2,12 @@
 export const TWITCH_CONFIG_WEB = {
   CLIENT_ID: '29m9wd4tyae2dgkvgr8ddqv45rxpwk',
   
-  // Web-Redirect URI - muss in Twitch Dev Console eingetragen sein
-  // Für lokale Entwicklung: http://localhost:5174
-  // Für Production: https://deine-domain.github.io/app
-  REDIRECT_URI: window.location.origin + window.location.pathname,
+  // Web-Redirect URI - automatisch erkannt
+  REDIRECT_URI: (() => {
+    const url = window.location.origin + window.location.pathname;
+    // Entferne trailing slash wenn vorhanden
+    return url.endsWith('/') ? url.slice(0, -1) : url;
+  })(),
 
   SCOPES: [
     'user:read:email',
