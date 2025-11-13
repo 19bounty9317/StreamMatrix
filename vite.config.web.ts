@@ -5,7 +5,7 @@ import { resolve } from 'path';
 // Web-Version Config (ohne Electron)
 export default defineConfig({
   plugins: [react()],
-  base: './',
+  base: '/StreamMatrix/app/',
   build: {
     outDir: 'dist/web',
     rollupOptions: {
