@@ -1,16 +1,175 @@
 <!DOCTYPE html>
 <html lang="de">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="StreamMatrix Web - Twitch Dashboard für Streamer" />
-    <title>StreamMatrix Web</title>
-    <script type="module" crossorigin src="./assets/index-C938tF60.js?v=4"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-DPtfGSdI.css?v=4">
-  </head>
-  <body>
-    <div id="root"></div>
-
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamMatrix Web - Coming Soon</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0E0E10 0%, #1F1F23 50%, #18181B 100%);
+            color: #EFEFF1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Absperrband Animation */
+        .tape {
+            position: absolute;
+            width: 200%;
+            height: 80px;
+            background: repeating-linear-gradient(
+                45deg,
+                #FFD700,
+                #FFD700 40px,
+                #000000 40px,
+                #000000 80px
+            );
+            transform: rotate(-15deg);
+            animation: slide 20s linear infinite;
+            opacity: 0.9;
+            z-index: 1;
+        }
+        
+        .tape:nth-child(1) {
+            top: 20%;
+            left: -50%;
+        }
+        
+        .tape:nth-child(2) {
+            bottom: 20%;
+            left: -50%;
+            animation-direction: reverse;
+        }
+        
+        @keyframes slide {
+            0% { transform: translateX(0) rotate(-15deg); }
+            100% { transform: translateX(50%) rotate(-15deg); }
+        }
+        
+        .container {
+            max-width: 600px;
+            text-align: center;
+            background: rgba(24, 24, 27, 0.95);
+            padding: 60px 40px;
+            border-radius: 20px;
+            border: 3px solid #FFD700;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 2;
+        }
+        
+        .icon {
+            font-size: 100px;
+            margin-bottom: 20px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            font-size: 24px;
+            color: #FFD700;
+            margin-bottom: 30px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .message {
+            font-size: 18px;
+            color: #ADADB8;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #9147FF 0%, #772CE8 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(145, 71, 255, 0.4);
+        }
+        
+        .warning-text {
+            font-size: 14px;
+            color: #FFD700;
+            margin-top: 30px;
+            padding: 15px;
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            h1 { font-size: 36px; }
+            .subtitle { font-size: 18px; }
+            .message { font-size: 16px; }
+            .container { padding: 40px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Absperrbänder -->
+    <div class="tape"></div>
+    <div class="tape"></div>
+    
+    <div class="container">
+        <div class="icon">🚧</div>
+        <h1>StreamMatrix Web</h1>
+        <div class="subtitle">⚠️ Coming Soon ⚠️</div>
+        
+        <p class="message">
+            Die Web-Version von StreamMatrix befindet sich noch in der Entwicklung.<br>
+            Aktuell arbeiten wir an der Optimierung und Fehlerbehebung.
+        </p>
+        
+        <div>
+            <a href="https://github.com/19bounty9317/StreamMatrix/releases/latest" class="btn">
+                💻 Desktop-App herunterladen
+            </a>
+            <a href="https://discord.gg/MeMEuu5tXU" class="btn">
+                💬 Discord Community
+            </a>
+        </div>
+        
+        <div class="warning-text">
+            <strong>🎯 Hinweis:</strong> Die vollständige Desktop-Version ist verfügbar und bietet alle Features!<br>
+            Die Web-Version wird in Kürze verfügbar sein.
+        </div>
+    </div>
+</body>
 </html>
