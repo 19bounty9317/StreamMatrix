@@ -2,12 +2,11 @@
 export const TWITCH_CONFIG_WEB = {
   CLIENT_ID: '29m9wd4tyae2dgkvgr8ddqv45rxpwk',
   
-  // Web-Redirect URI - automatisch erkannt
-  REDIRECT_URI: (() => {
+  // Redirect URI - wird zur Laufzeit ermittelt
+  get REDIRECT_URI() {
     const url = window.location.origin + window.location.pathname;
-    // Entferne trailing slash wenn vorhanden
     return url.endsWith('/') ? url.slice(0, -1) : url;
-  })(),
+  },
 
   SCOPES: [
     'user:read:email',
