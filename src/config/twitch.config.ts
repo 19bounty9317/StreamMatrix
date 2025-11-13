@@ -1,11 +1,24 @@
 // Zentrale Twitch-Konfiguration für die App
 // Diese Client ID ist für DEINE App und wird mit der App verteilt
+
+// Automatische Erkennung: Web oder Desktop
+const isWeb = typeof window !== 'undefined' && !window.electron;
+const getRedirectUri = () => {
+  if (isWeb) {
+    // Web-Version: Nutze aktuelle URL
+    const url = window.location.origin + window.location.pathname;
+    return url.endsWith('/') ? url.slice(0, -1) : url;
+  }
+  // Desktop-Version: Nutze localhost OAuth-Server
+  return 'http://localhost:3000/auth/callback';
+};
+
 export const TWITCH_CONFIG = {
   // Ersetze dies mit deiner eigenen Client ID von https://dev.twitch.tv/console
   CLIENT_ID: '29m9wd4tyae2dgkvgr8ddqv45rxpwk',
 
-  // Redirect URI - muss in der Twitch Dev Console eingetragen sein
-  REDIRECT_URI: 'http://localhost:3000/auth/callback',
+  // Redirect URI - automatisch erkannt (Web oder Desktop)
+  REDIRECT_URI: getRedirectUri(),
 
   // Scopes die deine App benötigt
   SCOPES: [
