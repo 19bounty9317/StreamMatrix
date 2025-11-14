@@ -16,6 +16,7 @@ export default function TileRaidTargets() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
   const [isRaiding, setIsRaiding] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showOnlyLive, setShowOnlyLive] = useState(() => {
     const saved = localStorage.getItem('raid-targets-show-only-live');
     return saved ? JSON.parse(saved) : true;
@@ -47,6 +48,9 @@ export default function TileRaidTargets() {
 
       if (!response.ok) {
         console.error('Fehler beim Laden der gefolgten Kanäle:', response.status);
+        const errorText = await response.text();
+        console.error('Error details:', errorText);
+        setError(`API-Fehler: ${response.status}. Möglicherweise fehlt die Berechtigung "user:read:follows". Bitte neu einloggen.`);
         setIsLoading(false);
         return;
       }
@@ -170,6 +174,27 @@ export default function TileRaidTargets() {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-2 border-t-transparent rounded-full" style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }}></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-full flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="text-4xl mb-4">⚠️</div>
+          <div className="text-sm theme-text-secondary mb-4">{error}</div>
+          <button
+            onClick={() => {
+              setError(null);
+              setIsLoading(true);
+              loadFollowedChannels();
+            }}
+            className="px-4 py-2 rounded bg-twitch-purple hover:bg-purple-600 text-white text-sm"
+          >
+            Erneut versuchen
+          </button>
+        </div>
       </div>
     );
   }
