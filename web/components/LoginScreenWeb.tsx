@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getWebAuthUrl } from '../config';
+import { getWebAuthUrl } from '../config-production';
 
 interface LoginScreenWebProps {
   onLogin: (token: string) => void;
