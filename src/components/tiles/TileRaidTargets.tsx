@@ -33,7 +33,14 @@ export default function TileRaidTargets() {
   const loadFollowedChannels = async () => {
     try {
       const user = TwitchService.getUserFromStorage();
-      if (!user) return;
+      if (!user) {
+        console.error('❌ Kein User gefunden');
+        setError('Kein Benutzer eingeloggt');
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('👤 Lade gefolgte Kanäle für:', user.display_name);
 
       // Hole gefolgte Kanäle
       const response = await fetch(
@@ -46,19 +53,30 @@ export default function TileRaidTargets() {
         }
       );
 
+      console.log('📡 API Response Status:', response.status);
+
       if (!response.ok) {
-        console.error('Fehler beim Laden der gefolgten Kanäle:', response.status);
         const errorText = await response.text();
-        console.error('Error details:', errorText);
-        setError(`API-Fehler: ${response.status}. Möglicherweise fehlt die Berechtigung "user:read:follows". Bitte neu einloggen.`);
+        console.error('❌ API-Fehler:', response.status, errorText);
+        
+        if (response.status === 401) {
+          setError('Token ungültig. Bitte neu einloggen.');
+        } else if (response.status === 403) {
+          setError('Fehlende Berechtigung "user:read:follows". Bitte neu einloggen und alle Berechtigungen akzeptieren.');
+        } else {
+          setError(`API-Fehler ${response.status}. Bitte neu einloggen.`);
+        }
         setIsLoading(false);
         return;
       }
 
       const data = await response.json();
       const followedChannels = data.data || [];
+      
+      console.log('✅ Gefolgte Kanäle geladen:', followedChannels.length);
 
       if (followedChannels.length === 0) {
+        console.log('⚠️ Keine gefolgten Kanäle gefunden');
         setChannels([]);
         setIsLoading(false);
         return;
@@ -66,6 +84,8 @@ export default function TileRaidTargets() {
 
       // Hole Stream-Infos für alle Kanäle (max 100 auf einmal)
       const channelIds = followedChannels.map((c: any) => c.broadcaster_id);
+      console.log('🔍 Prüfe Streams für', channelIds.length, 'Kanäle');
+      
       const streamParams = channelIds.map((id: string) => `user_id=${id}`).join('&');
       
       const streamsResponse = await fetch(
@@ -78,8 +98,16 @@ export default function TileRaidTargets() {
         }
       );
 
+      if (!streamsResponse.ok) {
+        console.error('❌ Fehler beim Laden der Streams:', streamsResponse.status);
+      }
+
       const streamsData = await streamsResponse.json();
-      console.log('🎮 Streams geladen:', streamsData.data?.length || 0, 'von', channelIds.length);
+      console.log('🎮 Live Streams gefunden:', streamsData.data?.length || 0, 'von', channelIds.length, 'Kanälen');
+      
+      if (streamsData.data && streamsData.data.length > 0) {
+        console.log('📺 Live Kanäle:', streamsData.data.map((s: any) => s.user_name).join(', '));
+      }
       
       const liveStreams = new Map<string, { viewer_count: number; game_name: string }>(
         (streamsData.data || []).map((s: any) => [
