@@ -1,4 +1,28 @@
+# robots.txt für StreamMatrix
+
 User-agent: *
 Allow: /
 
+# Sitemap
 Sitemap: https://streammatrix.de/sitemap.xml
+
+# Crawl-Delay
+Crawl-delay: 1
+
+# Disallow admin/internal pages (falls vorhanden)
+Disallow: /admin/
+Disallow: /api/
+Disallow: /*.json$
+
+# Allow important pages
+Allow: /
+Allow: /webapp/
+Allow: /impressum.html
+Allow: /datenschutz.html
+
+# Allow images
+Allow: /*.png$
+Allow: /*.jpg$
+Allow: /*.jpeg$
+Allow: /*.gif$
+Allow: /*.svg$
