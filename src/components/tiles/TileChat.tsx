@@ -285,6 +285,20 @@ export default function TileChat() {
               
               return [...prev, msg].slice(-100); // Max 100 Nachrichten
             });
+
+            // Sende Channel Points Redemptions an NotificationService für Alerts
+            if (msg.noticeType === 'channel-points') {
+              import('../../services/NotificationService').then(({ default: NotificationService }) => {
+                const notificationService = NotificationService.getInstance();
+                notificationService.showAlert({
+                  id: msg.id,
+                  type: 'channel-points',
+                  username: msg.username,
+                  message: msg.message,
+                  timestamp: msg.timestamp
+                });
+              });
+            }
           });
           
           // Höre auf ROOMSTATE-Updates

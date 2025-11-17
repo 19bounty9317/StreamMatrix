@@ -1,5 +1,56 @@
 # 📝 Changelog
 
+## Version 1.4.6 - Channel Points Integration (18.11.2025)
+
+### 🎉 Neue Features
+- **🎁 Kanalpunkte-Einlösungen in Alerts**
+  - Automatische Erkennung von Channel Points Redemptions
+  - Anzeige im Chat als grünes Banner mit 💎 Icon
+  - Anzeige in Alerts mit 🎁 Icon und gelbem Border
+  - Desktop-Benachrichtigungen mit eigenem Sound (700 Hz)
+  - Zeigt Belohnungstitel und optionale Nachricht an
+
+### 📊 Verbesserungen
+- **Alerts-Tile erweitert**
+  - Zeigt jetzt Raids, Sub-Bomben (5+) und Kanalpunkte
+  - Bessere Übersicht über alle wichtigen Events
+  - Keine Community-Interaktionen mehr verpassen
+
+### 🔧 Technische Änderungen
+- NotificationService um 'channel-points' Typ erweitert
+- TileChat leitet Channel Points Events an NotificationService weiter
+- Verbesserte Event-Verarbeitung und Typisierung
+
+### 🐛 Bugfixes
+- Behoben: TypeScript-Fehler in TileAlerts (id possibly undefined)
+- Verbessert: Event-Filterung in Test-Modus
+
+---
+
+## Version 1.4.5 - Web-Version & Discord-Integration (15.11.2025)
+
+### 🎉 Neue Features
+- **Web-Version (Beta)**
+  - StreamMatrix jetzt auch im Browser nutzbar
+  - Perfekt für iPad und Tablets
+  - Twitch OAuth für Web konfiguriert
+  - Deployment auf GitHub Pages
+
+### 🌐 Website & Community
+- **Discord-Integration**
+  - Vollständige Discord-Server-Struktur
+  - Download-Verwaltung über Discord
+  - Community-Channels und Support
+  - GitHub Webhook für Updates
+
+### 🔧 Technische Änderungen
+- Separate Vite-Konfiguration für Web-Version
+- Runtime URL-Detection für OAuth
+- Cache-Buster für Browser-Updates
+- SEO-Optimierung mit Meta-Tags
+
+---
+
 ## Version 1.4.4 - Multi-Window & Chat-Verbesserungen (08.11.2025)
 
 ### 🎉 Neue Features

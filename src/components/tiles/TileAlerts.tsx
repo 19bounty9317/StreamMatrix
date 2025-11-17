@@ -12,15 +12,21 @@ export default function TileAlerts() {
     const notificationService = NotificationService.getInstance();
     
     notificationService.onAlert((event) => {
-      // Raids und Sub-Bomben (5+ Subs) anzeigen
-      if (event.type === 'raid' || (event.type === 'subscriber' && event.amount && event.amount >= 5)) {
+      // Raids, Sub-Bomben (5+ Subs) und Kanalpunkte anzeigen
+      if (event.type === 'raid' || 
+          (event.type === 'subscriber' && event.amount && event.amount >= 5) ||
+          event.type === 'channel-points') {
         setAlerts(prev => [event, ...prev].slice(0, 20));
       }
     });
 
-    // Lade Raid-Alerts und Sub-Bomben aus der Historie
+    // Lade Raid-Alerts, Sub-Bomben und Kanalpunkte aus der Historie
     const history = notificationService.getAlertHistory();
-    setAlerts(history.filter(a => a.type === 'raid' || (a.type === 'subscriber' && a.amount && a.amount >= 5)));
+    setAlerts(history.filter(a => 
+      a.type === 'raid' || 
+      (a.type === 'subscriber' && a.amount && a.amount >= 5) ||
+      a.type === 'channel-points'
+    ));
   }, []);
 
   // Listener für Test-Events
@@ -77,7 +83,7 @@ export default function TileAlerts() {
     // Listener für Tile-Reload (beim Verlassen des Test-Modus)
     const handleReload = () => {
       // Entferne alle Test-Alerts
-      setAlerts(prev => prev.filter(a => !a.id.startsWith('test-')));
+      setAlerts(prev => prev.filter(a => a.id && !a.id.startsWith('test-')));
     };
     window.addEventListener('reload-tiles' as any, handleReload);
 
@@ -132,7 +138,17 @@ export default function TileAlerts() {
       case 'raid': return '🚀';
       case 'host': return '📺';
       case 'donation': return '💵';
+      case 'channel-points': return '🎁';
       default: return '🔔';
+    }
+  };
+
+  const getAlertColor = (type: string) => {
+    switch (type) {
+      case 'raid': return 'border-red-500';
+      case 'subscriber': return 'border-purple-500';
+      case 'channel-points': return 'border-yellow-500';
+      default: return 'border-gray-500';
     }
   };
 
@@ -190,22 +206,24 @@ export default function TileAlerts() {
           alerts.map((alert, index) => (
             <div
               key={index}
-              className={`theme-tile-content-bg p-3 rounded border-l-4 ${
-                alert.type === 'raid' ? 'border-red-500' : 'border-purple-500'
-              }`}
+              className={`theme-tile-content-bg p-3 rounded border-l-4 ${getAlertColor(alert.type)}`}
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-start gap-2">
-                  <span className="text-xl">{alert.type === 'raid' ? '🚀' : '⭐'}</span>
+                  <span className="text-xl">{getAlertIcon(alert.type)}</span>
                   <div>
                     <div className="font-semibold theme-text text-lg">
                       {alert.username}
                     </div>
                     <div className={`text-sm font-semibold ${
-                      alert.type === 'raid' ? 'text-red-400' : 'text-purple-400'
+                      alert.type === 'raid' ? 'text-red-400' : 
+                      alert.type === 'channel-points' ? 'text-yellow-400' :
+                      'text-purple-400'
                     }`}>
                       {alert.type === 'raid' 
                         ? `${alert.amount || 0} Zuschauer` 
+                        : alert.type === 'channel-points'
+                        ? alert.message || 'Kanalpunkte eingelöst'
                         : `${alert.amount || 0} Subs verschenkt`}
                     </div>
                   </div>

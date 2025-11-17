@@ -1,11 +1,12 @@
 // Service für Desktop-Benachrichtigungen und Alerts
 
 interface AlertEvent {
-  type: 'follower' | 'subscriber' | 'bits' | 'raid' | 'host' | 'donation';
+  type: 'follower' | 'subscriber' | 'bits' | 'raid' | 'host' | 'donation' | 'channel-points';
   username: string;
   amount?: number;
   message?: string;
   timestamp: Date;
+  id?: string;
 }
 
 class NotificationService {
@@ -81,6 +82,7 @@ class NotificationService {
       case 'bits': return '💎 Bits erhalten!';
       case 'raid': return '🚀 Raid!';
       case 'host': return '📺 Host!';
+      case 'channel-points': return '🎁 Kanalpunkte eingelöst!';
       default: return 'Benachrichtigung';
     }
   }
@@ -92,6 +94,7 @@ class NotificationService {
       case 'bits': return `${event.username} hat ${event.amount} Bits gespendet!`;
       case 'raid': return `${event.username} raidet mit ${event.amount} Zuschauern!`;
       case 'host': return `${event.username} hostet deinen Stream!`;
+      case 'channel-points': return event.message || `${event.username} hat eine Belohnung eingelöst!`;
       default: return event.message || '';
     }
   }
@@ -108,7 +111,14 @@ class NotificationService {
     oscillator.connect(gainNode);
     gainNode.connect(context.destination);
     
-    oscillator.frequency.value = type === 'raid' ? 800 : 600;
+    // Verschiedene Frequenzen für verschiedene Event-Typen
+    if (type === 'raid') {
+      oscillator.frequency.value = 800;
+    } else if (type === 'channel-points') {
+      oscillator.frequency.value = 700;
+    } else {
+      oscillator.frequency.value = 600;
+    }
     gainNode.gain.value = 0.1;
     
     oscillator.start();
