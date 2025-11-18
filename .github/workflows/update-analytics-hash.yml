@@ -1,0 +1,90 @@
+name: Update Analytics Hash on Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'package.json'
+
+jobs:
+  update-hash:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      
+      - name: Check if version changed
+        id: version-check
+        run: |
+          # Hole alte und neue Version
+          OLD_VERSION=$(git show HEAD~1:package.json | grep '"version"' | cut -d'"' -f4)
+          NEW_VERSION=$(grep '"version"' package.json | cut -d'"' -f4)
+          
+          echo "Old version: $OLD_VERSION"
+          echo "New version: $NEW_VERSION"
+          
+          if [ "$OLD_VERSION" != "$NEW_VERSION" ]; then
+            echo "version_changed=true" >> $GITHUB_OUTPUT
+            echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "version_changed=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Calculate hash for new version
+        if: steps.version-check.outputs.version_changed == 'true'
+        id: calc-hash
+        run: |
+          VERSION="${{ steps.version-check.outputs.new_version }}"
+          
+          # Berechne SHA-256 Hash mit Node.js
+          HASH=$(node -e "
+            const crypto = require('crypto');
+            const hash = crypto.createHash('sha256').update('$VERSION').digest('hex').substring(0, 16);
+            console.log(hash);
+          ")
+          
+          echo "Calculated hash for v$VERSION: $HASH"
+          echo "hash=$HASH" >> $GITHUB_OUTPUT
+      
+      - name: Update Cloud Functions
+        if: steps.version-check.outputs.version_changed == 'true'
+        run: |
+          VERSION="${{ steps.version-check.outputs.new_version }}"
+          HASH="${{ steps.calc-hash.outputs.hash }}"
+          
+          # Füge neuen Hash zu functions/index.js hinzu
+          sed -i "/\/\/ Neue Versionen hier hinzufügen/i \  '$VERSION': '$HASH', // Auto-generated hash" functions/index.js
+          
+          echo "✅ Hash für v$VERSION hinzugefügt: $HASH"
+      
+      - name: Install Firebase CLI
+        if: steps.version-check.outputs.version_changed == 'true'
+        run: npm install -g firebase-tools
+      
+      - name: Deploy Cloud Functions
+        if: steps.version-check.outputs.version_changed == 'true'
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          cd functions
+          npm install
+          cd ..
+          firebase deploy --only functions:validateAnalytics --token "$FIREBASE_TOKEN" --non-interactive
+      
+      - name: Commit updated functions
+        if: steps.version-check.outputs.version_changed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add functions/index.js
+          git commit -m "🤖 Auto-update: Add hash for v${{ steps.version-check.outputs.new_version }}"
+          git push
