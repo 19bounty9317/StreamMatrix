@@ -473,6 +473,77 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
             </div>
           </div>
 
+          {/* Analytics & Datenschutz */}
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold theme-text">📊 Analytics & Datenschutz</h3>
+            
+            <div className="p-4 theme-tile-content-bg rounded space-y-3">
+              <div className="theme-text text-sm">
+                <p className="mb-2">
+                  StreamMatrix sammelt anonyme Nutzungsstatistiken, um die App zu verbessern.
+                </p>
+                <p className="theme-text-secondary text-xs">
+                  Gesammelte Daten: App-Version, Betriebssystem, Nutzungshäufigkeit. 
+                  Keine persönlichen Daten oder Chat-Inhalte werden gespeichert.
+                </p>
+              </div>
+
+              <label className="flex items-center justify-between p-3 bg-gray-800 bg-opacity-50 rounded cursor-pointer hover:bg-opacity-70 transition-colors">
+                <div className="flex-1">
+                  <span className="theme-text font-semibold">Analytics aktivieren</span>
+                  <p className="theme-text-secondary text-xs mt-1">
+                    Hilf uns, StreamMatrix zu verbessern
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={localStorage.getItem('analytics-consent') === 'true'}
+                  onChange={async (e) => {
+                    const { default: AnalyticsService } = await import('../services/AnalyticsService');
+                    const analyticsService = AnalyticsService.getInstance();
+                    
+                    if (e.target.checked) {
+                      // Opt-in
+                      await analyticsService.setConsent(true, true);
+                      alert('✅ Analytics aktiviert!\n\nDanke für deine Unterstützung! Die Daten helfen uns, StreamMatrix zu verbessern.');
+                    } else {
+                      // Opt-out
+                      if (confirm('Analytics deaktivieren?\n\nDu kannst dies jederzeit in den Einstellungen wieder aktivieren.')) {
+                        await analyticsService.optOut();
+                        alert('✅ Analytics deaktiviert!\n\nDeine Daten werden nicht mehr gesammelt.');
+                      } else {
+                        e.preventDefault();
+                      }
+                    }
+                    // Force re-render
+                    setSettings({...settings});
+                  }}
+                  className="w-5 h-5"
+                />
+              </label>
+
+              <div className="flex gap-2 text-xs">
+                <a
+                  href="https://streammatrix.app/datenschutz"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="theme-text-secondary hover:text-twitch-purple transition-colors"
+                >
+                  📄 Datenschutzerklärung
+                </a>
+                <span className="theme-text-secondary">•</span>
+                <a
+                  href="https://streammatrix.app/agb"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="theme-text-secondary hover:text-twitch-purple transition-colors"
+                >
+                  📋 AGBs
+                </a>
+              </div>
+            </div>
+          </div>
+
           {/* OBS Integration */}
           <div className="space-y-3">
             <h3 className="text-lg font-semibold theme-text">🎥 OBS Integration</h3>
