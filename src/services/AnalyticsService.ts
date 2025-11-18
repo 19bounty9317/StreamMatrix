@@ -58,7 +58,7 @@ class AnalyticsService {
   private async checkCodeIntegrity(): Promise<{ valid: boolean; hash: string }> {
     try {
       // Browser-Version: Nutze App-Version als Hash
-      const appVersion = require('../../package.json').version;
+      const appVersion = '1.4.6'; // Hardcoded version
       const encoder = new TextEncoder();
       const data = encoder.encode(appVersion);
       const hashBuffer = await crypto.subtle.digest('SHA-256', data);
@@ -150,11 +150,11 @@ class AnalyticsService {
         userIdHash: userHash,
         channelName: user.login,
         channelUrl: `https://twitch.tv/${user.login}`,
-        appVersion: require('../../package.json').version,
-        os: process.platform,
-        osVersion: require('os').release(),
-        nodeVersion: process.versions.node,
-        electronVersion: process.versions.electron || 'unknown',
+        appVersion: '1.4.6',
+        os: typeof process !== 'undefined' ? process.platform : 'unknown',
+        osVersion: typeof process !== 'undefined' ? (process.versions?.node || 'unknown') : 'unknown',
+        nodeVersion: typeof process !== 'undefined' ? (process.versions?.node || 'unknown') : 'unknown',
+        electronVersion: typeof process !== 'undefined' ? (process.versions?.electron || 'unknown') : 'unknown',
         codeIntegrity: integrity.valid,
         codeHash: integrity.hash,
         optedIn: true,
