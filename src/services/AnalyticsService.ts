@@ -146,15 +146,38 @@ class AnalyticsService {
       // Prüfe Code-Integrität
       const integrity = await this.checkCodeIntegrity();
 
+      // Hole System-Info über Electron API falls verfügbar
+      let systemInfo = {
+        os: 'unknown',
+        osVersion: 'unknown',
+        nodeVersion: 'unknown',
+        electronVersion: 'unknown'
+      };
+
+      try {
+        // Prüfe ob Electron API verfügbar ist
+        if (typeof window !== 'undefined' && (window as any).electron?.getSystemInfo) {
+          const info = await (window as any).electron.getSystemInfo();
+          systemInfo = {
+            os: info.platform || 'unknown',
+            osVersion: info.release || 'unknown',
+            nodeVersion: info.nodeVersion || 'unknown',
+            electronVersion: info.electronVersion || 'unknown'
+          };
+        }
+      } catch (error) {
+        console.warn('Konnte System-Info nicht abrufen:', error);
+      }
+
       const data: any = {
         userIdHash: userHash,
         channelName: user.login,
         channelUrl: `https://twitch.tv/${user.login}`,
         appVersion: '1.4.6',
-        os: typeof process !== 'undefined' ? process.platform : 'unknown',
-        osVersion: typeof process !== 'undefined' ? (process.versions?.node || 'unknown') : 'unknown',
-        nodeVersion: typeof process !== 'undefined' ? (process.versions?.node || 'unknown') : 'unknown',
-        electronVersion: typeof process !== 'undefined' ? (process.versions?.electron || 'unknown') : 'unknown',
+        os: systemInfo.os,
+        osVersion: systemInfo.osVersion,
+        nodeVersion: systemInfo.nodeVersion,
+        electronVersion: systemInfo.electronVersion,
         codeIntegrity: integrity.valid,
         codeHash: integrity.hash,
         optedIn: true,

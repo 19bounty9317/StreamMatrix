@@ -553,3 +553,14 @@ ipcMain.handle('get-system-stats', async () => {
     bitrate: 0 // Bitrate wird vom Stream-Service berechnet
   };
 });
+
+// System-Info abrufen (für Analytics)
+ipcMain.handle('get-system-info', async () => {
+  const os = require('os');
+  return {
+    platform: process.platform,
+    release: os.release(),
+    nodeVersion: process.versions.node,
+    electronVersion: process.versions.electron
+  };
+});

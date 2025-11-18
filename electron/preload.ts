@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('electron', {
     ipcRenderer.on('oauth-token', (event, token) => callback(token));
   },
   getSystemStats: () => ipcRenderer.invoke('get-system-stats'),
+  getSystemInfo: () => ipcRenderer.invoke('get-system-info'),
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   onUpdateAvailable: (callback: (info: any) => void) => {
     ipcRenderer.on('update-available', (event, info) => callback(info));
