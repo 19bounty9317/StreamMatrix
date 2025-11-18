@@ -278,11 +278,14 @@ function App() {
               const eventTracker = EventTracker.getInstance();
               eventTracker.startTracking(userInfo.id);
 
-              // Starte Analytics (wenn Consent gegeben)
+              // Prüfe Ban-Status BEVOR Analytics gestartet wird
               const analyticsService = AnalyticsService.getInstance();
-              if (!analyticsService.needsConsent()) {
-                analyticsService.startHeartbeat();
-              }
+              analyticsService.checkBanStatus().then(isBanned => {
+                if (!isBanned && !analyticsService.needsConsent()) {
+                  // Nur starten wenn nicht gebannt
+                  analyticsService.startHeartbeat();
+                }
+              });
 
               // Prüfe ob Stream live ist und starte Session-Tracking
               TwitchService.getStreamInfo(userInfo.id).then(streamInfo => {
@@ -324,7 +327,17 @@ function App() {
     try {
       const userInfo = await TwitchService.getUserInfo();
       if (userInfo) {
-        // Initialisiere Services
+        // Prüfe SOFORT ob User gebannt ist
+        const analyticsService = AnalyticsService.getInstance();
+        const isBanned = await analyticsService.checkBanStatus();
+        
+        if (isBanned) {
+          // User ist gebannt - Login abbrechen
+          TwitchService.clearToken();
+          return; // handleBan() macht bereits Logout
+        }
+        
+        // User ist nicht gebannt - initialisiere Services
         const qualityService = StreamQualityService.getInstance();
         qualityService.initialize(
           token,

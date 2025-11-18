@@ -209,20 +209,23 @@ class AnalyticsService {
 
   // Handle Account-Sperre
   private handleBan(reason: string) {
-    // Zeige Benachrichtigung
-    const message = `
-      Dein Account wurde gesperrt.
-      
-      Grund: ${reason}
-      
-      Bitte kontaktiere den Support: streammatrix@web.de
-    `;
+    // Zeige Benachrichtigung mit Kontakt-Infos
+    const message = `🚫 Dein StreamMatrix Account wurde gesperrt.
+
+Grund: ${reason}
+
+📧 Support kontaktieren:
+• Email: streammatrix@web.de
+• Discord: https://discord.gg/streammatrix (Ticket öffnen)
+
+Bei Fragen oder Einspruch wende dich bitte an den Support.
+Du wirst jetzt ausgeloggt.`;
 
     // Electron Dialog
     if (typeof window !== 'undefined' && (window as any).electron) {
       (window as any).electron.dialog.showMessageBox({
         type: 'error',
-        title: 'Account gesperrt',
+        title: '🚫 Account gesperrt',
         message: message,
         buttons: ['OK']
       });
@@ -235,6 +238,33 @@ class AnalyticsService {
       localStorage.clear();
       window.location.reload();
     }, 3000);
+  }
+
+  // Prüfe Ban-Status (wird beim App-Start aufgerufen)
+  async checkBanStatus(): Promise<boolean> {
+    try {
+      const { TwitchService } = await import('./TwitchService');
+      const user = TwitchService.getUserFromStorage();
+      
+      if (!user) {
+        return false; // Kein User = nicht gebannt
+      }
+
+      const userHash = await this.generateUserHash(user.login);
+      const userDocRef = doc(db, 'users', userHash);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (userDoc.exists() && userDoc.data().banned) {
+        console.error('🚫 Account wurde gesperrt');
+        this.handleBan(userDoc.data().banReason || 'AGB-Verstoß');
+        return true; // User ist gebannt
+      }
+      
+      return false; // User ist nicht gebannt
+    } catch (error) {
+      console.error('Fehler beim Prüfen des Ban-Status:', error);
+      return false;
+    }
   }
 
   // Heartbeat (alle 30 Minuten)
