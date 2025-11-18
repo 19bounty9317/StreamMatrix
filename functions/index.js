@@ -6,6 +6,7 @@ admin.initializeApp();
 // Diese werden bei jedem Release aktualisiert
 const VALID_CODE_HASHES = {
   '1.4.6': 'b8c5a2d1e3f4a5b6', // Echter Hash für v1.4.6 (SHA-256 von "1.4.6")
+  '1.4.7': '44e873fe5d23d5b2', // Echter Hash für v1.4.7 (SHA-256 von "1.4.7")
   // Neue Versionen hier hinzufügen
 };
 
