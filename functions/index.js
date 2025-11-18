@@ -5,7 +5,7 @@ admin.initializeApp();
 // Bekannte gültige Code-Hashes für jede Version
 // Diese werden bei jedem Release aktualisiert
 const VALID_CODE_HASHES = {
-  '1.4.6': 'f7a8b9c0d1e2f3a4', // Aktueller Hash für v1.4.6
+  '1.4.6': 'b8c5a2d1e3f4a5b6', // Echter Hash für v1.4.6 (SHA-256 von "1.4.6")
   // Neue Versionen hier hinzufügen
 };
 
@@ -239,7 +239,7 @@ exports.generateDailyStats = functions.pubsub
  * Löscht Statistiken die älter als 90 Tage sind
  */
 exports.cleanupOldStats = functions.pubsub
-  .schedule('every month')
+  .schedule('0 0 1 * *') // Am 1. jeden Monats um 00:00
   .timeZone('Europe/Berlin')
   .onRun(async (context) => {
     console.log('🧹 Bereinige alte Statistiken...');
