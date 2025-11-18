@@ -6,10 +6,12 @@ import LoginScreen from './components/LoginScreen';
 import Tutorial from './components/Tutorial';
 import Settings from './components/Settings';
 import EventCelebration from './components/EventCelebration';
+import AnalyticsConsent from './components/AnalyticsConsent';
 import { TwitchService } from './services/TwitchService';
 import StreamQualityService from './services/StreamQualityService';
 import EventTracker from './services/EventTracker';
 import StreamSessionTracker from './services/StreamSessionTracker';
+import AnalyticsService from './services/AnalyticsService';
 import { getTheme, applyTheme } from './styles/themes';
 import WindowManager from './services/WindowManager';
 
@@ -276,6 +278,12 @@ function App() {
               const eventTracker = EventTracker.getInstance();
               eventTracker.startTracking(userInfo.id);
 
+              // Starte Analytics (wenn Consent gegeben)
+              const analyticsService = AnalyticsService.getInstance();
+              if (!analyticsService.needsConsent()) {
+                analyticsService.startHeartbeat();
+              }
+
               // Prüfe ob Stream live ist und starte Session-Tracking
               TwitchService.getStreamInfo(userInfo.id).then(streamInfo => {
                 const sessionTracker = StreamSessionTracker.getInstance();
@@ -377,6 +385,7 @@ function App() {
 
   return (
     <div className="flex h-screen" style={{ backgroundColor: 'var(--color-background)' }}>
+      <AnalyticsConsent />
       <Tutorial />
       <Settings isOpen={showSettings} onClose={() => setShowSettings(false)} />
       <EventCelebration />
