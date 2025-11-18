@@ -47,7 +47,7 @@ function createWindow() {
           "default-src 'self'; " +
           "script-src 'self' 'unsafe-inline'; " +
           "style-src 'self' 'unsafe-inline'; " +
-          "connect-src 'self' https://api.twitch.tv https://id.twitch.tv wss://*.twitch.tv ws://localhost:* ws://127.0.0.1:*; " +
+          "connect-src 'self' https://api.twitch.tv https://id.twitch.tv wss://*.twitch.tv ws://localhost:* ws://127.0.0.1:* https://*.googleapis.com https://*.firebaseapp.com https://firestore.googleapis.com https://api.betterttv.net https://api.frankerfacez.com https://7tv.io; " +
           "img-src 'self' data: https:; " +
           "frame-src 'self' https://player.twitch.tv https://embed.twitch.tv; " +
           "media-src 'self' https://*.twitch.tv;"
