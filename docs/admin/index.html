@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamMatrix Admin Dashboard</title>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0E0E10;
+            color: #EFEFF1;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Login Form */
+        .login-form {
+            max-width: 400px;
+            margin: 10rem auto;
+            background: #18181B;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #9147FF;
+            box-shadow: 0 10px 40px rgba(145, 71, 255, 0.3);
+        }
+
+        .login-form h1 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #9147FF;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            background: #0E0E10;
+            border: 1px solid #2C2C2E;
+            border-radius: 6px;
+            color: #EFEFF1;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #9147FF;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background: #9147FF;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #772CE8;
+        }
+
+        .error {
+            color: #E74C3C;
+            margin-top: 1rem;
+            text-align: center;
+            display: none;
+        }
+
+        /* Dashboard */
+        #dashboard {
+            display: none;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #9147FF;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            color: #9147FF;
+        }
+
+        .logout-btn {
+            background: #E74C3C;
+            padding: 0.5rem 1.5rem;
+            width: auto;
+        }
+
+        .logout-btn:hover {
+            background: #C0392B;
+        }
+
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: #18181B;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #2C2C2E;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: #9147FF;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #9147FF;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #ADADB8;
+            font-size: 0.9rem;
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-bar input {
+            flex: 1;
+            min-width: 300px;
+            margin: 0;
+        }
+
+        .filter-bar select {
+            padding: 0.75rem;
+            background: #18181B;
+            border: 1px solid #2C2C2E;
+            border-radius: 6px;
+            color: #EFEFF1;
+            cursor: pointer;
+        }
+
+        /* Table */
+        .table-container {
+            background: #18181B;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #2C2C2E;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #2C2C2E;
+        }
+
+        th {
+            background: #1F1F23;
+            font-weight: 600;
+            color: #9147FF;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tr:hover {
+            background: #1F1F23;
+        }
+
+        tr.warning {
+            background: rgba(255, 193, 7, 0.1);
+        }
+
+        tr.danger {
+            background: rgba(231, 76, 60, 0.1);
+        }
+
+        .channel-link {
+            color: #9147FF;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .channel-link:hover {
+            color: #A970FF;
+            text-decoration: underline;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-ok {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ECC71;
+        }
+
+        .status-warning {
+            background: rgba(255, 193, 7, 0.2);
+            color: #FFC107;
+        }
+
+        .status-banned {
+            background: rgba(231, 76, 60, 0.2);
+            color: #E74C3C;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-right: 0.5rem;
+        }
+
+        .ban-btn {
+            background: #E74C3C;
+            color: white;
+        }
+
+        .ban-btn:hover {
+            background: #C0392B;
+        }
+
+        .unban-btn {
+            background: #27AE60;
+            color: white;
+        }
+
+        .unban-btn:hover {
+            background: #229954;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #ADADB8;
+        }
+
+        .spinner {
+            border: 3px solid #2C2C2E;
+            border-top: 3px solid #9147FF;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #ADADB8;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Form -->
+    <div id="login-form" class="login-form">
+        <h1>🔐 StreamMatrix Admin</h1>
+        <input type="email" id="email" placeholder="Admin-Email" />
+        <input type="password" id="password" placeholder="Passwort" />
+        <button onclick="login()">Login</button>
+        <p id="error" class="error">Login fehlgeschlagen!</p>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="dashboard">
+        <div class="container">
+            <div class="header">
+                <h1>📊 StreamMatrix Analytics</h1>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-users">0</div>
+                    <div class="stat-label">Gesamt-User</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="active-today">0</div>
+                    <div class="stat-label">Aktiv heute</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="active-week">0</div>
+                    <div class="stat-label">Aktiv diese Woche</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="code-violations">0</div>
+                    <div class="stat-label">⚠️ Code-Verstöße</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="banned-users">0</div>
+                    <div class="stat-label">🚫 Gebannte User</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="opted-in">0</div>
+                    <div class="stat-label">✅ Opted-in</div>
+                </div>
+            </div>
+
+            <!-- Filter -->
+            <div class="filter-bar">
+                <input type="text" id="search" placeholder="🔍 Suche nach Kanal-Name..." onkeyup="filterUsers()" />
+                <select id="filter-status" onchange="filterUsers()">
+                    <option value="all">Alle User</option>
+                    <option value="ok">✅ OK</option>
+                    <option value="warning">⚠️ Verdächtig</option>
+                    <option value="banned">🚫 Gebannt</option>
+                </select>
+            </div>
+
+            <!-- Loading -->
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Lade Daten...</p>
+            </div>
+
+            <!-- Users Table -->
+            <div id="table-container" class="table-container" style="display: none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Kanal-Name</th>
+                            <th>Kanal-Link</th>
+                            <th>App-Version</th>
+                            <th>OS</th>
+                            <th>Code-Integrität</th>
+                            <th>Erste Nutzung</th>
+                            <th>Letzte Nutzung</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-tbody"></tbody>
+                </table>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">📊</div>
+                <h2>Noch keine User</h2>
+                <p>Sobald User die App nutzen und Analytics zustimmen, erscheinen sie hier.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDRW5hsVeR5TdwlcuM5i88PC2E3oXAdQQI",
+            authDomain: "streammatrix-731e0.firebaseapp.com",
+            projectId: "streammatrix-731e0",
+            storageBucket: "streammatrix-731e0.firebasestorage.app",
+            messagingSenderId: "594038498844",
+            appId: "1:594038498844:web:e48b1f099d553ad2cfa1d9"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        let allUsers = [];
+
+        // Login
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                loadData();
+            } catch (error) {
+                document.getElementById('error').style.display = 'block';
+                console.error('Login-Fehler:', error);
+            }
+        }
+
+        // Logout
+        function logout() {
+            auth.signOut();
+            location.reload();
+        }
+
+        // Lade Daten
+        async function loadData() {
+            try {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('table-container').style.display = 'none';
+                document.getElementById('empty-state').style.display = 'none';
+
+                const snapshot = await db.collection('users').get();
+                allUsers = [];
+                
+                snapshot.forEach(doc => {
+                    allUsers.push({ id: doc.id, ...doc.data() });
+                });
+
+                document.getElementById('loading').style.display = 'none';
+
+                if (allUsers.length === 0) {
+                    document.getElementById('empty-state').style.display = 'block';
+                } else {
+                    document.getElementById('table-container').style.display = 'block';
+                    updateStats(allUsers);
+                    renderUsers(allUsers);
+                }
+            } catch (error) {
+                console.error('Fehler beim Laden:', error);
+                alert('Fehler beim Laden der Daten: ' + error.message);
+            }
+        }
+
+        // Update Stats
+        function updateStats(users) {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+            document.getElementById('total-users').textContent = users.length;
+            
+            const activeToday = users.filter(u => {
+                const lastSeen = u.lastSeen?.toDate();
+                return lastSeen && lastSeen >= today;
+            }).length;
+            document.getElementById('active-today').textContent = activeToday;
+
+            const activeWeek = users.filter(u => {
+                const lastSeen = u.lastSeen?.toDate();
+                return lastSeen && lastSeen >= weekAgo;
+            }).length;
+            document.getElementById('active-week').textContent = activeWeek;
+
+            const violations = users.filter(u => !u.codeIntegrity).length;
+            document.getElementById('code-violations').textContent = violations;
+
+            const banned = users.filter(u => u.banned).length;
+            document.getElementById('banned-users').textContent = banned;
+
+            const optedIn = users.filter(u => u.optedIn).length;
+            document.getElementById('opted-in').textContent = optedIn;
+        }
+
+        // Render Users
+        function renderUsers(users) {
+            const tbody = document.getElementById('users-tbody');
+            tbody.innerHTML = '';
+
+            // Sortiere: Gebannte zuerst, dann Code-Verstöße, dann nach lastSeen
+            users.sort((a, b) => {
+                if (a.banned && !b.banned) return -1;
+                if (!a.banned && b.banned) return 1;
+                if (!a.codeIntegrity && b.codeIntegrity) return -1;
+                if (a.codeIntegrity && !b.codeIntegrity) return 1;
+                
+                const aTime = a.lastSeen?.toDate()?.getTime() || 0;
+                const bTime = b.lastSeen?.toDate()?.getTime() || 0;
+                return bTime - aTime;
+            });
+
+            users.forEach(user => {
+                const tr = document.createElement('tr');
+                
+                // Highlight bei Verstößen
+                if (user.banned) {
+                    tr.className = 'danger';
+                } else if (!user.codeIntegrity) {
+                    tr.className = 'warning';
+                }
+
+                const status = user.banned ? 
+                    '<span class="status-badge status-banned">🚫 GEBANNT</span>' :
+                    !user.codeIntegrity ? 
+                    '<span class="status-badge status-warning">⚠️ VERDÄCHTIG</span>' :
+                    '<span class="status-badge status-ok">✅ OK</span>';
+
+                const integrity = user.codeIntegrity ? 
+                    '✅ Valide' : 
+                    `⚠️ MANIPULIERT<br><small style="color: #ADADB8;">${user.codeHash || 'unknown'}</small>`;
+
+                const firstSeen = user.firstSeen?.toDate() ? 
+                    user.firstSeen.toDate().toLocaleString('de-DE') : 
+                    'Unbekannt';
+
+                const lastSeen = user.lastSeen?.toDate() ? 
+                    user.lastSeen.toDate().toLocaleString('de-DE') : 
+                    'Nie';
+
+                const actions = user.banned ? 
+                    `<button class="action-btn unban-btn" onclick="unbanUser('${user.id}', '${user.channelName}')">
+                        ✅ Entbannen
+                     </button>
+                     <small style="color: #E74C3C;">Grund: ${user.banReason || 'Unbekannt'}</small>` :
+                    `<button class="action-btn ban-btn" onclick="banUser('${user.id}', '${user.channelName}')">
+                        🚫 Bannen
+                     </button>`;
+
+                tr.innerHTML = `
+                    <td>${status}</td>
+                    <td><strong>${user.channelName}</strong></td>
+                    <td>
+                        <a href="${user.channelUrl}" target="_blank" class="channel-link">
+                            ${user.channelUrl}
+                        </a>
+                    </td>
+                    <td>${user.appVersion || 'Unbekannt'}</td>
+                    <td>${user.os || 'Unbekannt'}</td>
+                    <td>${integrity}</td>
+                    <td>${firstSeen}</td>
+                    <td>${lastSeen}</td>
+                    <td>${actions}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Filter Users
+        function filterUsers() {
+            const search = document.getElementById('search').value.toLowerCase();
+            const status = document.getElementById('filter-status').value;
+
+            let filtered = allUsers.filter(u => 
+                u.channelName.toLowerCase().includes(search)
+            );
+
+            if (status === 'ok') {
+                filtered = filtered.filter(u => !u.banned && u.codeIntegrity);
+            } else if (status === 'warning') {
+                filtered = filtered.filter(u => !u.banned && !u.codeIntegrity);
+            } else if (status === 'banned') {
+                filtered = filtered.filter(u => u.banned);
+            }
+
+            renderUsers(filtered);
+        }
+
+        // Ban User
+        async function banUser(userId, channelName) {
+            const reason = prompt(`Grund für Ban von ${channelName}:`, 'Code-Manipulation / AGB-Verstoß');
+            if (!reason) return;
+
+            if (!confirm(`Wirklich ${channelName} bannen?\n\nGrund: ${reason}`)) return;
+
+            try {
+                await db.collection('users').doc(userId).update({
+                    banned: true,
+                    banReason: reason,
+                    bannedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                alert(`✅ ${channelName} wurde gebannt!`);
+                loadData();
+            } catch (error) {
+                alert('❌ Fehler beim Bannen: ' + error.message);
+            }
+        }
+
+        // Unban User
+        async function unbanUser(userId, channelName) {
+            if (!confirm(`Wirklich ${channelName} entbannen?`)) return;
+
+            try {
+                await db.collection('users').doc(userId).update({
+                    banned: false,
+                    banReason: null,
+                    bannedAt: null
+                });
+                alert(`✅ ${channelName} wurde entbannt!`);
+                loadData();
+            } catch (error) {
+                alert('❌ Fehler beim Entbannen: ' + error.message);
+            }
+        }
+
+        // Auto-refresh alle 30 Sekunden
+        setInterval(() => {
+            if (auth.currentUser) {
+                loadData();
+            }
+        }, 30000);
+
+        // Check Auth on load
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                loadData();
+            }
+        });
+
+        // Enter-Taste im Login
+        document.getElementById('password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+    </script>
+</body>
+</html>
