@@ -31,6 +31,11 @@ export default function Footer({ status }: FooterProps) {
   useEffect(() => {
     const updateStats = async () => {
       try {
+        // Prüfe ob Electron API verfügbar ist
+        if (!window.electron?.getSystemStats) {
+          return;
+        }
+        
         // @ts-ignore - Electron API
         const stats = await window.electron.getSystemStats();
         console.log('System Stats:', stats); // Debug

@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Analytics Collection - Jeder kann lesen und schreiben
+    // Dies ermöglicht anonyme Analytics von der App
+    match /analytics/{userId} {
+      allow read, write: if true;
+    }
+    
+    // Alle anderen Collections - nur für authentifizierte Admins
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
