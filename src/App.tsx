@@ -31,7 +31,7 @@ function App() {
     { id: 'viewer-list', name: 'Live Viewer', enabled: true },
     { id: 'subs', name: 'Abonnenten', enabled: false },
     { id: 'bits', name: 'Einnahmen-Übersicht', enabled: true },
-    { id: 'channel-points', name: 'Rewards Queue', enabled: false },
+    { id: 'channel-points', name: 'Rewards Queue', enabled: true },
     { id: 'hype-train', name: 'Hype Train', enabled: false },
     { id: 'stream-settings', name: 'Stream-Einstellungen', enabled: false },
     { id: 'raid-targets', name: 'Raid-Ziele', enabled: true },
