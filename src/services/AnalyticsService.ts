@@ -1,9 +1,6 @@
 // Analytics Service für StreamMatrix
 // Sammelt anonyme Nutzungsstatistiken mit User-Einwilligung
 
-import crypto from 'crypto';
-import fs from 'fs';
-import path from 'path';
 import { db } from '../config/firebase.config';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -43,51 +40,35 @@ class AnalyticsService {
   }
 
   // Generiere anonymen User-Hash (basierend auf Kanal-Name)
-  private generateUserHash(channelName: string): string {
+  private async generateUserHash(channelName: string): Promise<string> {
     const salt = 'streammatrix_salt_2025'; // Geheimer Salt
-    return crypto
-      .createHash('sha256')
-      .update(channelName + salt)
-      .digest('hex')
-      .substring(0, 16);
+    const text = channelName + salt;
+    
+    // Browser-kompatible Hash-Funktion
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    return hashHex.substring(0, 16);
   }
 
   // Prüfe Code-Integrität (erkennt Manipulation)
   private async checkCodeIntegrity(): Promise<{ valid: boolean; hash: string }> {
     try {
-      // Prüfe wichtige Dateien
-      const filesToCheck = [
-        'dist/main.js',
-        'dist/renderer/index.html',
-        'package.json'
-      ];
+      // Browser-Version: Nutze App-Version als Hash
+      const appVersion = require('../../package.json').version;
+      const encoder = new TextEncoder();
+      const data = encoder.encode(appVersion);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 16);
 
-      let combinedHash = '';
-      
-      for (const file of filesToCheck) {
-        try {
-          const filePath = path.join(process.cwd(), file);
-          if (fs.existsSync(filePath)) {
-            const content = fs.readFileSync(filePath, 'utf-8');
-            const hash = crypto.createHash('sha256').update(content).digest('hex');
-            combinedHash += hash;
-          }
-        } catch (error) {
-          console.warn(`Konnte ${file} nicht prüfen:`, error);
-        }
-      }
-
-      const finalHash = crypto
-        .createHash('sha256')
-        .update(combinedHash)
-        .digest('hex')
-        .substring(0, 16);
-
-      // TODO: Vergleiche mit bekannten Hashes
       // Für jetzt: Immer als valid markieren (wird später serverseitig geprüft)
       return {
         valid: true,
-        hash: finalHash
+        hash: hash
       };
     } catch (error) {
       console.error('Code-Integritätsprüfung fehlgeschlagen:', error);
@@ -150,7 +131,7 @@ class AnalyticsService {
         return;
       }
 
-      const userHash = this.generateUserHash(user.login);
+      const userHash = await this.generateUserHash(user.login);
 
       // Prüfe ob User gebannt ist
       const userDocRef = doc(db, 'users', userHash);
@@ -272,7 +253,7 @@ class AnalyticsService {
       const user = TwitchService.getUserFromStorage();
       
       if (user) {
-        const userHash = this.generateUserHash(user.login);
+        const userHash = await this.generateUserHash(user.login);
         const userDocRef = doc(db, 'users', userHash);
         await setDoc(userDocRef, {
           optedIn: false,
