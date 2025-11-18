@@ -9,6 +9,13 @@ const VALID_CODE_HASHES = {
   // Neue Versionen hier hinzufügen
 };
 
+// Whitelist: Admins/Entwickler die von Validierung ausgenommen sind
+// Diese User werden NIEMALS gebannt, egal was sie tun
+const ADMIN_WHITELIST = [
+  'bounty9317', // Hauptentwickler
+  // Weitere Admins hier hinzufügen
+];
+
 /**
  * Cloud Function: Validiere Analytics-Daten bei jedem Write
  * Erkennt Code-Manipulation und verdächtiges Verhalten
@@ -25,6 +32,25 @@ exports.validateAnalytics = functions.firestore
     const userId = context.params.userId;
     
     console.log(`📊 Validiere Analytics für User: ${userId}`);
+
+    // Prüfe ob User auf Whitelist ist (Admin/Entwickler)
+    if (ADMIN_WHITELIST.includes(newData.channelName)) {
+      console.log(`✅ User ${newData.channelName} ist auf Whitelist - Überspringe Validierung`);
+      
+      // Markiere als Admin
+      await change.after.ref.update({
+        isAdmin: true,
+        validated: true,
+        validatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        validVersion: true,
+        validHash: true,
+        validConsent: true,
+        suspicious: false,
+        banned: false // Admins können nie gebannt werden
+      });
+      
+      return null;
+    }
 
     // Prüfungen
     const checks = {

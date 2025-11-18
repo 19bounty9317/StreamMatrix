@@ -133,11 +133,17 @@ class AnalyticsService {
 
       const userHash = await this.generateUserHash(user.login);
 
-      // Prüfe ob User gebannt ist
+      // Prüfe Whitelist (Admins/Entwickler)
+      const isAdmin = this.isWhitelisted(user.login);
+      if (isAdmin) {
+        console.log('✅ Admin/Entwickler - Analytics ohne Validierung');
+      }
+
+      // Prüfe ob User gebannt ist (außer Admins)
       const userDocRef = doc(db, 'users', userHash);
       const userDoc = await getDoc(userDocRef);
       
-      if (userDoc.exists() && userDoc.data().banned) {
+      if (!isAdmin && userDoc.exists() && userDoc.data().banned) {
         console.error('🚫 Account wurde gesperrt');
         this.handleBan(userDoc.data().banReason || 'AGB-Verstoß');
         return;
@@ -184,7 +190,8 @@ class AnalyticsService {
         agbsAccepted: this.agbsAccepted,
         consentDate: localStorage.getItem('consent-date') || new Date().toISOString(),
         lastSeen: serverTimestamp(),
-        banned: false
+        banned: false,
+        isAdmin: isAdmin // Markiere Admins
       };
 
       // Füge firstSeen nur hinzu wenn User neu ist
@@ -240,6 +247,15 @@ Du wirst jetzt ausgeloggt.`;
     }, 3000);
   }
 
+  // Whitelist: Admins/Entwickler die von Ban-Checks ausgenommen sind
+  private isWhitelisted(username: string): boolean {
+    const whitelist = [
+      'bounty9317', // Hauptentwickler
+      // Weitere Admins hier hinzufügen
+    ];
+    return whitelist.includes(username.toLowerCase());
+  }
+
   // Prüfe Ban-Status (wird beim App-Start aufgerufen)
   async checkBanStatus(): Promise<boolean> {
     try {
@@ -248,6 +264,12 @@ Du wirst jetzt ausgeloggt.`;
       
       if (!user) {
         return false; // Kein User = nicht gebannt
+      }
+
+      // Prüfe Whitelist (Admins/Entwickler)
+      if (this.isWhitelisted(user.login)) {
+        console.log('✅ Admin/Entwickler erkannt - Ban-Check übersprungen');
+        return false; // Admins werden nie gebannt
       }
 
       const userHash = await this.generateUserHash(user.login);
