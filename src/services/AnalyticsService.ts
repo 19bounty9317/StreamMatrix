@@ -106,6 +106,12 @@ class AnalyticsService {
       
       this.optedIn = consent === 'true';
       this.agbsAccepted = agbs === 'true';
+      
+      console.log('📊 Analytics Consent geladen:', {
+        optedIn: this.optedIn,
+        agbsAccepted: this.agbsAccepted,
+        needsConsent: this.needsConsent()
+      });
     } catch (error) {
       console.error('Fehler beim Laden des Consent-Status:', error);
     }

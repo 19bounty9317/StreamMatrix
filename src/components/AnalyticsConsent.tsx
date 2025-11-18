@@ -1,15 +1,29 @@
 // Consent-Dialog für Analytics und AGBs
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AnalyticsService from '../services/AnalyticsService';
 
 export default function AnalyticsConsent() {
-  const [show, setShow] = useState(() => {
-    const analyticsService = AnalyticsService.getInstance();
-    return analyticsService.needsConsent();
-  });
-
+  const [show, setShow] = useState(false);
   const [showAgbs, setShowAgbs] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
+
+  // Prüfe beim Mount und nach Login ob Consent nötig ist
+  useEffect(() => {
+    const checkConsent = () => {
+      const analyticsService = AnalyticsService.getInstance();
+      const needsConsent = analyticsService.needsConsent();
+      console.log('🔍 Consent-Check:', { needsConsent });
+      setShow(needsConsent);
+    };
+
+    // Prüfe sofort
+    checkConsent();
+
+    // Prüfe auch nach Login (nach 1 Sekunde)
+    const timer = setTimeout(checkConsent, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleAccept = async () => {
     await AnalyticsService.getInstance().setConsent(true, true);
