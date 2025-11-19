@@ -150,11 +150,14 @@ function App() {
   useEffect(() => {
     if (window.electron?.onUpdateAvailable) {
       window.electron.onUpdateAvailable((info) => {
-        // Prüfe ob Update bereits abgelehnt wurde
-        const dismissedUpdate = localStorage.getItem('dismissed-update-version');
-        if (dismissedUpdate !== info.version) {
+        // Prüfe ob User bereits "Später" geklickt hat
+        const dismissedPopup = localStorage.getItem('dismissed-update-popup');
+        if (dismissedPopup !== info.version) {
+          // Nur wenn noch nicht dismissed, zeige Popup
           setUpdateAvailable(true);
           console.log('Update verfügbar:', info.version);
+        } else {
+          console.log('Update-Popup für v' + info.version + ' wurde bereits dismissed - nur Banner wird angezeigt');
         }
       });
     }

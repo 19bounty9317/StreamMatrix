@@ -64,8 +64,10 @@ export default function Footer({ status }: FooterProps) {
   }, []);
 
   const dismissUpdate = () => {
-    localStorage.setItem('dismissed-update-version', updateVersion);
-    setUpdateAvailable(false);
+    // Speichere dass User "Später" geklickt hat
+    // Aber lasse das Banner sichtbar (setUpdateAvailable bleibt true)
+    localStorage.setItem('dismissed-update-popup', updateVersion);
+    console.log('Update-Popup für v' + updateVersion + ' dismissed - Banner bleibt sichtbar');
   };
 
   const getStatusColor = (state: string) => {

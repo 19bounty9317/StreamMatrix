@@ -1,5 +1,63 @@
 # 📝 Changelog
 
+## Version 1.4.8 - Streamer Directory & Donations (19.11.2025)
+
+### 🎉 Neue Features
+- **🎮 Streamer-Verzeichnis**
+  - Neue Seite: https://streammatrix.de/streamer
+  - Zeigt alle StreamMatrix-Nutzer die opted-in haben
+  - Live-Streamer mit Twitch-Video-Preview (muted)
+  - Offline-Streamer mit "Letzter Stream vor X" Anzeige
+  - Opt-In in Einstellungen: "Im Streamer-Verzeichnis anzeigen"
+  - Firebase Cloud Functions für Auto-Updates (alle 5 Min)
+  - DSGVO-konform mit Opt-In System
+
+- **💜 Spendenkampagne**
+  - PayPal-Integration auf Website
+  - Spenden-Sektion in Einstellungen
+  - Ziel: 400€ für Code-Signierungszertifikat
+  - PayPal Campaign Card mit Fortschrittsanzeige
+  - Transparente Verwendung der Spenden
+
+- **🎁 Rewards Queue Kachel**
+  - Verwalte Channel Points Redemptions im Dashboard
+  - 3 Action-Buttons: Bestätigen, Ablehnen, Erstatten
+  - Erstatten-Button funktioniert (gibt Punkte zurück!)
+  - Chat-Integration für Redemptions
+  - Auto-Refresh alle 10 Sekunden
+
+### 🔧 Verbesserungen
+- **Update-System**
+  - "Später installieren" lässt blaues Banner sichtbar
+  - Keine weiteren Popups nach "Später" klicken
+  - Permanente, unaufdringliche Erinnerung
+
+- **Website**
+  - Google Analytics Integration (DSGVO-konform)
+  - Spenden-Links im Banner und Hero-Bereich
+  - Datenschutzerklärung aktualisiert
+  - SEO-Optimierung
+
+- **Backend**
+  - Firebase Cloud Functions für Streamer-Status
+  - Twitch API Integration (Client Credentials Flow)
+  - Auto-Cleanup inaktiver Streamer (30 Tage)
+  - Firestore Rules für Streamer Collection
+
+### 🐛 Bugfixes
+- Update-Benachrichtigungen: Keine doppelten Popups
+- Firestore Rules korrekt konfiguriert
+- Channel Points Events korrekt weitergeleitet
+
+### 📊 Technische Details
+- Neue Services: StreamerDirectoryService
+- Neue Komponenten: TileRewardsQueue
+- Firebase SDK 10.7.1
+- Axios für Cloud Functions
+- Twitch Backend App (Confidential)
+
+---
+
 ## Version 1.4.6 - Channel Points Integration (18.11.2025)
 
 ### 🎉 Neue Features
