@@ -17,6 +17,7 @@ import TileViewerList from './tiles/TileViewerList';
 import TileStreamPreview from './tiles/TileStreamPreview';
 import TileRaidTargets from './tiles/TileRaidTargets';
 import TileStreamHistory from './tiles/TileStreamHistory';
+import TileRewardsQueue from './tiles/TileRewardsQueue';
 import WindowManager from '../services/WindowManager';
 
 interface Tile {
@@ -60,7 +61,8 @@ export default function Dashboard({ tiles, onCloseTile }: DashboardProps) {
     'stream-settings': TileStreamSettings,
     'stream-preview': TileStreamPreview,
     'raid-targets': TileRaidTargets,
-    'stream-history': TileStreamHistory
+    'stream-history': TileStreamHistory,
+    'rewards-queue': TileRewardsQueue
   };
 
   // Standard-Layout: Festes Layout wie im Screenshot
@@ -79,6 +81,7 @@ export default function Dashboard({ tiles, onCloseTile }: DashboardProps) {
       'quick-actions': { x: 3, y: 7, w: 3, h: 3 },
       'channel-points': { x: 6, y: 9, w: 3, h: 3 },
       'hype-train': { x: 9, y: 7, w: 3, h: 3 },
+      'rewards-queue': { x: 0, y: 13, w: 6, h: 4 },
       'viewer-stats': { x: 0, y: 10, w: 3, h: 3 },
       'subs': { x: 3, y: 10, w: 3, h: 3 },
       'raid-targets': { x: 6, y: 10, w: 3, h: 4 },

@@ -666,6 +666,85 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
             </div>
           </div>
 
+          {/* Spenden */}
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold theme-text">💜 Unterstütze StreamMatrix</h3>
+            
+            <div className="p-4 theme-tile-content-bg rounded space-y-3">
+              <div className="text-sm theme-text-secondary leading-relaxed">
+                <p className="mb-2">
+                  <strong className="theme-text">StreamMatrix ist 100% kostenlos und Open Source.</strong>
+                </p>
+                <p className="mb-2">
+                  Ich entwickle diese App in meiner Freizeit, um Streamern zu helfen. 
+                  Um die <strong>Windows-Sicherheitswarnung</strong> beim Download zu entfernen, 
+                  benötige ich ein <strong>Code-Signierungszertifikat</strong> (400€/Jahr).
+                </p>
+                <p>
+                  Mit deiner Spende hilfst du, die App professioneller zu machen und 
+                  die Installation für alle einfacher! 🚀
+                </p>
+              </div>
+
+              <a
+                href="https://www.paypal.com/donate?campaign_id=F69NRSXHU8W7N"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full py-3 px-4 rounded-lg text-center font-semibold transition-all"
+                style={{
+                  background: 'linear-gradient(135deg, #9147FF 0%, #772CE8 100%)',
+                  color: 'white',
+                  boxShadow: '0 4px 12px rgba(145, 71, 255, 0.4)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(145, 71, 255, 0.6)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(145, 71, 255, 0.4)';
+                }}
+              >
+                💜 Jetzt spenden via PayPal
+              </a>
+
+              <div className="text-xs theme-text-secondary text-center">
+                Jeder Betrag hilft! Auch 5€ machen einen Unterschied. ☕
+              </div>
+            </div>
+
+            {/* Danke an Spender */}
+            <div className="p-4 rounded" style={{ 
+              background: 'linear-gradient(135deg, rgba(145, 71, 255, 0.1) 0%, rgba(119, 44, 232, 0.1) 100%)',
+              border: '1px solid rgba(145, 71, 255, 0.3)'
+            }}>
+              <h4 className="text-sm font-semibold theme-text mb-3 flex items-center gap-2">
+                <span>🙏</span>
+                <span>Vielen Dank an alle Unterstützer!</span>
+              </h4>
+              
+              <div className="space-y-2 text-xs theme-text-secondary">
+                <p className="leading-relaxed">
+                  Deine Spende wird zu 100% für das Code-Signierungszertifikat verwendet. 
+                  Überschüsse fließen in Server-Kosten und zukünftige Features.
+                </p>
+                
+                {/* Spender-Liste (wird später dynamisch) */}
+                <div className="mt-3 p-3 rounded" style={{ backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
+                  <div className="text-xs font-semibold theme-text mb-2">💝 Spender-Liste:</div>
+                  <div className="text-xs theme-text-secondary italic">
+                    Noch keine Spenden erhalten. Sei der Erste! 🌟
+                  </div>
+                  {/* TODO: Später dynamisch aus localStorage laden */}
+                </div>
+                
+                <p className="text-xs theme-text-secondary mt-3 text-center italic">
+                  ❤️ Danke, dass du StreamMatrix nutzt und unterstützt!
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* App-Info */}
           <div className="space-y-3">
             <h3 className="text-lg font-semibold theme-text">ℹ️ App-Informationen</h3>

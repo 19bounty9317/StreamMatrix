@@ -221,6 +221,19 @@ export class TwitchChatService {
         if (message) {
           displayMessage += `: ${message}`;
         }
+        
+        // Trigger Event für Rewards Queue
+        const redemptionEvent = new CustomEvent('channel-points-redemption', {
+          detail: {
+            username: tags['display-name'] || username,
+            userId: tags['user-id'],
+            rewardId: tags['custom-reward-id'],
+            rewardTitle: rewardTitle,
+            userInput: message,
+            timestamp: new Date()
+          }
+        });
+        window.dispatchEvent(redemptionEvent);
       }
 
       // Subs, Resubs, Gift Subs
