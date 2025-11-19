@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamMatrix Streamer-Verzeichnis | Entdecke die Community</title>
+    <meta name="description" content="Entdecke alle Streamer die StreamMatrix nutzen. Finde neue Kanäle, schaue Live-Streams und werde Teil der Community!">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <link rel="icon" type="image/png" href="../logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-K19V54XX19"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-K19V54XX19', {
+            'anonymize_ip': true,
+            'cookie_flags': 'SameSite=None;Secure'
+        });
+    </script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --purple: #9147FF;
+            --purple-dark: #772CE8;
+            --dark: #0E0E10;
+            --dark-light: #18181B;
+            --dark-lighter: #1F1F23;
+            --text: #EFEFF1;
+            --text-secondary: #ADADB8;
+            --red: #FF0000;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        header {
+            background: var(--dark-light);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid rgba(145, 71, 255, 0.2);
+        }
+
+        nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+        }
+
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .logo-text {
+            background: linear-gradient(135deg, #9147FF 0%, #772CE8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #9147FF 0%, #772CE8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .stats {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            background: var(--dark-light);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            border: 1px solid rgba(145, 71, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--purple);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            margin: 3rem 0 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .streamers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .streamer-card {
+            background: var(--dark-light);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(145, 71, 255, 0.2);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .streamer-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--purple);
+            box-shadow: 0 10px 40px rgba(145, 71, 255, 0.3);
+        }
+
+        .streamer-card.live {
+            border-color: var(--red);
+        }
+
+        .stream-preview {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background: var(--dark-lighter);
+        }
+
+        .stream-preview iframe {
+            width: 100%;
+            height: 100%;
+        }
+
+        .stream-preview-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, var(--dark-lighter) 0%, var(--dark-light) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            opacity: 0.3;
+        }
+
+        .live-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: var(--red);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            z-index: 10;
+        }
+
+        .live-badge::before {
+            content: '●';
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .streamer-info {
+            padding: 1rem;
+        }
+
+        .streamer-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .streamer-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--purple);
+        }
+
+        .streamer-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .stream-title {
+            color: var(--text);
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .stream-meta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .stream-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            font-size: 3rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #9147FF 0%, #772CE8 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(145, 71, 255, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .streamers-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="../" class="logo">
+                <div class="logo-icon">
+                    <img src="../logo.png" alt="StreamMatrix Logo">
+                </div>
+                <span class="logo-text">StreamMatrix</span>
+            </a>
+            <a href="../" class="btn">← Zurück zur Startseite</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1>🎮 Streamer-Verzeichnis</h1>
+        <p class="subtitle">Entdecke alle Streamer die StreamMatrix nutzen!</p>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-number" id="total-streamers">-</div>
+                <div class="stat-label">Streamer insgesamt</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="live-streamers">-</div>
+                <div class="stat-label">🔴 Jetzt live</div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="loading-spinner">⏳</div>
+            <p>Lade Streamer...</p>
+        </div>
+
+        <div id="live-section" style="display: none;">
+            <h2 class="section-title">🔴 Live Streamer</h2>
+            <div id="live-streamers" class="streamers-grid"></div>
+        </div>
+
+        <div id="offline-section" style="display: none;">
+            <h2 class="section-title">💤 Offline Streamer</h2>
+            <div id="offline-streamers" class="streamers-grid"></div>
+        </div>
+
+        <div id="empty-state" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">🎮</div>
+            <h3>Noch keine Streamer im Verzeichnis</h3>
+            <p>Sei der Erste! Aktiviere das Streamer-Verzeichnis in den StreamMatrix-Einstellungen.</p>
+            <a href="../" class="btn" style="margin-top: 1rem;">StreamMatrix herunterladen</a>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, query, where, getDocs, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBfXMEo8uKqH0gVwZ3QX7Y9J0K1L2M3N4O",
+            authDomain: "streammatrix-analytics.firebaseapp.com",
+            projectId: "streammatrix-analytics",
+            storageBucket: "streammatrix-analytics.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abc123def456"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function loadStreamers() {
+            try {
+                console.log('📊 Lade Streamer aus Firestore...');
+
+                const streamersRef = collection(db, 'streamers');
+                const q = query(streamersRef, where('consent', '==', true));
+                const querySnapshot = await getDocs(q);
+
+                const streamers = [];
+                querySnapshot.forEach((doc) => {
+                    streamers.push({ id: doc.id, ...doc.data() });
+                });
+
+                console.log(`✅ ${streamers.length} Streamer geladen`);
+
+                // Sortiere: Live zuerst, dann nach Viewer-Count
+                const liveStreamers = streamers.filter(s => s.isLive).sort((a, b) => {
+                    const aViewers = a.streamData?.viewerCount || 0;
+                    const bViewers = b.streamData?.viewerCount || 0;
+                    return bViewers - aViewers;
+                });
+
+                const offlineStreamers = streamers.filter(s => !s.isLive).sort((a, b) => {
+                    const aTime = a.lastStreamAt?.toDate?.() || new Date(0);
+                    const bTime = b.lastStreamAt?.toDate?.() || new Date(0);
+                    return bTime - aTime;
+                });
+
+                // Update Stats
+                document.getElementById('total-streamers').textContent = streamers.length;
+                document.getElementById('live-streamers').textContent = liveStreamers.length;
+
+                // Render
+                if (streamers.length === 0) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('empty-state').style.display = 'block';
+                    return;
+                }
+
+                document.getElementById('loading').style.display = 'none';
+
+                if (liveStreamers.length > 0) {
+                    document.getElementById('live-section').style.display = 'block';
+                    renderStreamers(liveStreamers, 'live-streamers', true);
+                }
+
+                if (offlineStreamers.length > 0) {
+                    document.getElementById('offline-section').style.display = 'block';
+                    renderStreamers(offlineStreamers, 'offline-streamers', false);
+                }
+
+            } catch (error) {
+                console.error('❌ Fehler beim Laden:', error);
+                document.getElementById('loading').innerHTML = '<p>❌ Fehler beim Laden der Streamer</p>';
+            }
+        }
+
+        function renderStreamers(streamers, containerId, isLive) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            streamers.forEach(streamer => {
+                const card = createStreamerCard(streamer, isLive);
+                container.appendChild(card);
+            });
+        }
+
+        function createStreamerCard(streamer, isLive) {
+            const card = document.createElement('div');
+            card.className = `streamer-card ${isLive ? 'live' : ''}`;
+            card.onclick = () => window.open(`https://twitch.tv/${streamer.username}`, '_blank');
+
+            let previewHTML = '';
+            if (isLive) {
+                previewHTML = `
+                    <div class="stream-preview">
+                        <div class="live-badge">🔴 LIVE</div>
+                        <iframe
+                            src="https://player.twitch.tv/?channel=${streamer.username}&parent=${window.location.hostname}&muted=true&autoplay=true"
+                            frameborder="0"
+                            allowfullscreen="true"
+                            scrolling="no">
+                        </iframe>
+                    </div>
+                `;
+            } else {
+                previewHTML = `
+                    <div class="stream-preview-placeholder">
+                        🎮
+                    </div>
+                `;
+            }
+
+            const title = isLive ? (streamer.streamData?.title || 'Kein Titel') : '';
+            const game = isLive ? (streamer.streamData?.gameName || 'Keine Kategorie') : '';
+            const viewers = isLive ? (streamer.streamData?.viewerCount || 0) : 0;
+            
+            let lastStreamText = '';
+            if (!isLive && streamer.lastStreamAt) {
+                const lastStream = streamer.lastStreamAt.toDate();
+                const now = new Date();
+                const diff = now - lastStream;
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const days = Math.floor(hours / 24);
+                
+                if (days > 0) {
+                    lastStreamText = `Letzter Stream vor ${days} Tag${days > 1 ? 'en' : ''}`;
+                } else if (hours > 0) {
+                    lastStreamText = `Letzter Stream vor ${hours} Stunde${hours > 1 ? 'n' : ''}`;
+                } else {
+                    lastStreamText = 'Letzter Stream vor kurzem';
+                }
+            }
+
+            card.innerHTML = `
+                ${previewHTML}
+                <div class="streamer-info">
+                    <div class="streamer-header">
+                        <img src="${streamer.profileImageUrl || '../logo.png'}" alt="${streamer.displayName}" class="streamer-avatar">
+                        <div class="streamer-name">${streamer.displayName || streamer.username}</div>
+                    </div>
+                    ${title ? `<div class="stream-title">${title}</div>` : ''}
+                    <div class="stream-meta">
+                        ${game ? `<div class="stream-meta-item">🎮 ${game}</div>` : ''}
+                        ${isLive ? `<div class="stream-meta-item">👁️ ${viewers.toLocaleString('de-DE')} Zuschauer</div>` : ''}
+                        ${lastStreamText ? `<div class="stream-meta-item">⏰ ${lastStreamText}</div>` : ''}
+                    </div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // Lade Streamer beim Seitenaufruf
+        loadStreamers();
+
+        // Auto-Refresh alle 2 Minuten
+        setInterval(loadStreamers, 2 * 60 * 1000);
+    </script>
+</body>
+</html>

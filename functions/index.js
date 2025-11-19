@@ -290,3 +290,286 @@ exports.cleanupOldStats = functions.pubsub
     
     return null;
   });
+
+// ============================================
+// STREAMER DIRECTORY FUNCTIONS
+// ============================================
+
+// Twitch API Credentials (Backend App - nur für Cloud Functions)
+// Beide werden via Firebase Config gesetzt
+const TWITCH_CLIENT_ID = functions.config().twitch?.client_id || '29m9wd4tyae2dgkvgr8ddqv45rxpwk';
+const TWITCH_CLIENT_SECRET = functions.config().twitch?.client_secret || '';
+
+let twitchAccessToken = null;
+let tokenExpiresAt = 0;
+
+/**
+ * Holt Twitch Access Token (OAuth Client Credentials Flow)
+ */
+async function getTwitchAccessToken() {
+  // Prüfe ob Token noch gültig ist
+  if (twitchAccessToken && Date.now() < tokenExpiresAt) {
+    return twitchAccessToken;
+  }
+
+  console.log('🔑 Hole neuen Twitch Access Token...');
+
+  try {
+    const response = await axios.post('https://id.twitch.tv/oauth2/token', null, {
+      params: {
+        client_id: TWITCH_CLIENT_ID,
+        client_secret: TWITCH_CLIENT_SECRET,
+        grant_type: 'client_credentials'
+      }
+    });
+
+    twitchAccessToken = response.data.access_token;
+    tokenExpiresAt = Date.now() + (response.data.expires_in * 1000) - 60000; // 1 Min Puffer
+
+    console.log('✅ Twitch Access Token erhalten');
+    return twitchAccessToken;
+  } catch (error) {
+    console.error('❌ Fehler beim Holen des Twitch Access Token:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Holt Twitch Stream-Daten für mehrere User
+ */
+async function getTwitchStreams(userIds) {
+  if (!userIds || userIds.length === 0) {
+    return [];
+  }
+
+  const token = await getTwitchAccessToken();
+  
+  // Twitch API erlaubt max 100 User-IDs pro Request
+  const chunks = [];
+  for (let i = 0; i < userIds.length; i += 100) {
+    chunks.push(userIds.slice(i, i + 100));
+  }
+
+  const allStreams = [];
+
+  for (const chunk of chunks) {
+    try {
+      const params = new URLSearchParams();
+      chunk.forEach(id => params.append('user_id', id));
+
+      const response = await axios.get('https://api.twitch.tv/helix/streams', {
+        params: params,
+        headers: {
+          'Client-ID': TWITCH_CLIENT_ID,
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      allStreams.push(...response.data.data);
+    } catch (error) {
+      console.error('❌ Fehler beim Holen der Twitch Streams:', error.message);
+    }
+  }
+
+  return allStreams;
+}
+
+/**
+ * Holt Twitch User-Daten (Profilbilder, etc.)
+ */
+async function getTwitchUsers(userIds) {
+  if (!userIds || userIds.length === 0) {
+    return [];
+  }
+
+  const token = await getTwitchAccessToken();
+  
+  const chunks = [];
+  for (let i = 0; i < userIds.length; i += 100) {
+    chunks.push(userIds.slice(i, i + 100));
+  }
+
+  const allUsers = [];
+
+  for (const chunk of chunks) {
+    try {
+      const params = new URLSearchParams();
+      chunk.forEach(id => params.append('id', id));
+
+      const response = await axios.get('https://api.twitch.tv/helix/users', {
+        params: params,
+        headers: {
+          'Client-ID': TWITCH_CLIENT_ID,
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      allUsers.push(...response.data.data);
+    } catch (error) {
+      console.error('❌ Fehler beim Holen der Twitch User:', error.message);
+    }
+  }
+
+  return allUsers;
+}
+
+/**
+ * Cloud Function: Update Streamer Status (alle 5 Minuten)
+ * Holt aktuelle Twitch-Daten für alle Streamer im Verzeichnis
+ */
+exports.updateStreamerStatus = functions.pubsub
+  .schedule('every 5 minutes')
+  .timeZone('Europe/Berlin')
+  .onRun(async (context) => {
+    console.log('🎮 Starte Streamer-Status-Update...');
+
+    const db = admin.firestore();
+    
+    try {
+      // Hole alle Streamer die Tracking zugestimmt haben
+      const streamersSnapshot = await db.collection('streamers')
+        .where('consent', '==', true)
+        .get();
+
+      if (streamersSnapshot.empty) {
+        console.log('ℹ️ Keine Streamer im Verzeichnis');
+        return null;
+      }
+
+      console.log(`📊 ${streamersSnapshot.size} Streamer gefunden`);
+
+      const userIds = [];
+      const streamerDocs = {};
+
+      streamersSnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.userId) {
+          userIds.push(data.userId);
+          streamerDocs[data.userId] = doc;
+        }
+      });
+
+      // Hole aktuelle Stream-Daten von Twitch
+      const streams = await getTwitchStreams(userIds);
+      const users = await getTwitchUsers(userIds);
+
+      console.log(`🔴 ${streams.length} Live-Streams gefunden`);
+
+      // Erstelle Maps für schnellen Zugriff
+      const streamMap = {};
+      streams.forEach(stream => {
+        streamMap[stream.user_id] = stream;
+      });
+
+      const userMap = {};
+      users.forEach(user => {
+        userMap[user.id] = user;
+      });
+
+      // Update alle Streamer
+      const batch = db.batch();
+      let updatedCount = 0;
+
+      for (const userId of userIds) {
+        const doc = streamerDocs[userId];
+        const stream = streamMap[userId];
+        const user = userMap[userId];
+
+        const updates = {
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          isLive: !!stream
+        };
+
+        // Update User-Daten wenn verfügbar
+        if (user) {
+          updates.displayName = user.display_name;
+          updates.profileImageUrl = user.profile_image_url;
+          updates.broadcasterType = user.broadcaster_type;
+        }
+
+        // Update Stream-Daten wenn live
+        if (stream) {
+          updates.streamData = {
+            title: stream.title,
+            gameName: stream.game_name,
+            gameId: stream.game_id,
+            viewerCount: stream.viewer_count,
+            thumbnailUrl: stream.thumbnail_url,
+            startedAt: admin.firestore.Timestamp.fromDate(new Date(stream.started_at)),
+            language: stream.language,
+            tags: stream.tags || []
+          };
+          updates.lastStreamAt = admin.firestore.FieldValue.serverTimestamp();
+        } else {
+          // Wenn offline, lösche streamData
+          updates.streamData = admin.firestore.FieldValue.delete();
+        }
+
+        batch.update(doc.ref, updates);
+        updatedCount++;
+      }
+
+      await batch.commit();
+      console.log(`✅ ${updatedCount} Streamer aktualisiert`);
+
+    } catch (error) {
+      console.error('❌ Fehler beim Update der Streamer:', error);
+    }
+
+    return null;
+  });
+
+/**
+ * Cloud Function: Bereinige inaktive Streamer (täglich)
+ * Entfernt Streamer die seit 30 Tagen nicht mehr gesehen wurden
+ */
+exports.cleanupInactiveStreamers = functions.pubsub
+  .schedule('every day 03:00')
+  .timeZone('Europe/Berlin')
+  .onRun(async (context) => {
+    console.log('🧹 Bereinige inaktive Streamer...');
+
+    const db = admin.firestore();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    try {
+      const inactiveSnapshot = await db.collection('streamers')
+        .where('lastSeen', '<', admin.firestore.Timestamp.fromDate(thirtyDaysAgo))
+        .get();
+
+      if (inactiveSnapshot.empty) {
+        console.log('ℹ️ Keine inaktiven Streamer gefunden');
+        return null;
+      }
+
+      const batch = db.batch();
+      inactiveSnapshot.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+
+      await batch.commit();
+      console.log(`✅ ${inactiveSnapshot.size} inaktive Streamer entfernt`);
+
+    } catch (error) {
+      console.error('❌ Fehler beim Bereinigen:', error);
+    }
+
+    return null;
+  });
+
+/**
+ * HTTP Function: Manueller Trigger für Streamer-Update (für Testing)
+ */
+exports.triggerStreamerUpdate = functions.https.onRequest(async (req, res) => {
+  console.log('🔧 Manueller Streamer-Update getriggert');
+  
+  try {
+    // Rufe die Update-Funktion auf
+    await exports.updateStreamerStatus.run();
+    res.status(200).send('✅ Streamer-Update erfolgreich');
+  } catch (error) {
+    console.error('❌ Fehler:', error);
+    res.status(500).send('❌ Fehler beim Update');
+  }
+});

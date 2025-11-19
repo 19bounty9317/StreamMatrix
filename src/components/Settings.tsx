@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { themes, getTheme, applyTheme } from '../styles/themes';
 import { triggerCelebration } from './EventCelebration';
 import { APP_VERSION } from '../config/version';
+import { StreamerDirectoryService } from '../services/StreamerDirectoryService';
 
 interface SettingsProps {
   isOpen: boolean;
@@ -40,6 +41,9 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
   const [obsConnected, setObsConnected] = useState(false);
   const [obsConnecting, setObsConnecting] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<string>('');
+  const [streamerDirectoryOptIn, setStreamerDirectoryOptIn] = useState(() => {
+    return StreamerDirectoryService.getInstance().isOptedIn();
+  });
 
   useEffect(() => {
     const theme = getTheme(settings.themeId);
@@ -662,6 +666,70 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
               
               <div className="text-xs theme-text-secondary">
                 💡 Updates werden automatisch heruntergeladen und beim nächsten Start installiert.
+              </div>
+            </div>
+          </div>
+
+          {/* Streamer-Verzeichnis */}
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold theme-text">🎮 Streamer-Verzeichnis</h3>
+            
+            <div className="p-4 theme-tile-content-bg rounded space-y-3">
+              <div className="text-sm theme-text-secondary leading-relaxed">
+                <p className="mb-2">
+                  <strong className="theme-text">Zeige dich in der StreamMatrix-Community!</strong>
+                </p>
+                <p className="mb-2">
+                  Wenn aktiviert, erscheinst du auf <strong>streammatrix.de/streamer</strong> und andere Nutzer können dich finden.
+                </p>
+                <p className="mb-2">
+                  <strong className="theme-text">Angezeigt werden:</strong>
+                </p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>Kanal-Name & Profilbild</li>
+                  <li>Live-Status (🔴 wenn live)</li>
+                  <li>Stream-Titel & Kategorie</li>
+                  <li>Viewer-Anzahl (wenn live)</li>
+                </ul>
+              </div>
+
+              <label className="flex items-center justify-between p-3 theme-tile-content-bg rounded theme-button cursor-pointer">
+                <span className="theme-text font-semibold">Im Streamer-Verzeichnis anzeigen</span>
+                <input
+                  type="checkbox"
+                  checked={streamerDirectoryOptIn}
+                  onChange={async (e) => {
+                    const enabled = e.target.checked;
+                    try {
+                      const service = StreamerDirectoryService.getInstance();
+                      
+                      if (enabled) {
+                        await service.optIn();
+                        setStreamerDirectoryOptIn(true);
+                        alert('✅ Du wirst jetzt im Streamer-Verzeichnis angezeigt!\n\nBesuche streammatrix.de/streamer um dich zu sehen.');
+                      } else {
+                        if (confirm('Möchtest du wirklich aus dem Streamer-Verzeichnis entfernt werden?\n\nDeine Daten werden sofort gelöscht.')) {
+                          await service.optOut();
+                          setStreamerDirectoryOptIn(false);
+                          alert('✅ Du wurdest aus dem Streamer-Verzeichnis entfernt.');
+                        } else {
+                          e.preventDefault();
+                        }
+                      }
+                    } catch (error) {
+                      console.error('Fehler:', error);
+                      alert('❌ Fehler beim Aktualisieren der Einstellung.\n\nBitte versuche es später erneut.');
+                      setStreamerDirectoryOptIn(!enabled);
+                    }
+                  }}
+                  className="w-5 h-5"
+                />
+              </label>
+
+              <div className="text-xs theme-text-secondary space-y-1">
+                <p>💡 <strong>Jederzeit widerrufbar!</strong> Deine Daten werden nach 30 Tagen Inaktivität automatisch gelöscht.</p>
+                <p>🔒 <strong>Datenschutz:</strong> Es werden nur öffentliche Twitch-Daten angezeigt.</p>
+                <p>🌐 <strong>Besuche:</strong> <a href="https://streammatrix.de/streamer" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: 'var(--color-accent)' }}>streammatrix.de/streamer</a></p>
               </div>
             </div>
           </div>

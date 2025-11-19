@@ -12,6 +12,7 @@ import StreamQualityService from './services/StreamQualityService';
 import EventTracker from './services/EventTracker';
 import StreamSessionTracker from './services/StreamSessionTracker';
 import AnalyticsService from './services/AnalyticsService';
+import { StreamerDirectoryService } from './services/StreamerDirectoryService';
 import { getTheme, applyTheme } from './styles/themes';
 import WindowManager from './services/WindowManager';
 
@@ -304,6 +305,11 @@ function App() {
                   sessionTracker.endSession();
                 }
               });
+
+              // Initialisiere Streamer Directory Service
+              const streamerDirectoryService = StreamerDirectoryService.getInstance();
+              streamerDirectoryService.initialize();
+              console.log('✅ Streamer Directory Service initialisiert');
             }
           }).catch(console.error);
         } else {
