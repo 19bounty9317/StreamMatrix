@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface StreamSession {
   date: string; // YYYY-MM-DD
@@ -26,15 +26,116 @@ export default function TileStreamHistory() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        const sessions = parsed.map((s: any) => ({
+        
+        // Validiere und filtere Sessions
+        const validSessions = parsed.filter((s: any) => {
+          // Prüfe ob alle erforderlichen Felder vorhanden sind
+          if (!s.date || !s.startTime || !s.endTime || s.duration === undefined) {
+            console.warn('Ungültige Session gefunden (fehlende Felder):', s);
+            return false;
+          }
+          
+          const isTestMode = localStorage.getItem('test-mode-active') === 'true';
+          
+          if (!isTestMode) {
+            // Im Normal-Modus: Zeige echte Daten
+            
+            // Wenn isReal Flag existiert und false ist, filtere raus
+            if (s.isReal === false) {
+              console.warn('Test-Session gefunden (isReal=false):', s);
+              return false;
+            }
+            
+            // Wenn kein isReal Flag: Behalte Session, aber prüfe auf unrealistische Werte
+            if (s.isReal === undefined) {
+              // Entferne nur offensichtlich unrealistische Sessions
+              if (s.newFollowers > 100 || s.newSubs > 100) {
+                console.warn('Unrealistische Session gefunden (zu viele Follower/Subs):', s);
+                return false;
+              }
+            }
+          }
+          
+          // Entferne offensichtlich ungültige Daten:
+          // - Dauer = 0 (nicht gestartet)
+          // - Dauer < 1 Min (zu kurz)
+          if (s.duration === 0 || s.duration < 1) {
+            console.warn('Ungültige Session gefunden (zu kurze Dauer):', s);
+            return false;
+          }
+          
+          // Prüfe ob Datum nicht in der Zukunft liegt
+          const sessionDate = new Date(s.date);
+          if (sessionDate > new Date()) {
+            console.warn('Ungültige Session gefunden (Zukunftsdatum):', s);
+            return false;
+          }
+          
+          return true;
+        });
+        
+        const sessions = validSessions.map((s: any) => ({
           ...s,
           startTime: new Date(s.startTime),
           endTime: new Date(s.endTime)
         }));
+        
         setSessions(sessions);
+        
+        // Wenn Sessions gefiltert wurden, speichere bereinigte Version
+        if (validSessions.length !== parsed.length) {
+          console.log(`🧹 ${parsed.length - validSessions.length} ungültige Sessions entfernt`);
+          localStorage.setItem('stream-history', JSON.stringify(validSessions));
+        }
       } catch (error) {
         console.error('Fehler beim Laden der Stream-Historie:', error);
       }
+    }
+  };
+
+  const clearHistory = () => {
+    if (confirm('Möchtest du wirklich die gesamte Stream-Historie löschen?\n\nDies kann nicht rückgängig gemacht werden!')) {
+      localStorage.removeItem('stream-history');
+      setSessions([]);
+      console.log('🗑️ Stream-Historie gelöscht');
+    }
+  };
+
+  const cleanupTestData = () => {
+    const saved = localStorage.getItem('stream-history');
+    if (!saved) return;
+
+    try {
+      const history = JSON.parse(saved);
+      const before = history.length;
+      
+      // Filtere Test-Daten
+      const filtered = history.filter((s: any) => {
+        // Behalte nur Sessions mit isReal=true
+        if (s.isReal !== true) return false;
+        
+        // Entferne unrealistische Werte
+        if (s.newFollowers > 50 || s.newSubs > 50) return false;
+        
+        // Entferne zu kurze Sessions
+        if (s.duration < 5) return false;
+        
+        return true;
+      });
+      
+      const removed = before - filtered.length;
+      
+      if (removed > 0) {
+        localStorage.setItem('stream-history', JSON.stringify(filtered));
+        loadStreamHistory();
+        alert(`✅ ${removed} Test-Session(s) entfernt!\n\nVerbleibend: ${filtered.length} echte Sessions`);
+        console.log(`🧹 ${removed} Test-Sessions entfernt`);
+      } else {
+        alert('✅ Keine Test-Daten gefunden!\n\nAlle Sessions sind bereits als echt markiert.');
+      }
+    } catch (error) {
+      console.error('Fehler beim Cleanup:', error);
+      alert('❌ Fehler beim Bereinigen der Daten');
     }
   };
 
@@ -162,21 +263,95 @@ export default function TileStreamHistory() {
 
   const selectedSession = selectedDay ? sessions.find(s => s.date === selectedDay) : null;
 
+  // Responsive View Mode (automatisch basierend auf Größe)
+  const [viewMode, setViewMode] = useState<'calendar' | 'single'>('calendar');
+  const [singleDayDate, setSingleDayDate] = useState(new Date());
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Automatische Umschaltung basierend auf Container-Größe
+  useEffect(() => {
+    const checkSize = () => {
+      if (containerRef.current) {
+        const height = containerRef.current.clientHeight;
+        const width = containerRef.current.clientWidth;
+        
+        // Wenn zu klein für Kalender (< 400px Höhe oder < 300px Breite) → Einzelansicht
+        if (height < 400 || width < 300) {
+          setViewMode('single');
+        } else {
+          setViewMode('calendar');
+        }
+      }
+    };
+
+    // Prüfe Größe beim Mount und bei Resize
+    checkSize();
+    
+    const resizeObserver = new ResizeObserver(checkSize);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  // Vorheriger Tag (für Single-View)
+  const previousDay = () => {
+    const newDate = new Date(singleDayDate);
+    newDate.setDate(newDate.getDate() - 1);
+    setSingleDayDate(newDate);
+  };
+
+  // Nächster Tag (für Single-View)
+  const nextDay = () => {
+    const newDate = new Date(singleDayDate);
+    newDate.setDate(newDate.getDate() + 1);
+    setSingleDayDate(newDate);
+  };
+
   return (
-    <div className="h-full flex flex-col">
-      {/* Header mit Monat-Navigation */}
-      <div className="flex items-center justify-between mb-3 pb-3 border-b theme-border">
+    <div ref={containerRef} className="h-full flex flex-col">
+      {/* Header mit Buttons */}
+      <div className="flex items-center justify-between mb-3 pb-2 border-b theme-border">
+        <span className="text-xs text-gray-400">
+          {sessions.length} {sessions.length === 1 ? 'Session' : 'Sessions'}
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={loadStreamHistory}
+            className="text-xs text-gray-500 hover:text-purple-400 transition-colors"
+            title="Aktualisieren"
+          >
+            🔄
+          </button>
+          <button
+            onClick={cleanupTestData}
+            className="text-xs text-gray-500 hover:text-yellow-400 transition-colors"
+            title="Test-Daten entfernen"
+          >
+            🧹
+          </button>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <div className="flex items-center justify-between mb-3">
         <button
-          onClick={previousMonth}
+          onClick={viewMode === 'calendar' ? previousMonth : previousDay}
           className="px-3 py-1 theme-button rounded hover:opacity-80 transition-opacity"
         >
           ←
         </button>
         <h3 className="text-lg font-bold theme-text">
-          {currentMonth.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}
+          {viewMode === 'calendar' 
+            ? currentMonth.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
+            : singleDayDate.toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })
+          }
         </h3>
         <button
-          onClick={nextMonth}
+          onClick={viewMode === 'calendar' ? nextMonth : nextDay}
           className="px-3 py-1 theme-button rounded hover:opacity-80 transition-opacity"
         >
           →
@@ -226,19 +401,21 @@ export default function TileStreamHistory() {
         </div>
       </div>
 
-      {/* Kalender */}
+      {/* Kalender oder Single-Day View */}
       <div className="flex-1 overflow-y-auto">
-        {/* Wochentage */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          {['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'].map(day => (
-            <div key={day} className="text-center text-xs font-semibold theme-text-secondary py-1">
-              {day}
+        {viewMode === 'calendar' ? (
+          <>
+            {/* Wochentage */}
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'].map(day => (
+                <div key={day} className="text-center text-xs font-semibold theme-text-secondary py-1">
+                  {day}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* Tage */}
-        <div className="grid grid-cols-7 gap-1">
+            {/* Tage */}
+            <div className="grid grid-cols-7 gap-1">
           {/* Leere Zellen für Tage vor dem 1. des Monats */}
           {Array.from({ length: firstDayOfWeek }).map((_, i) => (
             <div key={`empty-${i}`} className="aspect-square" />
@@ -271,7 +448,7 @@ export default function TileStreamHistory() {
                   onClick={() => setSelectedDay(session ? dateStr : null)}
                   onMouseEnter={() => setHoveredDay(session ? dateStr : null)}
                   onMouseLeave={() => setHoveredDay(null)}
-                  className={`w-full aspect-square p-1 rounded text-xs transition-all ${
+                  className={`w-full aspect-square p-1 rounded text-xs transition-all relative ${
                     session
                       ? isSelected
                         ? 'bg-green-600 text-white ring-2 ring-green-400'
@@ -283,9 +460,16 @@ export default function TileStreamHistory() {
                   disabled={!session}
                 >
                   <div className="font-semibold">{day.getDate()}</div>
-                  {session && (
+                  {session ? (
                     <div className="text-[10px] mt-0.5">
                       {session.avgViewers}👁️
+                    </div>
+                  ) : !isToday && day < new Date() && (
+                    // Rotes X für vergangene Tage ohne Stream
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-red-500 text-2xl font-bold leading-none" style={{ textShadow: '0 0 3px rgba(0,0,0,0.5)' }}>
+                        ✕
+                      </div>
                     </div>
                   )}
                 </button>
@@ -347,66 +531,153 @@ export default function TileStreamHistory() {
               </div>
             );
           })}
-        </div>
+            </div>
+          </>
+        ) : (
+          // Single-Day View
+          <div className="flex flex-col items-center justify-center h-full">
+            {(() => {
+              const dateStr = formatDate(singleDayDate);
+              const session = sessions.find(s => s.date === dateStr);
+              const isToday = formatDate(new Date()) === dateStr;
+
+              if (session) {
+                return (
+                  <div className="w-full max-w-md p-6 rounded-lg border-2 border-green-500 bg-green-500/10">
+                    <div className="text-center mb-4">
+                      <div className="text-4xl mb-2">✅</div>
+                      <div className="text-2xl font-bold theme-text">Stream-Tag!</div>
+                    </div>
+                    
+                    <div className="space-y-3 theme-text">
+                      <div className="flex items-center justify-between p-2 rounded theme-tile-content">
+                        <span className="theme-text-secondary">⏱️ Dauer:</span>
+                        <span className="font-semibold">{formatDuration(session.duration)}</span>
+                      </div>
+                      <div className="flex items-center justify-between p-2 rounded theme-tile-content">
+                        <span className="theme-text-secondary">👁️ Ø Viewer:</span>
+                        <span className="font-semibold">{session.avgViewers}</span>
+                      </div>
+                      <div className="flex items-center justify-between p-2 rounded theme-tile-content">
+                        <span className="theme-text-secondary">📈 Peak:</span>
+                        <span className="font-semibold">{session.peakViewers}</span>
+                      </div>
+                      <div className="flex items-center justify-between p-2 rounded theme-tile-content">
+                        <span className="text-blue-400">👥 Follower:</span>
+                        <span className="font-semibold text-blue-400">+{session.newFollowers}</span>
+                      </div>
+                      <div className="flex items-center justify-between p-2 rounded theme-tile-content">
+                        <span className="text-purple-400">⭐ Subs:</span>
+                        <span className="font-semibold text-purple-400">+{session.newSubs}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              } else if (isToday) {
+                return (
+                  <div className="text-center">
+                    <div className="text-6xl mb-4">📅</div>
+                    <div className="text-xl font-bold theme-text mb-2">Heute</div>
+                    <div className="theme-text-secondary">Noch kein Stream</div>
+                  </div>
+                );
+              } else if (singleDayDate > new Date()) {
+                return (
+                  <div className="text-center">
+                    <div className="text-6xl mb-4">🔮</div>
+                    <div className="text-xl font-bold theme-text mb-2">Zukunft</div>
+                    <div className="theme-text-secondary">Noch nicht passiert</div>
+                  </div>
+                );
+              } else {
+                return (
+                  <div className="text-center">
+                    <div className="text-6xl mb-4 text-red-500">✕</div>
+                    <div className="text-xl font-bold theme-text mb-2">Kein Stream</div>
+                    <div className="theme-text-secondary">An diesem Tag wurde nicht gestreamt</div>
+                  </div>
+                );
+              }
+            })()}
+          </div>
+        )}
       </div>
 
-      {/* Details für ausgewählten Tag */}
-      {selectedSession && (
-        <div className="mt-4 p-3 rounded border-2 border-green-500 bg-green-500/10">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="font-bold theme-text">
-              {new Date(selectedSession.date).toLocaleDateString('de-DE', { 
-                weekday: 'long', 
-                day: 'numeric', 
-                month: 'long' 
-              })}
-            </h4>
-            <button
-              onClick={() => setSelectedDay(null)}
-              className="text-xs theme-text-secondary hover:theme-text"
-            >
-              ✕
-            </button>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <span className="theme-text-secondary">Dauer:</span>
-              <span className="ml-2 font-semibold theme-text">{formatDuration(selectedSession.duration)}</span>
+      {/* Details Overlay (nur in Kalenderansicht) */}
+      {viewMode === 'calendar' && selectedSession && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={() => setSelectedDay(null)}>
+          <div className="max-w-md w-full mx-4 p-4 rounded-lg shadow-2xl border-2 border-green-500" 
+               style={{ backgroundColor: 'var(--color-tile)' }}
+               onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-lg font-bold theme-text">
+                {new Date(selectedSession.date).toLocaleDateString('de-DE', { 
+                  weekday: 'long', 
+                  day: 'numeric', 
+                  month: 'long' 
+                })}
+              </h4>
+              <button
+                onClick={() => setSelectedDay(null)}
+                className="text-xl theme-text-secondary hover:theme-text"
+              >
+                ✕
+              </button>
             </div>
-            <div>
-              <span className="theme-text-secondary">Ø Viewer:</span>
-              <span className="ml-2 font-semibold theme-text">{selectedSession.avgViewers}</span>
+            
+            <div className="space-y-3 mb-4">
+              <div className="flex items-center justify-between p-3 rounded theme-tile-content">
+                <span className="theme-text-secondary">⏱️ Dauer:</span>
+                <span className="font-semibold theme-text">{formatDuration(selectedSession.duration)}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded theme-tile-content">
+                <span className="theme-text-secondary">👁️ Ø Viewer:</span>
+                <span className="font-semibold theme-text">{selectedSession.avgViewers}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded theme-tile-content">
+                <span className="theme-text-secondary">📈 Peak:</span>
+                <span className="font-semibold theme-text">{selectedSession.peakViewers}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded theme-tile-content">
+                <span className="theme-text-secondary">🕐 Start:</span>
+                <span className="font-semibold theme-text">
+                  {selectedSession.startTime.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded theme-tile-content">
+                <span className="text-blue-400">👥 Follower:</span>
+                <span className="font-semibold text-blue-400">+{selectedSession.newFollowers}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded theme-tile-content">
+                <span className="text-purple-400">⭐ Subs:</span>
+                <span className="font-semibold text-purple-400">+{selectedSession.newSubs}</span>
+              </div>
             </div>
-            <div>
-              <span className="theme-text-secondary">Peak:</span>
-              <span className="ml-2 font-semibold theme-text">{selectedSession.peakViewers}</span>
-            </div>
-            <div>
-              <span className="theme-text-secondary">Start:</span>
-              <span className="ml-2 font-semibold theme-text">
-                {selectedSession.startTime.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            </div>
-            <div>
-              <span className="theme-text-secondary">Follower:</span>
-              <span className="ml-2 font-semibold text-blue-400">+{selectedSession.newFollowers}</span>
-            </div>
-            <div>
-              <span className="theme-text-secondary">Subs:</span>
-              <span className="ml-2 font-semibold text-purple-400">+{selectedSession.newSubs}</span>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Keine Daten Hinweis */}
-      {sessions.length === 0 && (
-        <div className="flex-1 flex flex-col items-center justify-center theme-text-secondary">
-          <div className="text-4xl mb-2">📊</div>
-          <div className="text-sm text-center">
-            Noch keine Stream-Daten vorhanden.<br />
-            Starte einen Stream um Daten zu sammeln!
+            {/* Löschen Button */}
+            <button
+              onClick={() => {
+                if (confirm(`Möchtest du diesen Stream wirklich löschen?\n\nDatum: ${new Date(selectedSession.date).toLocaleDateString('de-DE')}\nDauer: ${formatDuration(selectedSession.duration)}\n\nDies kann nicht rückgängig gemacht werden!`)) {
+                  // Entferne Session aus localStorage
+                  const saved = localStorage.getItem('stream-history');
+                  if (saved) {
+                    const history = JSON.parse(saved);
+                    const filtered = history.filter((s: any) => s.date !== selectedSession.date);
+                    localStorage.setItem('stream-history', JSON.stringify(filtered));
+                    
+                    // Aktualisiere UI
+                    loadStreamHistory();
+                    setSelectedDay(null);
+                    
+                    console.log(`🗑️ Stream vom ${selectedSession.date} gelöscht`);
+                  }
+                }
+              }}
+              className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+            >
+              <span>🗑️</span>
+              <span>Stream löschen</span>
+            </button>
           </div>
         </div>
       )}

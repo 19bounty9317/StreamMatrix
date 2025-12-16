@@ -105,10 +105,9 @@ Neue Dokumentations-Dateien:
 - **Support**: streammatrix@web.de oder Discord
 
 ### Für Admins
-- **Firebase Setup erforderlich**: Siehe `FIREBASE-ADMIN-SETUP.md`
-- **Cloud Functions deployen**: Siehe `CLOUD-FUNCTIONS-SETUP.md`
-- **Admin-Dashboard**: `docs/admin/index.html`
-- **Blaze-Plan nötig**: Aber kostenlos für normale Nutzung
+- **Firebase Setup erforderlich**
+- **Cloud Functions deployen**
+- **Admin-Dashboard** 
 
 ## 🔄 Migration
 

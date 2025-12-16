@@ -1,8 +1,48 @@
 # 📝 Changelog
 
-## Version 1.4.8 - Streamer Directory & Donations (19.11.2025)
+## Version 1.4.9 - Bugfixes & Improvements (19.11.2025)
+
+### 🐛 Bugfixes
+- **Rewards Queue 403 Fehler behoben**
+  - Fehlender OAuth Scope `channel:manage:redemptions` hinzugefügt
+  - Redemptions können jetzt gelesen und verwaltet werden
+  - Bessere Fehleranzeige bei API-Problemen
+
+- **Stream-Historie Verbesserungen**
+  - "Keine Daten"-Meldung entfernt (blockierte Kalenderansicht)
+  - Details in Overlay-Fenster verschoben
+  - Rotes X für nicht-gestreamte Tage
+  - Automatische responsive Umschaltung (Kalender ↔ Einzelansicht)
+  - Bessere Filterung von Test-Daten
+
+- **Test-Daten Cleanup verbessert**
+  - Filtert jetzt auch alte Daten ohne `isReal` Flag
+  - Entfernt Sessions mit > 50 Follower/Subs pro Session
+  - Besseres Logging für Debugging
+
+### 🔧 Verbesserungen
+- Rewards Queue lädt alle Custom Rewards automatisch
+- Bessere Fehlerbehandlung bei Twitch API Calls
+- Verbesserte Fehleranzeige mit Retry-Button
+
+### ⚠️ Wichtig
+Nach dem Update **neu anmelden**, um die neuen Berechtigungen zu erhalten!
+
+---
+
+## Version 1.4.8 - Test-Modus System & Streamer Directory (19.11.2025)
 
 ### 🎉 Neue Features
+- **🧪 Intelligentes Test-Modus System**
+  - Automatische Unterscheidung zwischen echten und Test-Daten
+  - Stream 10+ Min live → Daten werden als `isReal: true` markiert
+  - Test-Modus endet automatisch nach 5 Minuten
+  - 30-Sekunden Countdown mit visuellem Timer
+  - Globale Notification (oben rechts) für Cleanup-Status
+  - Nur Test-Daten werden gelöscht, echte Daten bleiben erhalten
+  - Manueller Cleanup-Button in Einstellungen
+  - Dokumentation: TEST-MODE-SYSTEM.md
+
 - **🎮 Streamer-Verzeichnis**
   - Neue Seite: https://streammatrix.de/streamer
   - Zeigt alle StreamMatrix-Nutzer die opted-in haben
@@ -27,6 +67,13 @@
   - Auto-Refresh alle 10 Sekunden
 
 ### 🔧 Verbesserungen
+- **Test-Daten Management**
+  - TestModeManager Service für automatisches Tracking
+  - Live-Check alle 30 Sekunden via Twitch API
+  - Stream-History filtert automatisch Test-Daten
+  - Activity Feed unterscheidet Test vs. Echt
+  - Session-Stats mit isReal Flag
+
 - **Update-System**
   - "Später installieren" lässt blaues Banner sichtbar
   - Keine weiteren Popups nach "Später" klicken
@@ -45,6 +92,8 @@
   - Firestore Rules für Streamer Collection
 
 ### 🐛 Bugfixes
+- Test-Daten werden nicht mehr mit echten Daten vermischt
+- Stream-History zeigt nur noch verifizierte Sessions
 - Update-Benachrichtigungen: Keine doppelten Popups
 - Firestore Rules korrekt konfiguriert
 - Channel Points Events korrekt weitergeleitet

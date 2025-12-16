@@ -1,19 +1,6 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, setDoc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc, getDoc, Timestamp } from 'firebase/firestore';
+import { db } from '../config/firebase.config';
 import { TwitchService } from './TwitchService';
-
-// Firebase Config (gleiche wie in AnalyticsService)
-const firebaseConfig = {
-  apiKey: "AIzaSyBfXMEo8uKqH0gVwZ3QX7Y9J0K1L2M3N4O",
-  authDomain: "streammatrix-analytics.firebaseapp.com",
-  projectId: "streammatrix-analytics",
-  storageBucket: "streammatrix-analytics.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abc123def456"
-};
-
-const app = initializeApp(firebaseConfig, 'streamer-directory');
-const db = getFirestore(app);
 
 export class StreamerDirectoryService {
   private static instance: StreamerDirectoryService;
@@ -139,13 +126,25 @@ export class StreamerDirectoryService {
         return;
       }
 
-      // Update lastSeen
+      // Prüfe ob User live ist
+      const streamInfo = await TwitchService.getStreamInfo(user.id);
+      const isLive = streamInfo !== null && streamInfo !== undefined;
+
+      // Update lastSeen und Live-Status
       await setDoc(doc(db, 'streamers', user.id), {
+        isLive: isLive,
         lastSeen: Timestamp.now(),
-        updatedAt: Timestamp.now()
+        updatedAt: Timestamp.now(),
+        // Wenn live, speichere auch Stream-Info
+        ...(isLive && {
+          streamTitle: streamInfo.title,
+          gameName: streamInfo.game_name,
+          viewerCount: streamInfo.viewer_count,
+          thumbnailUrl: streamInfo.thumbnail_url
+        })
       }, { merge: true });
 
-      console.log('💓 Streamer Directory Heartbeat gesendet');
+      console.log(`💓 Streamer Directory Heartbeat gesendet (Live: ${isLive})`);
     } catch (error) {
       console.error('❌ Fehler beim Heartbeat:', error);
     }
@@ -161,10 +160,31 @@ export class StreamerDirectoryService {
   /**
    * Initialisiere Service (beim App-Start)
    */
-  initialize(): void {
+  async initialize(): Promise<void> {
     if (this.isOptedInFlag) {
-      this.startHeartbeat();
-      console.log('✅ Streamer Directory Service initialisiert (Opted-In)');
+      // Prüfe ob Registrierung in neuer Firebase existiert
+      try {
+        const user = TwitchService.getUserFromStorage();
+        if (user) {
+          const docRef = doc(db, 'streamers', user.id);
+          const docSnap = await getDoc(docRef);
+          
+          if (!docSnap.exists()) {
+            // Registrierung existiert nicht in neuer Firebase
+            // Re-registriere automatisch
+            console.log('🔄 Migriere Streamer Directory Registrierung...');
+            await this.optIn();
+          } else {
+            // Registrierung existiert, starte Heartbeat
+            this.startHeartbeat();
+            console.log('✅ Streamer Directory Service initialisiert (Opted-In)');
+          }
+        }
+      } catch (error) {
+        console.error('❌ Fehler bei Initialisierung:', error);
+        // Fallback: Starte Heartbeat trotzdem
+        this.startHeartbeat();
+      }
     } else {
       console.log('ℹ️ Streamer Directory Service initialisiert (Opted-Out)');
     }

@@ -7,7 +7,9 @@ import Tutorial from './components/Tutorial';
 import Settings from './components/Settings';
 import EventCelebration from './components/EventCelebration';
 import AnalyticsConsent from './components/AnalyticsConsent';
+import TestModeCleanupNotification from './components/TestModeCleanupNotification';
 import { TwitchService } from './services/TwitchService';
+import { TwitchEventSubService } from './services/TwitchEventSubService';
 import StreamQualityService from './services/StreamQualityService';
 import EventTracker from './services/EventTracker';
 import StreamSessionTracker from './services/StreamSessionTracker';
@@ -283,6 +285,12 @@ function App() {
               const eventTracker = EventTracker.getInstance();
               eventTracker.startTracking(userInfo.id);
 
+              // Starte EventSub WebSocket für Echtzeit-Events
+              console.log('🚀 Starte EventSub WebSocket...');
+              TwitchEventSubService.connect().catch(err => {
+                console.error('❌ EventSub Verbindung fehlgeschlagen:', err);
+              });
+
               // Prüfe Ban-Status BEVOR Analytics gestartet wird
               const analyticsService = AnalyticsService.getInstance();
               analyticsService.checkBanStatus().then(isBanned => {
@@ -290,6 +298,11 @@ function App() {
                   // Nur starten wenn nicht gebannt
                   analyticsService.startHeartbeat();
                 }
+              });
+
+              // Initialisiere TestModeManager (prüft automatisch Stream-Status)
+              import('./services/TestModeManager').then(({ default: TestModeManager }) => {
+                TestModeManager.getInstance();
               });
 
               // Prüfe ob Stream live ist und starte Session-Tracking
@@ -370,6 +383,10 @@ function App() {
   };
 
   const handleLogout = () => {
+    // Trenne EventSub WebSocket
+    console.log('🔌 Trenne EventSub WebSocket...');
+    TwitchEventSubService.disconnect();
+    
     TwitchService.clearToken();
     setIsAuthenticated(false);
   };
@@ -412,6 +429,7 @@ function App() {
       <Tutorial />
       <Settings isOpen={showSettings} onClose={() => setShowSettings(false)} />
       <EventCelebration />
+      <TestModeCleanupNotification />
       
       {/* Update-Banner - wird nicht mehr oben angezeigt, nur im Footer */}
 

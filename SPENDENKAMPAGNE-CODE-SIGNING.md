@@ -73,7 +73,6 @@ Ein digitales Zertifikat, das beweist:
 - **5€** = Ein Kaffee für den Entwickler ☕
 - **10€** = Motivation für neue Features 💪
 - **25€** = Großer Beitrag zum Ziel 🎯
-- **50€+** = Du bist ein Held! 🦸‍♂️
 
 **Auch kleine Beträge machen einen Unterschied!**
 

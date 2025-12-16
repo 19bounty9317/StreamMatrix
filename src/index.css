@@ -104,3 +104,19 @@ body {
 .theme-button:hover {
   background-color: var(--color-tile-header);
 }
+
+/* Test-Modus Cleanup Notification Animation */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.5s ease-out;
+}

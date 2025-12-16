@@ -9,6 +9,8 @@ export default function TileStreamInfo() {
   const [streamQuality, setStreamQuality] = useState<any>(null);
 
   useEffect(() => {
+    let previousStreamState: boolean | null = null;
+
     const loadStreamInfo = async () => {
       try {
         const user = TwitchService.getUserFromStorage();
@@ -17,6 +19,32 @@ export default function TileStreamInfo() {
             TwitchService.getStreamInfo(user.id),
             TwitchService.getChannelInfo(user.id)
           ]);
+          
+          const isLive = stream !== null && stream !== undefined;
+          
+          // Tracke Viewer-Zahlen wenn live
+          if (isLive && stream?.viewer_count !== undefined) {
+            import('../../services/StreamSessionTracker').then(({ default: StreamSessionTracker }) => {
+              const tracker = StreamSessionTracker.getInstance();
+              tracker.trackViewers(stream.viewer_count);
+            });
+          }
+          
+          // Erkenne Stream-Ende: War live, ist jetzt offline
+          if (previousStreamState === true && !isLive) {
+            console.log('📊 Stream beendet - speichere Session in Historie');
+            
+            // Beende Session und speichere in Historie
+            // Der Tracker hat bereits alle Viewer-Zahlen getrackt
+            import('../../services/StreamSessionTracker').then(({ default: StreamSessionTracker }) => {
+              const tracker = StreamSessionTracker.getInstance();
+              tracker.endSession(); // Verwendet automatisch die getrackten Werte
+            });
+          }
+          
+          // Aktualisiere Stream-State
+          previousStreamState = isLive;
+          
           setStreamInfo(stream);
           setChannelInfo(channel);
         }
@@ -41,7 +69,7 @@ export default function TileStreamInfo() {
         refreshService.unregister('tile-stream-info');
       });
     };
-  }, []);
+  }, [streamInfo]);
 
   // Berechne Uptime
   useEffect(() => {

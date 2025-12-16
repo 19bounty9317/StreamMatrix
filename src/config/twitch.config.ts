@@ -38,6 +38,7 @@ export const TWITCH_CONFIG = {
     'channel:read:subscriptions',
     'bits:read',
     'channel:read:redemptions',
+    'channel:manage:redemptions', // Für Verwalten von Redemptions (Bestätigen/Ablehnen/Erstatten)
     'moderator:read:followers',
     'moderator:read:chatters', // Für Live Viewer Liste
     'channel:read:hype_train',
@@ -54,13 +55,18 @@ export const TWITCH_CONFIG = {
 };
 
 // OAuth URL Generator
-export function getAuthUrl(): string {
+export function getAuthUrl(forceVerify: boolean = false): string {
   const params = new URLSearchParams({
     client_id: TWITCH_CONFIG.CLIENT_ID,
     redirect_uri: TWITCH_CONFIG.REDIRECT_URI,
     response_type: 'token',
     scope: TWITCH_CONFIG.SCOPES.join(' ')
   });
+
+  // force_verify=true zwingt Twitch, die Berechtigungen neu anzuzeigen
+  if (forceVerify) {
+    params.append('force_verify', 'true');
+  }
 
   return `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
 }

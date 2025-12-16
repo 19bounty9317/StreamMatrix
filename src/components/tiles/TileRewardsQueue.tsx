@@ -25,14 +25,30 @@ export default function TileRewardsQueue() {
   const loadRedemptions = async () => {
     try {
       const user = TwitchService.getUserFromStorage();
-      if (!user) return;
+      if (!user) {
+        setError('Nicht angemeldet');
+        setLoading(false);
+        return;
+      }
 
+      console.log('🔄 Lade Redemptions für User:', user.id);
       const data = await TwitchService.getChannelPointRedemptions(user.id, 'UNFULFILLED');
-      setRedemptions(data);
-      setError(null);
+      console.log('✅ Redemptions geladen:', data.length);
+      
+      // Wenn keine Redemptions geladen wurden, zeige EventSub Meldung
+      if (data.length === 0) {
+        setRedemptions([]);
+        // Setze einen speziellen Error-State für "keine Daten"
+        setError('403'); // Trigger für EventSub Meldung
+      } else {
+        setRedemptions(data);
+        setError(null);
+      }
     } catch (err: any) {
-      console.error('Fehler beim Laden der Redemptions:', err);
-      setError(err.response?.data?.message || 'Fehler beim Laden');
+      console.error('❌ Fehler beim Laden der Redemptions:', err);
+      const errorMsg = err.response?.data?.message || err.message || 'Fehler beim Laden';
+      console.error('Error details:', errorMsg);
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -47,20 +63,47 @@ export default function TileRewardsQueue() {
     return () => clearInterval(interval);
   }, []);
 
-  // Listener für neue Redemptions aus Chat
+  // Listener für neue Redemptions aus EventSub
   useEffect(() => {
-    const handleRedemption = (event: CustomEvent) => {
-      const data = event.detail;
-      console.log('🎁 Channel Points Redemption:', data);
+    const handleRedemptionAdd = (event: CustomEvent) => {
+      const redemption = event.detail;
+      console.log('🎁 EventSub: Neue Redemption:', redemption);
       
-      // Reload Redemptions
-      loadRedemptions();
+      // Füge zur Liste hinzu (am Anfang, da neueste)
+      setRedemptions(prev => [redemption, ...prev]);
+      setError(null); // Entferne Fehler wenn EventSub funktioniert
     };
 
-    window.addEventListener('channel-points-redemption' as any, handleRedemption);
+    const handleRedemptionUpdate = (event: CustomEvent) => {
+      const redemption = event.detail;
+      console.log('🔄 EventSub: Redemption Update:', redemption);
+      
+      // Entferne aus Liste wenn fulfilled/canceled
+      if (redemption.status !== 'UNFULFILLED') {
+        setRedemptions(prev => prev.filter(r => r.id !== redemption.id));
+      } else {
+        // Update in Liste
+        setRedemptions(prev => prev.map(r => 
+          r.id === redemption.id ? redemption : r
+        ));
+      }
+    };
+
+    // EventSub Events
+    window.addEventListener('channel-points-redemption-add' as any, handleRedemptionAdd);
+    window.addEventListener('channel-points-redemption-update' as any, handleRedemptionUpdate);
+
+    // Legacy Chat Event (Fallback)
+    const handleLegacyRedemption = (event: CustomEvent) => {
+      console.log('🎁 Legacy: Channel Points Redemption:', event.detail);
+      loadRedemptions();
+    };
+    window.addEventListener('channel-points-redemption' as any, handleLegacyRedemption);
 
     return () => {
-      window.removeEventListener('channel-points-redemption' as any, handleRedemption);
+      window.removeEventListener('channel-points-redemption-add' as any, handleRedemptionAdd);
+      window.removeEventListener('channel-points-redemption-update' as any, handleRedemptionUpdate);
+      window.removeEventListener('channel-points-redemption' as any, handleLegacyRedemption);
     };
   }, []);
 
@@ -189,21 +232,34 @@ export default function TileRewardsQueue() {
     );
   }
 
+  // Zeige keine Fehlermeldung bei 403 - EventSub übernimmt
   if (error) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-3xl mb-2">⚠️</div>
-          <div className="text-sm theme-text-secondary">{error}</div>
-          <button
-            onClick={loadRedemptions}
-            className="mt-3 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded text-sm transition-colors"
-          >
-            Erneut versuchen
-          </button>
+    const is403Error = error.includes('403') || error.includes('Forbidden') || error.includes('Missing required parameter');
+    
+    // Bei 403: Zeige einfach leere Liste, EventSub wird neue Redemptions liefern
+    if (is403Error) {
+      // Setze error zurück, damit die normale leere Ansicht gezeigt wird
+      setError(null);
+    } else {
+      // Nur bei echten Fehlern (nicht 403) zeige Fehlermeldung
+      return (
+        <div className="h-full flex items-center justify-center p-4">
+          <div className="text-center max-w-md">
+            <div className="text-3xl mb-2">⚠️</div>
+            <div className="text-sm theme-text font-semibold mb-2">Fehler beim Laden</div>
+            <div className="text-xs theme-text-secondary mb-4 p-2 rounded bg-red-500/10 border border-red-500/30">
+              {error}
+            </div>
+            <button
+              onClick={loadRedemptions}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded text-sm transition-colors"
+            >
+              🔄 Erneut versuchen
+            </button>
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
   }
 
   return (
@@ -225,9 +281,14 @@ export default function TileRewardsQueue() {
         {redemptions.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-gray-500">
             <div className="text-4xl mb-2">🎁</div>
-            <div className="text-sm theme-text">Keine offenen Redemptions</div>
-            <div className="text-xs mt-2 theme-text-secondary">
-              Channel Points Einlösungen erscheinen hier
+            <div className="text-sm theme-text mb-2">Keine offenen Redemptions</div>
+            <div className="text-xs theme-text-secondary text-center max-w-xs">
+              <p className="mb-2">
+                Neue Channel Points Einlösungen erscheinen hier automatisch in Echtzeit.
+              </p>
+              <p className="text-green-400">
+                ✅ EventSub aktiv
+              </p>
             </div>
           </div>
         )}

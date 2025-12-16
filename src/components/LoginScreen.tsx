@@ -37,7 +37,8 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
     setError(null);
     
     try {
-      const authUrl = getAuthUrl();
+      // force_verify=true zwingt Twitch, alle Berechtigungen neu anzuzeigen
+      const authUrl = getAuthUrl(true);
       
       // Öffne im Standard-Browser (umgeht Electron-Probleme)
       if (window.electron) {

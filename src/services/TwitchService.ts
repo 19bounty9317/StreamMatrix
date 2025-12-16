@@ -168,16 +168,51 @@ export class TwitchService {
   }
 
   static async getChannelPointRedemptions(broadcasterId: string, status: 'UNFULFILLED' | 'FULFILLED' | 'CANCELED' = 'UNFULFILLED') {
-    const response = await axios.get(
-      `${TWITCH_API_BASE}/channel_points/custom_rewards/redemptions?broadcaster_id=${broadcasterId}&status=${status}&first=50`,
-      {
-        headers: {
-          'Authorization': `Bearer ${this.token}`,
-          'Client-Id': this.clientId
+    try {
+      // Stille Abfrage - Logs nur bei echten Fehlern
+      // EventSub übernimmt jetzt das Echtzeit-Tracking
+      
+      // Schritt 1: Lade alle Custom Rewards
+      const rewards = await this.getCustomRewards(broadcasterId);
+      
+      if (rewards.length === 0) {
+        return [];
+      }
+      
+      // Schritt 2: Lade Redemptions für jeden Reward
+      const allRedemptions: any[] = [];
+      
+      for (const reward of rewards) {
+        try {
+          const response = await axios.get(
+            `${TWITCH_API_BASE}/channel_points/custom_rewards/redemptions?broadcaster_id=${broadcasterId}&reward_id=${reward.id}&status=${status}&first=50`,
+            {
+              headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Client-Id': this.clientId
+              }
+            }
+          );
+          
+          const redemptions = response.data.data || [];
+          allRedemptions.push(...redemptions);
+        } catch (err: any) {
+          // Ignoriere 403 Fehler still - das ist erwartet
+          // EventSub liefert die Daten in Echtzeit
         }
       }
-    );
-    return response.data.data;
+      
+      // Sortiere nach Datum (neueste zuerst)
+      return allRedemptions.sort((a: any, b: any) => 
+        new Date(b.redeemed_at).getTime() - new Date(a.redeemed_at).getTime()
+      );
+    } catch (err: any) {
+      // Nur echte Fehler loggen (nicht 403)
+      if (!err.response || err.response.status !== 403) {
+        console.error('❌ Fehler beim Laden der Redemptions:', err);
+      }
+      throw err;
+    }
   }
 
   static async updateRedemptionStatus(
@@ -259,6 +294,26 @@ export class TwitchService {
     } catch (error) {
       console.error('Fehler beim Laden des Hype Trains:', error);
       return null;
+    }
+  }
+
+  static async startRaid(fromBroadcasterId: string, toBroadcasterId: string) {
+    try {
+      const response = await axios.post(
+        `${TWITCH_API_BASE}/raids?from_broadcaster_id=${fromBroadcasterId}&to_broadcaster_id=${toBroadcasterId}`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${this.token}`,
+            'Client-Id': this.clientId
+          }
+        }
+      );
+      console.log('✅ Raid erfolgreich gestartet:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Fehler beim Starten des Raids:', error.response?.data || error.message);
+      throw error;
     }
   }
 }

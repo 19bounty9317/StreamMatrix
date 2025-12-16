@@ -179,9 +179,17 @@ export default function TileRaidTargets() {
     setIsRaiding(true);
     
     try {
-      // Sende Raid-Command
-      const { twitchChat } = await import('../../services/TwitchChatService');
-      twitchChat.sendMessage(`/raid ${channel.login}`);
+      const user = TwitchService.getUserFromStorage();
+      if (!user) {
+        console.error('❌ Kein User gefunden');
+        setError('Kein Benutzer eingeloggt');
+        setIsRaiding(false);
+        setSelectedChannel(null);
+        return;
+      }
+
+      // Starte Raid über Helix API
+      await TwitchService.startRaid(user.id, channel.id);
       
       // Zeige Bestätigung
       console.log(`✅ Raid zu ${channel.display_name} gestartet!`);
@@ -191,10 +199,20 @@ export default function TileRaidTargets() {
         setSelectedChannel(null);
         setIsRaiding(false);
       }, 2000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Fehler beim Raiden:', error);
+      
+      // Zeige Fehlermeldung
+      const errorMsg = error.response?.data?.message || 'Raid konnte nicht gestartet werden';
+      setError(errorMsg);
+      
       setIsRaiding(false);
       setSelectedChannel(null);
+      
+      // Verstecke Fehler nach 5 Sekunden
+      setTimeout(() => {
+        setError(null);
+      }, 5000);
     }
   };
 

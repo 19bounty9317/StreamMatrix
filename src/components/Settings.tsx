@@ -44,6 +44,8 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
   const [streamerDirectoryOptIn, setStreamerDirectoryOptIn] = useState(() => {
     return StreamerDirectoryService.getInstance().isOptedIn();
   });
+  const [cleanupCountdown, setCleanupCountdown] = useState<number | null>(null);
+  const [autoCleanupCountdown, setAutoCleanupCountdown] = useState<number | null>(null);
 
   useEffect(() => {
     const theme = getTheme(settings.themeId);
@@ -74,6 +76,25 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
         }
       });
     }
+  }, []);
+
+  // Höre auf automatischen Test-Modus Cleanup Countdown
+  useEffect(() => {
+    const handleAutoCleanupCountdown = (event: CustomEvent<number>) => {
+      const countdown = event.detail;
+      setAutoCleanupCountdown(countdown > 0 ? countdown : null);
+      
+      if (countdown === 0) {
+        // Cleanup abgeschlossen
+        setTimeout(() => setAutoCleanupCountdown(null), 2000);
+      }
+    };
+
+    window.addEventListener('test-mode-cleanup-countdown', handleAutoCleanupCountdown as EventListener);
+    
+    return () => {
+      window.removeEventListener('test-mode-cleanup-countdown', handleAutoCleanupCountdown as EventListener);
+    };
   }, []);
 
   useEffect(() => {
@@ -352,10 +373,14 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
                     })()}
                     onChange={async (e) => {
                       const isActive = e.target.checked;
-                      localStorage.setItem('test-mode-active', isActive.toString());
+                      const TestModeManager = (await import('../services/TestModeManager')).default;
+                      const manager = TestModeManager.getInstance();
                       
                       if (isActive) {
-                        // Test-Modus aktivieren - starte Test-Session
+                        // Test-Modus aktivieren (automatisch nach 5 Min beenden)
+                        manager.activateTestMode();
+                        
+                        // Starte Test-Session wenn nötig
                         const StreamSessionTracker = (await import('../services/StreamSessionTracker')).default;
                         const tracker = StreamSessionTracker.getInstance();
                         const existingStats = tracker.getStats();
@@ -368,40 +393,28 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
                           }
                         }
                       } else {
-                        // Test-Modus deaktivieren - lösche alle Test-Daten
+                        // Test-Modus deaktivieren - starte 30s Countdown
+                        console.log('🧹 Test-Modus deaktiviert - starte Cleanup-Countdown...');
                         
-                        // 1. Lösche Activity Feed Test-Daten
-                        const activityFeed = localStorage.getItem('activity-feed');
-                        if (activityFeed) {
-                          const activities = JSON.parse(activityFeed);
-                          const cleanedActivities = activities.filter((a: any) => !a.id.startsWith('test-'));
-                          localStorage.setItem('activity-feed', JSON.stringify(cleanedActivities));
-                        }
+                        // Starte 30-Sekunden Countdown
+                        setCleanupCountdown(30);
                         
-                        // 2. Reset Session-Stats (entferne Test-Follower/Subs)
-                        const StreamSessionTracker = (await import('../services/StreamSessionTracker')).default;
-                        const tracker = StreamSessionTracker.getInstance();
-                        tracker.resetSession();
+                        const countdownInterval = setInterval(() => {
+                          setCleanupCountdown(prev => {
+                            if (prev === null || prev <= 1) {
+                              clearInterval(countdownInterval);
+                              return null;
+                            }
+                            return prev - 1;
+                          });
+                        }, 1000);
                         
-                        // 3. Trigger Event zum Neuladen aller Kacheln
-                        const reloadEvent = new CustomEvent('reload-tiles');
-                        window.dispatchEvent(reloadEvent);
-                        
-                        // 4. Lade echte Daten neu
-                        const { TwitchService } = await import('../services/TwitchService');
-                        const user = TwitchService.getUserFromStorage();
-                        if (user) {
-                          // Prüfe ob Stream live ist
-                          const streamInfo = await TwitchService.getStreamInfo(user.id);
-                          
-                          if (streamInfo) {
-                            // Stream ist live - aktualisiere Session mit echten Daten
-                            await tracker.updateCurrentStats(user.id);
-                          } else {
-                            // Stream ist offline - beende Session
-                            tracker.endSession();
-                          }
-                        }
+                        // Nach 30 Sekunden: Cleanup
+                        setTimeout(async () => {
+                          await manager.deactivateTestMode(true);
+                          setCleanupCountdown(null);
+                          console.log('✅ Cleanup abgeschlossen!');
+                        }, 30000); // 30 Sekunden
                       }
                       
                       // Trigger Event für alle Komponenten
@@ -416,10 +429,18 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
                 </label>
               </div>
 
-              {localStorage.getItem('test-mode-active') === 'true' && (
+              {localStorage.getItem('test-mode-active') === 'true' && !autoCleanupCountdown && (
                 <>
-                  <div className="mb-3 p-2 bg-orange-500/20 border border-orange-500/50 rounded text-xs theme-text">
-                    ⚠️ Test-Modus aktiv - Events werden in allen Kacheln simuliert
+                  <div className="mb-3 p-3 bg-orange-500/20 border border-orange-500/50 rounded space-y-2">
+                    <div className="text-xs theme-text font-semibold">
+                      ⚠️ Test-Modus aktiv - Events werden in allen Kacheln simuliert
+                    </div>
+                    <div className="text-xs theme-text-secondary">
+                      💡 Test-Modus endet automatisch nach 5 Minuten und löscht alle Test-Daten
+                    </div>
+                    <div className="text-xs theme-text-secondary">
+                      ✅ Wenn dein Stream 10+ Minuten live ist, werden Daten als ECHT markiert und bleiben erhalten
+                    </div>
                   </div>
                   
                   <div className="grid grid-cols-3 gap-2">
@@ -473,6 +494,102 @@ export default function Settings({ isOpen, onClose }: SettingsProps) {
                     </button>
                   </div>
                 </>
+              )}
+
+              {/* Automatischer Cleanup Countdown (nach 5 Min Test-Modus) */}
+              {autoCleanupCountdown !== null && (
+                <div className="mt-3 p-4 bg-orange-500/20 border-2 border-orange-500/50 rounded-lg space-y-3">
+                  <div className="text-center">
+                    <div className="text-4xl font-bold theme-text mb-2">
+                      ⏰ {autoCleanupCountdown}s
+                    </div>
+                    <div className="text-sm theme-text font-semibold">
+                      Test-Modus endet - Test-Daten werden gelöscht...
+                    </div>
+                    <div className="text-xs theme-text-secondary mt-1">
+                      5 Minuten Test-Zeit abgelaufen
+                    </div>
+                  </div>
+                  
+                  {/* Visueller Progress Bar */}
+                  <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-orange-500 to-orange-700 transition-all duration-1000 ease-linear"
+                      style={{ width: `${(autoCleanupCountdown / 30) * 100}%` }}
+                    />
+                  </div>
+                  
+                  <div className="text-xs theme-text-secondary text-center italic">
+                    Nur Daten mit isReal=true bleiben erhalten
+                  </div>
+                </div>
+              )}
+
+              {/* Manueller Cleanup Countdown (beim Ausschalten) */}
+              {cleanupCountdown !== null && (
+                <div className="mt-3 p-4 bg-red-500/20 border-2 border-red-500/50 rounded-lg space-y-3">
+                  <div className="text-center">
+                    <div className="text-4xl font-bold theme-text mb-2">
+                      🗑️ {cleanupCountdown}s
+                    </div>
+                    <div className="text-sm theme-text font-semibold">
+                      Test-Daten werden gelöscht...
+                    </div>
+                    <div className="text-xs theme-text-secondary mt-1">
+                      Activity Feed • Stream-History • Session-Stats
+                    </div>
+                  </div>
+                  
+                  {/* Visueller Progress Bar */}
+                  <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-red-500 to-red-700 transition-all duration-1000 ease-linear"
+                      style={{ width: `${(cleanupCountdown / 30) * 100}%` }}
+                    />
+                  </div>
+                  
+                  <button
+                    onClick={async () => {
+                      const TestModeManager = (await import('../services/TestModeManager')).default;
+                      const manager = TestModeManager.getInstance();
+                      await manager.deactivateTestMode(true);
+                      setCleanupCountdown(null);
+                    }}
+                    className="w-full px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors"
+                  >
+                    ⚡ Jetzt sofort löschen
+                  </button>
+                  
+                  <div className="text-xs theme-text-secondary text-center italic">
+                    Schließe die Einstellungen nicht während des Cleanups
+                  </div>
+                </div>
+              )}
+
+              {/* Manueller Cleanup Button (wenn Test-Modus inaktiv) */}
+              {localStorage.getItem('test-mode-active') !== 'true' && cleanupCountdown === null && (
+                <div className="mt-3 p-3 bg-gray-500/10 border border-gray-500/30 rounded-lg">
+                  <div className="text-xs theme-text-secondary mb-2">
+                    💡 Hast du noch alte Test-Daten? Bereinige sie manuell:
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (!confirm('Alle Test-Daten jetzt löschen?\n\nDies entfernt:\n• Test-Activities (ohne isReal Flag)\n• Test-Stream-Sessions (ohne isReal Flag)\n• Test-Follower/Subs\n\nNur Daten mit isReal=true bleiben erhalten!')) {
+                        return;
+                      }
+
+                      const TestModeManager = (await import('../services/TestModeManager')).default;
+                      const manager = TestModeManager.getInstance();
+                      await manager.manualCleanup();
+                      
+                      alert('✅ Cleanup abgeschlossen!\n\nAlle Test-Daten wurden entfernt.\nNur verifizierte echte Daten bleiben erhalten.');
+                      setSettings({...settings});
+                    }}
+                    className="w-full px-3 py-2 rounded bg-gray-600 hover:bg-gray-700 text-white text-sm font-semibold transition-colors"
+                  >
+                    🧹 Test-Daten jetzt bereinigen
+                  </button>
+                </div>
               )}
             </div>
           </div>

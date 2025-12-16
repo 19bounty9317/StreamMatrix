@@ -155,7 +155,6 @@ Geplante Features:
 - 🔍 Suche im Streamer-Verzeichnis
 - 🏆 Top-Streamer nach Viewern
 - 🎨 Filter nach Kategorie/Game
-- ⭐ Favoriten-System
 - 📱 Mobile-Optimierung der Website
 - 🌐 Mehrsprachigkeit (EN)
 

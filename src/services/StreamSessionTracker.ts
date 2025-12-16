@@ -7,6 +7,9 @@ interface SessionStats {
   currentSubs: number;
   sessionStartTime: string;
   isLive: boolean;
+  isReal?: boolean; // Flag ob Daten echt sind (Stream 10+ Min live)
+  viewerHistory?: number[]; // Historie der Viewer-Zahlen
+  peakViewers?: number; // Höchste Viewer-Zahl
 }
 
 class StreamSessionTracker {
@@ -77,7 +80,9 @@ class StreamSessionTracker {
         currentFollowers: followerCount,
         currentSubs: subCount,
         sessionStartTime: new Date().toISOString(),
-        isLive: true
+        isLive: true,
+        viewerHistory: [],
+        peakViewers: 0
       };
 
       this.saveSession();
@@ -127,15 +132,36 @@ class StreamSessionTracker {
     }
   }
 
-  async endSession(avgViewers: number = 0, peakViewers: number = 0) {
+  async endSession(avgViewers?: number, peakViewers?: number) {
     if (this.stats) {
+      // Berechne Stream-Dauer
+      const startTime = new Date(this.stats.sessionStartTime);
+      const endTime = new Date();
+      const durationMinutes = Math.round((endTime.getTime() - startTime.getTime()) / 1000 / 60);
+      
+      // Markiere als "echt" wenn Stream mindestens 10 Minuten live war
+      if (durationMinutes >= 10) {
+        this.stats.isReal = true;
+        console.log('✅ Stream war 10+ Minuten live - markiere als echte Daten');
+      } else {
+        console.log('⚠️ Stream war < 10 Minuten live - markiere als Test-Daten');
+      }
+      
       this.stats.isLive = false;
       this.saveSession();
       
+      // Verwende berechnete Werte wenn nicht übergeben
+      const finalAvgViewers = avgViewers !== undefined ? avgViewers : this.getAverageViewers();
+      const finalPeakViewers = peakViewers !== undefined ? peakViewers : this.getPeakViewers();
+      
       // Speichere Session in Historie
-      await this.saveToHistory(avgViewers, peakViewers);
+      await this.saveToHistory(finalAvgViewers, finalPeakViewers);
       
       console.log('📊 Stream-Session beendet:', this.stats);
+      console.log(`📊 Viewer-Stats: Ø ${finalAvgViewers}, Peak ${finalPeakViewers}`);
+      
+      // Lösche Session nach Speicherung
+      this.clearSession();
     }
   }
 
@@ -155,7 +181,8 @@ class StreamSessionTracker {
         avgViewers,
         peakViewers,
         newFollowers: this.getFollowerDiff(),
-        newSubs: this.getSubDiff()
+        newSubs: this.getSubDiff(),
+        isReal: this.stats.isReal || false // Übernehme isReal Flag
       };
 
       // Lade bestehende Historie
@@ -246,6 +273,38 @@ class StreamSessionTracker {
     this.stats = null;
     localStorage.removeItem('stream-session-stats');
     this.notifyListeners();
+  }
+
+  // Tracke Viewer-Zahl
+  trackViewers(viewerCount: number) {
+    if (this.stats && this.stats.isLive) {
+      // Füge zur Historie hinzu
+      if (!this.stats.viewerHistory) {
+        this.stats.viewerHistory = [];
+      }
+      this.stats.viewerHistory.push(viewerCount);
+
+      // Aktualisiere Peak
+      if (!this.stats.peakViewers || viewerCount > this.stats.peakViewers) {
+        this.stats.peakViewers = viewerCount;
+      }
+
+      this.saveSession();
+    }
+  }
+
+  // Berechne durchschnittliche Viewer
+  getAverageViewers(): number {
+    if (!this.stats || !this.stats.viewerHistory || this.stats.viewerHistory.length === 0) {
+      return 0;
+    }
+    const sum = this.stats.viewerHistory.reduce((a, b) => a + b, 0);
+    return Math.round(sum / this.stats.viewerHistory.length);
+  }
+
+  // Hole Peak Viewer
+  getPeakViewers(): number {
+    return this.stats?.peakViewers || 0;
   }
 }
 

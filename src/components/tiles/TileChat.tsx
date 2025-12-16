@@ -382,9 +382,17 @@ export default function TileChat() {
     };
     window.addEventListener('reload-tiles' as any, handleReload);
 
+    // Listener für Channel Points Redemptions (von EventSub)
+    const handleChannelPoints = (event: CustomEvent) => {
+      const msg = event.detail;
+      setMessages(prev => [...prev, msg].slice(-100));
+    };
+    window.addEventListener('chat-message' as any, handleChannelPoints);
+
     return () => {
       window.removeEventListener('test-event-trigger' as any, handleTestEvent);
       window.removeEventListener('reload-tiles' as any, handleReload);
+      window.removeEventListener('chat-message' as any, handleChannelPoints);
     };
   }, []);
 
