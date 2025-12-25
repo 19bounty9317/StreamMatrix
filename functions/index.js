@@ -30,7 +30,24 @@ exports.validateAnalytics = functions.firestore
     }
 
     const newData = change.after.data();
+    const oldData = change.before.exists ? change.before.data() : null;
     const userId = context.params.userId;
+    
+    // WICHTIG: Verhindere Endlosschleife!
+    // Wenn das Update von dieser Function kam (validated=true und validatedAt wurde gerade gesetzt),
+    // dann nicht erneut validieren
+    if (oldData && oldData.validated === true && newData.validated === true) {
+      // Prüfe ob nur Validierungs-Felder geändert wurden
+      const oldValidatedAt = oldData.validatedAt?.toMillis() || 0;
+      const newValidatedAt = newData.validatedAt?.toMillis() || 0;
+      
+      // Wenn validatedAt sich gerade geändert hat (innerhalb der letzten 5 Sekunden),
+      // dann kam das Update von dieser Function → Überspringe
+      if (Math.abs(newValidatedAt - Date.now()) < 5000) {
+        console.log(`⏭️ Überspringe Re-Validierung für User ${userId} (bereits validiert)`);
+        return null;
+      }
+    }
     
     console.log(`📊 Validiere Analytics für User: ${userId}`);
 
@@ -38,17 +55,19 @@ exports.validateAnalytics = functions.firestore
     if (ADMIN_WHITELIST.includes(newData.channelName)) {
       console.log(`✅ User ${newData.channelName} ist auf Whitelist - Überspringe Validierung`);
       
-      // Markiere als Admin
-      await change.after.ref.update({
-        isAdmin: true,
-        validated: true,
-        validatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        validVersion: true,
-        validHash: true,
-        validConsent: true,
-        suspicious: false,
-        banned: false // Admins können nie gebannt werden
-      });
+      // Nur updaten wenn noch nicht als Admin markiert
+      if (!newData.isAdmin) {
+        await change.after.ref.update({
+          isAdmin: true,
+          validated: true,
+          validatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          validVersion: true,
+          validHash: true,
+          validConsent: true,
+          suspicious: false,
+          banned: false
+        });
+      }
       
       return null;
     }
@@ -123,10 +142,22 @@ exports.validateAnalytics = functions.firestore
       updates.suspiciousReasons = admin.firestore.FieldValue.delete();
     }
 
-    // Speichere Validierungs-Ergebnisse
-    await change.after.ref.update(updates);
+    // Nur updaten wenn sich etwas geändert hat
+    const needsUpdate = !oldData || 
+      oldData.validated !== true ||
+      oldData.validVersion !== updates.validVersion ||
+      oldData.validHash !== updates.validHash ||
+      oldData.validConsent !== updates.validConsent ||
+      oldData.suspicious !== updates.suspicious;
 
-    console.log(`✅ Validierung abgeschlossen für User ${userId}:`, checks);
+    if (needsUpdate) {
+      // Speichere Validierungs-Ergebnisse
+      await change.after.ref.update(updates);
+      console.log(`✅ Validierung abgeschlossen für User ${userId}:`, checks);
+    } else {
+      console.log(`⏭️ Keine Änderungen nötig für User ${userId}`);
+    }
+    
     return null;
   });
 
