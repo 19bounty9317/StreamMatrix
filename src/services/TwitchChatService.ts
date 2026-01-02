@@ -277,10 +277,11 @@ export class TwitchChatService {
   // Mod-Befehle
   deleteMessage(messageId: string) {
     if (this.isConnected && this.channel) {
+      // Twitch IRC erwartet: PRIVMSG #channel :/delete <message-id>
       const command = `/delete ${messageId}`;
-      console.log('🗑️ Sende Delete-Befehl:', command);
-      this.send(`PRIVMSG #${this.channel} :${command}`);
-      console.log('✅ Delete-Befehl gesendet für Message-ID:', messageId);
+      console.log('🗑️ Sende Delete-Befehl:', command, 'für Message-ID:', messageId);
+      this.sendMessage(command);
+      console.log('✅ Delete-Befehl gesendet');
     } else {
       console.error('❌ Nicht verbunden oder kein Channel');
     }

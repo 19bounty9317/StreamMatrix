@@ -13,6 +13,9 @@ export interface IElectronAPI {
   moveTile?: (tileId: string, targetWindowId: string) => Promise<{ success: boolean }>;
   onTileMoved?: (callback: (data: { tileId: string; targetWindowId: string }) => void) => void;
   getTilesOrder?: () => Promise<{ tilesOrder: string | null }>;
+  openUserModal?: (data: { username: string; userId?: string; userColor: string; messages: any[] }) => Promise<{ success: boolean }>;
+  sendChatCommand?: (command: string) => Promise<{ success: boolean; error?: string }>;
+  onExecuteChatCommand?: (callback: (command: string) => void) => void;
 }
 
 declare global {

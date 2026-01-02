@@ -509,6 +509,95 @@ async function createTileWindow() {
   mainWindow?.webContents.send('tile-window-opened', windowId);
 }
 
+// Erstelle User-Modal-Fenster
+async function createUserModalWindow(username: string, userId: string | undefined, userColor: string, messages: any[]) {
+  const userModalWindow = new BrowserWindow({
+    width: 1400,
+    height: 900,
+    backgroundColor: '#0E0E10',
+    title: `User: ${username}`,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
+    },
+    frame: true,
+    titleBarStyle: 'default',
+    autoHideMenuBar: true
+  });
+
+  // Tastenkombination für DevTools (Ctrl+Shift+I oder F12)
+  userModalWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.key === 'F12' || 
+        (input.control && input.shift && input.key === 'I')) {
+      if (userModalWindow?.webContents.isDevToolsOpened()) {
+        userModalWindow.webContents.closeDevTools();
+      } else {
+        userModalWindow?.webContents.openDevTools();
+      }
+    }
+  });
+
+  // Speichere Messages im localStorage des neuen Fensters
+  // (wird vor dem Laden gesetzt, damit die React-App sie lesen kann)
+  
+  // Prüfe ob wir im Development-Modus sind
+  const indexPath = path.join(__dirname, 'renderer', 'index.html');
+  const fs = require('fs');
+  const isDev = !fs.existsSync(indexPath);
+  
+  const queryParams = new URLSearchParams({
+    username,
+    userId: userId || '',
+    userColor
+  });
+  
+  if (isDev) {
+    const port = process.env.VITE_PORT || '5173';
+    await userModalWindow.loadURL(`http://localhost:${port}/user-modal-window.html?${queryParams.toString()}`);
+  } else {
+    const fileUrl = url.format({
+      protocol: 'file',
+      slashes: true,
+      pathname: path.join(__dirname, 'renderer', 'user-modal-window.html')
+    });
+    await userModalWindow.loadURL(`${fileUrl}?${queryParams.toString()}`);
+  }
+
+  // NACH dem Laden: Setze Messages im localStorage
+  try {
+    await userModalWindow.webContents.executeJavaScript(
+      `localStorage.setItem("user-modal-messages", ${JSON.stringify(JSON.stringify(messages))})`
+    );
+    console.log('✅ Electron: Messages in User-Modal-Fenster gesetzt:', messages.length);
+  } catch (error) {
+    console.error('❌ Electron: Fehler beim Setzen der Messages:', error);
+  }
+
+  userModalWindow.on('closed', () => {
+    console.log('🪟 User-Modal-Fenster geschlossen');
+  });
+}
+
+// IPC Handler für User-Modal-Fenster
+ipcMain.handle('open-user-modal', async (event, data) => {
+  const { username, userId, userColor, messages } = data;
+  console.log('🪟 Öffne User-Modal-Fenster für:', username);
+  await createUserModalWindow(username, userId, userColor, messages);
+  return { success: true };
+});
+
+// IPC Handler für Chat-Befehle (vom User-Modal-Fenster)
+ipcMain.handle('send-chat-command', async (event, command: string) => {
+  console.log('💬 Chat-Befehl empfangen:', command);
+  // Sende Befehl an Hauptfenster
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('execute-chat-command', command);
+    return { success: true };
+  }
+  return { success: false, error: 'Hauptfenster nicht verfügbar' };
+});
+
 // Manuell nach Updates suchen
 ipcMain.handle('check-for-updates', async () => {
   if (appUpdater) {

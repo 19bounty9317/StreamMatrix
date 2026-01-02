@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { emoteService } from '../../services/EmoteService';
 import UserCard from '../UserCard';
+import UserModerationModal from '../UserModerationModal';
 
 interface ChatMessage {
   id: string;
@@ -51,6 +52,7 @@ export default function TileChat() {
   });
   const [viewerCount, setViewerCount] = useState(0);
   const [selectedUser, setSelectedUser] = useState<{ username: string; color: string; badges: string; position: { x: number; y: number } } | null>(null);
+  const [selectedUserForModeration, setSelectedUserForModeration] = useState<{ username: string; userId?: string; color: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(() => {
     const saved = localStorage.getItem('chat-auto-scroll');
@@ -270,20 +272,15 @@ export default function TileChat() {
           
           // Höre auf neue Nachrichten
           twitchChat.onMessage((msg: ChatMessage) => {
+            // Speichere JEDE Nachricht in der User-History (für Moderation)
+            import('../../services/UserMessageHistoryService').then(({ userMessageHistoryService }) => {
+              userMessageHistoryService.addMessage(msg);
+            });
+            
             setMessages(prev => {
-              // Verhindere Duplikate: Prüfe ob Nachricht bereits existiert
-              // (z.B. eigene Nachricht die wir lokal hinzugefügt haben)
-              const isDuplicate = prev.some(m => 
-                m.username === msg.username && 
-                m.message === msg.message &&
-                Math.abs(m.timestamp.getTime() - msg.timestamp.getTime()) < 2000 // Innerhalb 2 Sekunden
-              );
-              
-              if (isDuplicate) {
-                return prev; // Nicht hinzufügen
-              }
-              
-              return [...prev, msg].slice(-100); // Max 100 Nachrichten
+              // Keine Duplikat-Prüfung mehr - Twitch sendet jede Nachricht nur einmal
+              // Das Echo von eigenen Nachrichten ist gewollt!
+              return [...prev, msg].slice(-500); // Max 500 Nachrichten im Chat-Fenster
             });
 
             // Sende Channel Points Redemptions an NotificationService für Alerts
@@ -321,6 +318,34 @@ export default function TileChat() {
 
     connectChat();
 
+    // Listener für Chat-Befehle vom User-Modal-Fenster
+    const handleChatCommand = async (command: string) => {
+      console.log('💬 Führe Chat-Befehl aus:', command);
+      
+      // Prüfe ob es eine System-Nachricht ist
+      if (command.startsWith('__SYSTEM__:')) {
+        const message = command.replace('__SYSTEM__:', '');
+        const systemMsg: ChatMessage = {
+          id: `system-${Date.now()}`,
+          username: 'System',
+          message: message,
+          timestamp: new Date(),
+          color: '#9147FF',
+          badges: ''
+        };
+        setMessages(prev => [...prev, systemMsg].slice(-500));
+        return;
+      }
+      
+      const { twitchChat } = await import('../../services/TwitchChatService');
+      twitchChat.sendMessage(command);
+    };
+
+    // Electron IPC Listener
+    if (window.electron?.onExecuteChatCommand) {
+      window.electron.onExecuteChatCommand(handleChatCommand);
+    }
+
     return () => {
       // Cleanup beim Unmount
       import('../../services/TwitchChatService').then(({ twitchChat }) => {
@@ -345,7 +370,7 @@ export default function TileChat() {
         tags: {}
       };
       
-      setMessages(prev => [...prev, testMessage].slice(-100));
+      setMessages(prev => [...prev, testMessage].slice(-500));
     };
 
     const getTestChatMessage = (data: any) => {
@@ -385,7 +410,7 @@ export default function TileChat() {
     // Listener für Channel Points Redemptions (von EventSub)
     const handleChannelPoints = (event: CustomEvent) => {
       const msg = event.detail;
-      setMessages(prev => [...prev, msg].slice(-100));
+      setMessages(prev => [...prev, msg].slice(-500));
     };
     window.addEventListener('chat-message' as any, handleChannelPoints);
 
@@ -480,7 +505,7 @@ export default function TileChat() {
           isRaidNotice: true,
           raidTarget: args[0]
         };
-        setMessages(prev => [...prev, raidNotice].slice(-100));
+        setMessages(prev => [...prev, raidNotice].slice(-500));
         break;
 
       case '/unraid':
@@ -887,6 +912,51 @@ export default function TileChat() {
   const handleUsernameClick = (e: React.MouseEvent, msg: ChatMessage) => {
     if (msg.username === 'Du' || msg.username === 'System') return;
     
+    // Rechtsklick oder Ctrl+Click öffnet Moderation-Fenster
+    if (e.button === 2 || e.ctrlKey) {
+      e.preventDefault();
+      
+      // Öffne separates Electron-Fenster
+      if (window.electron?.openUserModal) {
+        // Lade ALLE Nachrichten des Users aus der History
+        import('../../services/UserMessageHistoryService').then(({ userMessageHistoryService }) => {
+          let allUserMessages = userMessageHistoryService.getUserMessages(msg.username);
+          
+          // Fallback: Wenn History leer ist, verwende aktuelle Chat-Nachrichten
+          if (allUserMessages.length === 0) {
+            console.log('⚠️ History leer, verwende aktuelle Chat-Nachrichten');
+            allUserMessages = messages.filter(m => m.username.toLowerCase() === msg.username.toLowerCase());
+          }
+          
+          console.log('📝 Lade User-Messages für:', msg.username, '- Anzahl:', allUserMessages.length);
+          
+          // Serialisiere Messages für IPC (Date -> ISO String)
+          const serializedMessages = allUserMessages.map(m => ({
+            ...m,
+            timestamp: m.timestamp.toISOString()
+          }));
+          
+          if (window.electron?.openUserModal) {
+            window.electron.openUserModal({
+              username: msg.username,
+              userId: msg.tags?.['user-id'],
+              userColor: msg.color,
+              messages: serializedMessages
+            });
+          }
+        });
+      } else {
+        // Fallback für Browser (Dev-Modus ohne Electron)
+        setSelectedUserForModeration({
+          username: msg.username,
+          userId: msg.tags?.['user-id'],
+          color: msg.color
+        });
+      }
+      return;
+    }
+    
+    // Normaler Klick öffnet UserCard
     const rect = (e.target as HTMLElement).getBoundingClientRect();
     setSelectedUser({
       username: msg.username,
@@ -1151,6 +1221,54 @@ export default function TileChat() {
                   style={{ color: msg.color }} 
                   className="font-semibold cursor-pointer hover:underline"
                   onClick={(e) => handleUsernameClick(e, msg)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    
+                    // Öffne separates Electron-Fenster
+                    if (window.electron?.openUserModal) {
+                      // Lade ALLE Nachrichten des Users aus der History
+                      import('../../services/UserMessageHistoryService').then(({ userMessageHistoryService }) => {
+                        let allUserMessages = userMessageHistoryService.getUserMessages(msg.username);
+                        
+                        console.log('🔍 History für', msg.username, ':', allUserMessages.length, 'Nachrichten');
+                        console.log('🔍 Aktuelle Chat-Messages:', messages.length);
+                        console.log('🔍 Messages von', msg.username, 'im Chat:', messages.filter(m => m.username.toLowerCase() === msg.username.toLowerCase()).length);
+                        
+                        // Fallback: Wenn History leer ist, verwende aktuelle Chat-Nachrichten
+                        if (allUserMessages.length === 0) {
+                          console.log('⚠️ History leer, verwende aktuelle Chat-Nachrichten');
+                          allUserMessages = messages.filter(m => m.username.toLowerCase() === msg.username.toLowerCase());
+                        }
+                        
+                        console.log('📝 Lade User-Messages für:', msg.username, '- Anzahl:', allUserMessages.length);
+                        
+                        // Serialisiere Messages für IPC (Date -> ISO String)
+                        const serializedMessages = allUserMessages.map(m => ({
+                          ...m,
+                          timestamp: m.timestamp.toISOString()
+                        }));
+                        
+                        console.log('📤 Sende an Modal:', serializedMessages.length, 'Nachrichten');
+                        
+                        if (window.electron?.openUserModal) {
+                          window.electron.openUserModal({
+                            username: msg.username,
+                            userId: msg.tags?.['user-id'],
+                            userColor: msg.color,
+                            messages: serializedMessages
+                          });
+                        }
+                      });
+                    } else {
+                      // Fallback für Browser (Dev-Modus ohne Electron)
+                      setSelectedUserForModeration({
+                        username: msg.username,
+                        userId: msg.tags?.['user-id'],
+                        color: msg.color
+                      });
+                    }
+                  }}
+                  title="Linksklick: User-Info | Rechtsklick: Moderation"
                 >
                   {msg.username}
                 </span>
@@ -1220,6 +1338,17 @@ export default function TileChat() {
           badges={selectedUser.badges}
           position={selectedUser.position}
           onClose={() => setSelectedUser(null)}
+        />
+      )}
+
+      {/* User Moderation Modal */}
+      {selectedUserForModeration && (
+        <UserModerationModal
+          username={selectedUserForModeration.username}
+          userId={selectedUserForModeration.userId}
+          userColor={selectedUserForModeration.color}
+          onClose={() => setSelectedUserForModeration(null)}
+          allMessages={messages}
         />
       )}
     </div>

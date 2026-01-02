@@ -16,6 +16,8 @@ export default function TileRaidTargets() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
   const [isRaiding, setIsRaiding] = useState(false);
+  const [raidSuccess, setRaidSuccess] = useState(false);
+  const [raidCountdown, setRaidCountdown] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [showOnlyLive, setShowOnlyLive] = useState(() => {
     const saved = localStorage.getItem('raid-targets-show-only-live');
@@ -177,6 +179,7 @@ export default function TileRaidTargets() {
 
   const executeRaid = async (channel: Channel) => {
     setIsRaiding(true);
+    setRaidSuccess(false);
     
     try {
       const user = TwitchService.getUserFromStorage();
@@ -191,14 +194,25 @@ export default function TileRaidTargets() {
       // Starte Raid über Helix API
       await TwitchService.startRaid(user.id, channel.id);
       
-      // Zeige Bestätigung
+      // Zeige Erfolg
       console.log(`✅ Raid zu ${channel.display_name} gestartet!`);
+      setRaidSuccess(true);
       
-      // Reset nach 2 Sekunden
-      setTimeout(() => {
-        setSelectedChannel(null);
-        setIsRaiding(false);
-      }, 2000);
+      // Starte 10-Sekunden Countdown
+      setRaidCountdown(10);
+      const countdownInterval = setInterval(() => {
+        setRaidCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval);
+            setIsRaiding(false);
+            setSelectedChannel(null);
+            setRaidSuccess(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      
     } catch (error: any) {
       console.error('Fehler beim Raiden:', error);
       
@@ -208,12 +222,21 @@ export default function TileRaidTargets() {
       
       setIsRaiding(false);
       setSelectedChannel(null);
+      setRaidSuccess(false);
       
       // Verstecke Fehler nach 5 Sekunden
       setTimeout(() => {
         setError(null);
       }, 5000);
     }
+  };
+
+  const executeRaidNow = async () => {
+    // Beende Countdown sofort
+    setRaidCountdown(0);
+    setIsRaiding(false);
+    setSelectedChannel(null);
+    setRaidSuccess(false);
   };
 
   if (isLoading) {
@@ -249,6 +272,34 @@ export default function TileRaidTargets() {
 
   return (
     <div className="h-full flex flex-col">
+      {/* Raid-Erfolg Banner mit Countdown */}
+      {raidSuccess && raidCountdown > 0 && (
+        <div className="mb-3 p-4 rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 border-2 border-purple-400 shadow-lg">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🚀</span>
+              <div>
+                <div className="text-white font-bold">Raid gestartet!</div>
+                <div className="text-purple-200 text-sm">Raid wird in {raidCountdown}s ausgeführt</div>
+              </div>
+            </div>
+            <button
+              onClick={executeRaidNow}
+              className="bg-white text-purple-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-purple-100 transition-colors shadow-md"
+            >
+              ⚡ Jetzt raiden
+            </button>
+          </div>
+          {/* Countdown-Balken */}
+          <div className="w-full bg-purple-900/50 rounded-full h-2 overflow-hidden">
+            <div 
+              className="bg-white h-full transition-all duration-1000 ease-linear"
+              style={{ width: `${(raidCountdown / 10) * 100}%` }}
+            ></div>
+          </div>
+        </div>
+      )}
+
       <div className="mb-3 pb-2 border-b theme-border">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm theme-text font-semibold">Raid-Ziele</span>
@@ -351,6 +402,13 @@ export default function TileRaidTargets() {
                         className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-5 py-2.5 rounded-lg font-bold text-sm transition-all shadow-lg shadow-purple-500/50 disabled:opacity-50 animate-pulse"
                       >
                         {isRaiding ? '⏳ Raiding...' : '🚀 RAIDEN!'}
+                      </button>
+                    ) : raidSuccess && raidCountdown > 0 ? (
+                      <button 
+                        disabled
+                        className="px-4 py-2.5 rounded-lg text-sm font-bold opacity-50 cursor-not-allowed theme-button theme-text border border-gray-600/50"
+                      >
+                        ⏳ Raid läuft
                       </button>
                     ) : (
                       <button className={`px-4 py-2.5 rounded-lg text-sm font-bold transition-all shadow-md ${

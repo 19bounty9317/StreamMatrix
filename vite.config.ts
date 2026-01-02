@@ -10,7 +10,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        tileWindow: resolve(__dirname, 'tile-window.html')
+        tileWindow: resolve(__dirname, 'tile-window.html'),
+        userModalWindow: resolve(__dirname, 'user-modal-window.html')
       }
     }
   },

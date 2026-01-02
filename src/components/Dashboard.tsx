@@ -85,7 +85,11 @@ export default function Dashboard({ tiles, onCloseTile }: DashboardProps) {
       'viewer-stats': { x: 0, y: 10, w: 3, h: 3 },
       'subs': { x: 3, y: 10, w: 3, h: 3 },
       'raid-targets': { x: 6, y: 10, w: 3, h: 4 },
-      'stream-history': { x: 9, y: 10, w: 3, h: 4 }
+      'stream-history': { x: 9, y: 10, w: 3, h: 4 },
+      // Mod-Tiles
+      'mod-queue': { x: 0, y: 17, w: 4, h: 4 },
+      'banned-users': { x: 4, y: 17, w: 4, h: 4 },
+      'mod-actions': { x: 8, y: 17, w: 4, h: 4 }
     };
 
     return tiles.map((tile) => {

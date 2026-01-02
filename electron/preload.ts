@@ -32,5 +32,11 @@ contextBridge.exposeInMainWorld('electron', {
   onTileMoved: (callback: (data: { tileId: string; targetWindowId: string }) => void) => {
     ipcRenderer.on('tile-moved', (event, data) => callback(data));
   },
-  getTilesOrder: () => ipcRenderer.invoke('get-tiles-order')
+  getTilesOrder: () => ipcRenderer.invoke('get-tiles-order'),
+  openUserModal: (data: { username: string; userId?: string; userColor: string; messages: any[] }) => 
+    ipcRenderer.invoke('open-user-modal', data),
+  sendChatCommand: (command: string) => ipcRenderer.invoke('send-chat-command', command),
+  onExecuteChatCommand: (callback: (command: string) => void) => {
+    ipcRenderer.on('execute-chat-command', (event, command) => callback(command));
+  }
 });

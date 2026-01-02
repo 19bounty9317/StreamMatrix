@@ -216,17 +216,7 @@ export default function Sidebar({ tiles, onToggleTile, onReorderTiles, onOpenSet
           >
             ⚙️ Einstellungen
           </button>
-          <button
-            onClick={() => {
-              const event = new CustomEvent('show-tutorial');
-              window.dispatchEvent(event);
-            }}
-            className="w-full px-4 py-2 rounded-lg transition-colors text-sm font-medium"
-            style={{ backgroundColor: 'var(--color-accent)', color: '#FFFFFF' }}
-            title="Tutorial anzeigen"
-          >
-            ❓ Tutorial
-          </button>
+          
           <button
             onClick={onLogout}
             className="w-full px-4 py-2 rounded-lg transition-colors text-sm font-medium"
